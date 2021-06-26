@@ -14,6 +14,9 @@ namespace PrisonCopter {
                                                       ref Vehicle vehicleData,
                                                       ref Vehicle.Frame frameData);
 
+        private delegate void LoadVehicleTarget(ushort vehicleID,
+                                                ref Vehicle data);
+
         internal static PrisonCopterAIConnection GetConnection() {
             try {
                 SimulationStepHelicopterAIDelegate simulationStepHelicopterAI =
@@ -27,10 +30,10 @@ namespace PrisonCopter {
                     null,
                     true);
                 LoadVehicleHelicopterAIDelegate loadVehicleHelicopterAI =
-                    TranspilerUtil.CreateDelegate<LoadVehicleHelicopterAIDelegate>(
-                        typeof(HelicopterAI),
-                        "LoadVehicle",
-                        true);
+                    AccessTools.MethodDelegate<LoadVehicleHelicopterAIDelegate>(
+                    TranspilerUtil.DeclaredMethod<LoadVehicleTarget>(typeof(HelicopterAI), "LoadVehicle"),
+                    null,
+                    false);
                 RemoveTargetDelegate removeTarget =
                     TranspilerUtil.CreateDelegate<RemoveTargetDelegate>(
                         typeof(PoliceCopterAI),

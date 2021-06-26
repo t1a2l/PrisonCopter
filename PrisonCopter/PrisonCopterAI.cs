@@ -155,7 +155,7 @@ namespace PrisonCopter {
 		else
 		{
 			data.m_flags &= ~Vehicle.Flags.Emergency2;
-			if (data.m_transferSize < __instance.m_crimeCapacity && !ShouldReturnToSource(vehicleID, ref data))
+			if (data.m_transferSize < __instance.m_crimeCapacity && !ShouldReturnToSource(__instance, vehicleID, ref data))
 			{
 				TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
 				offer.Priority = 7;
@@ -185,19 +185,19 @@ namespace PrisonCopter {
         [HarmonyPrefix]
         public static bool SimulationStep(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics) {
             if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4) {
-                SimulationStepHelicopterAI(vehicleID, ref vehicleData, ref frameData, leaderID, ref leaderData, lodPhysics);
+                SimulationStepHelicopterAI(__instance, vehicleID, ref vehicleData, ref frameData, leaderID, ref leaderData, lodPhysics);
                 if ((vehicleData.m_flags & Vehicle.Flags.Stopped) != 0 && __instance.CanLeave(vehicleID, ref vehicleData)) {
                     vehicleData.m_flags &= ~Vehicle.Flags.Stopped;
                     vehicleData.m_flags |= Vehicle.Flags.Leaving;
                 }
-                if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && ShouldReturnToSource(vehicleID, ref vehicleData)) {
+                if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && ShouldReturnToSource(__instance, vehicleID, ref vehicleData)) {
                     SetTarget(__instance, vehicleID, ref vehicleData, 0);
                 }
                 return false;
             }
             frameData.m_blinkState = (((vehicleData.m_flags & Vehicle.Flags.Emergency2) == 0) ? 0f : 10f);
-            TryCollectCrime(vehicleID, ref vehicleData, ref frameData);
-            SimulationStepHelicopterAI(vehicleID, ref vehicleData, ref frameData, leaderID, ref leaderData, lodPhysics);
+            TryCollectCrime(__instance, vehicleID, ref vehicleData, ref frameData);
+            SimulationStepHelicopterAI(__instance, vehicleID, ref vehicleData, ref frameData, leaderID, ref leaderData, lodPhysics);
             if ((vehicleData.m_flags & Vehicle.Flags.Stopped) != 0) {
                 if (__instance.CanLeave(vehicleID, ref vehicleData)) {
                     vehicleData.m_flags &= ~Vehicle.Flags.Stopped;
@@ -207,7 +207,7 @@ namespace PrisonCopter {
                 Boolean result = false;
                 ArriveAtTarget(__instance, vehicleID, ref vehicleData, ref result);
             }
-            if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && (vehicleData.m_transferSize >= __instance.m_crimeCapacity || ShouldReturnToSource(vehicleID, ref vehicleData))) {
+            if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && (vehicleData.m_transferSize >= __instance.m_crimeCapacity || ShouldReturnToSource(__instance, vehicleID, ref vehicleData))) {
                 SetTarget(__instance, vehicleID, ref vehicleData, 0);
             }
             return false;
@@ -254,7 +254,7 @@ namespace PrisonCopter {
 				BuildingInfo info = instance.m_buildings.m_buffer[leaderData.m_sourceBuilding].Info;
 				Randomizer randomizer = new Randomizer(vehicleID);
 				info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[leaderData.m_sourceBuilding], ref randomizer, __instance.m_info, out var _, out var target);
-				vehicleData.SetTargetPos(index++, CalculateTargetPoint(refPos, target, minSqrDistance, 0f));
+				vehicleData.SetTargetPos(index++, CalculateTargetPoint(__instance, refPos, target, minSqrDistance, 0f));
 			}
 		}
 		else if (((leaderData.m_flags & Vehicle.Flags.Emergency2) != 0 || __instance.m_info.m_class.m_level >= ItemClass.Level.Level4) && leaderData.m_targetBuilding != 0)
@@ -263,7 +263,7 @@ namespace PrisonCopter {
 			BuildingInfo info2 = instance2.m_buildings.m_buffer[leaderData.m_targetBuilding].Info;
 			Randomizer randomizer2 = new Randomizer(vehicleID);
 			info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[leaderData.m_targetBuilding], ref randomizer2, __instance.m_info, out var _, out var target2);
-			vehicleData.SetTargetPos(index++, CalculateTargetPoint(refPos, target2, minSqrDistance, info2.m_size.y + 10f));
+			vehicleData.SetTargetPos(index++, CalculateTargetPoint(__instance, refPos, target2, minSqrDistance, info2.m_size.y + 10f));
 		}
                 return false;
 	}

@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace PrisonCopter {
 
-    public delegate void SimulationStepHelicopterAIDelegate(ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics);
+    public delegate void SimulationStepHelicopterAIDelegate(HelicopterAI instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics);
 
-    public delegate void TryCollectCrimeDelegate(ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData);
+    public delegate void TryCollectCrimeDelegate(PoliceCopterAI instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData);
 
     public delegate void LoadVehicleHelicopterAIDelegate(HelicopterAI instance, ushort vehicleID, ref Vehicle data);
 
@@ -15,9 +15,9 @@ namespace PrisonCopter {
 
     public delegate void EnsureCitizenUnitsVehicleAIDelegate(VehicleAI instance, ushort vehicleID, ref Vehicle data, int passengerCount);
 
-    public delegate bool ShouldReturnToSourceDelegate(ushort vehicleID, ref Vehicle data);
+    public delegate bool ShouldReturnToSourceDelegate(PoliceCopterAI instance, ushort vehicleID, ref Vehicle data);
 
-    public delegate Vector4 CalculateTargetPointHelicopterAIDelegate(Vector3 refPos, Vector3 targetPos, float maxSqrDistance, float height);
+    public delegate Vector4 CalculateTargetPointHelicopterAIDelegate(HelicopterAI instance, Vector3 refPos, Vector3 targetPos, float maxSqrDistance, float height);
 
     class PrisonCopterAIConnection {
         internal PrisonCopterAIConnection(SimulationStepHelicopterAIDelegate simulationStepHelicopterAI,
