@@ -1,274 +1,236 @@
 using ColossalFramework;
 using UnityEngine;
 using ColossalFramework.Math;
-using HarmonyLib;
 using System;
 
 namespace PrisonCopter {
 
-    [HarmonyPatch(typeof(PoliceCopterAI))]
-    static class PrisonCopterAI  {
-        public static int m_policeCount = 2;
-        public static int m_criminalCapacity = 3;
+    public class PrisonCopterAI : PoliceCopterAI {
+        public int m_policeCount = 2;
 
-        private static SimulationStepHelicopterAIDelegate SimulationStepHelicopterAI;
-        private static TryCollectCrimeDelegate TryCollectCrime;
-        private static LoadVehicleHelicopterAIDelegate LoadVehicleHelicopterAI;
-        private static RemoveTargetDelegate RemoveTarget;
-        private static StartPathFindDelegate StartPathFind;
-        private static EnsureCitizenUnitsVehicleAIDelegate EnsureCitizenUnitsVehicleAI;
-        private static ShouldReturnToSourceDelegate ShouldReturnToSource;
-        private static CalculateTargetPointHelicopterAIDelegate CalculateTargetPoint;
+        [CustomizableProperty("Criminal capacity")]
+        public int m_criminalCapacity = 20;
 
-        public static void Prepare() {
-            SimulationStepHelicopterAI = GameConnectionManager.Instance.PrisonCopterAIConnection.SimulationStepHelicopterAI;
-            TryCollectCrime = GameConnectionManager.Instance.PrisonCopterAIConnection.TryCollectCrime;
-            LoadVehicleHelicopterAI = GameConnectionManager.Instance.PrisonCopterAIConnection.LoadVehicleHelicopterAI;
-            RemoveTarget = GameConnectionManager.Instance.PrisonCopterAIConnection.RemoveTarget;
-            StartPathFind = GameConnectionManager.Instance.PrisonCopterAIConnection.StartPathFind;
-            EnsureCitizenUnitsVehicleAI = GameConnectionManager.Instance.PrisonCopterAIConnection.EnsureCitizenUnitsVehicleAI;
-            ShouldReturnToSource = GameConnectionManager.Instance.PrisonCopterAIConnection.ShouldReturnToSource;
-            CalculateTargetPoint = GameConnectionManager.Instance.PrisonCopterAIConnection.CalculateTargetPoint;
-        }
-
-        [HarmonyPatch(typeof(PoliceCopterAI), "GetLocalizedStatus")]
-        [HarmonyPrefix]
-        public static bool GetLocalizedStatus(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle data, out InstanceID target, ref string __result)
+        public override string GetLocalizedStatus(ushort vehicleID, ref Vehicle data, out InstanceID target)
 	{
-                if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
-		{
-			if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
-			{
-			    target = InstanceID.Empty;
-			    __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_RETURN");
-			}
-			else if ((data.m_flags & (Vehicle.Flags.Stopped | Vehicle.Flags.WaitingTarget)) != 0)
-			{
-			    target = InstanceID.Empty;
-			    __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_WAIT");
-			}
-			else if (data.m_targetBuilding != 0)
-			{
-			    target = InstanceID.Empty;
-			    target.Building = data.m_targetBuilding;
-			    __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_PICKINGUP");
-			} else {
-                            target = InstanceID.Empty;
-			    __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_CONFUSED");
-                        }
-			
-		} else {
-                    if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
-		    {
-			    target = InstanceID.Empty;
-			    __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_POLICE_COPTER_RETURN");
-		    }
-		    else if ((data.m_flags & Vehicle.Flags.WaitingTarget) != 0)
-		    {
-			    target = InstanceID.Empty;
-			    __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_POLICE_COPTER_PATROL_WAIT");
-		    }
-		    else if ((data.m_flags & Vehicle.Flags.Emergency2) != 0)
-		    {
-			    target = InstanceID.Empty;
-			    __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_POLICE_COPTER_EMERGENCY");
-		    }
-                    else {
-                        target = InstanceID.Empty;
-		         __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_POLICE_COPTER_PATROL");
-                    }
-                }
-                return false;
+            if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
+	    {
+		target = InstanceID.Empty;
+		return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_RETURN");
+	    }
+	    else if ((data.m_flags & (Vehicle.Flags.Stopped | Vehicle.Flags.WaitingTarget)) != 0)
+	    {
+		target = InstanceID.Empty;
+		return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_WAIT");
+	    }
+	    else if (data.m_targetBuilding != 0)
+	    {
+		target = InstanceID.Empty;
+		target.Building = data.m_targetBuilding;
+		return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_PICKINGUP");
+	    } 
+            target = InstanceID.Empty;
+	    return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_CONFUSED");
+            
 	}
 
-        [HarmonyPatch(typeof(PoliceCopterAI), "GetBufferStatus")]
-        [HarmonyPrefix]
-        public static bool GetBufferStatus(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle data, out string localeKey, out int current, out int max)
+        public override void GetBufferStatus(ushort vehicleID, ref Vehicle data, out string localeKey, out int current, out int max)
 	{
-		if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
-		{
-			localeKey = "PrisonCopter";
-		}
-		else
-		{
-			localeKey = "PoliceCopter";
-		}
-		current = data.m_transferSize;
-		max = __instance.m_crimeCapacity;
-		if ((data.m_flags & Vehicle.Flags.GoingBack) == 0 && current == max)
-		{
-			current = max - 1;
-		}
-                return false;
+            localeKey = "PrisonCopter";
+            current = data.m_transferSize;
+            max = m_criminalCapacity;
+	    if ((data.m_flags & Vehicle.Flags.GoingBack) == 0 && current == max)
+	    {
+		    current = max - 1;
+	    }
 	}
 
-        [HarmonyPatch(typeof(PoliceCopterAI), "CreateVehicle")]
-        [HarmonyPostfix]
-        public static void CreateVehicle(ushort vehicleID, ref Vehicle data)
+        public override void CreateVehicle(ushort vehicleID, ref Vehicle data)
 	{
-		Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, 0, vehicleID, 0, 0, 0, m_policeCount + m_criminalCapacity, 0);
+            base.CreateVehicle(vehicleID, ref data);
+	    data.m_flags |= Vehicle.Flags.WaitingTarget;
+            Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, 0, vehicleID, 0, 0, 0, m_policeCount + m_criminalCapacity, 0);   
         }
 
-        [HarmonyPatch(typeof(PoliceCopterAI), "ReleaseVehicle")]
-        [HarmonyPrefix]
-        public static void Prefix(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle data) {
-            UnloadCriminals(__instance, vehicleID, ref data);
+        public override void ReleaseVehicle(ushort vehicleID, ref Vehicle data) {
+            UnloadCriminals(vehicleID, ref data);
+            RemoveOffers(vehicleID, ref data);
+	    RemoveSource(vehicleID, ref data);
+	    RemoveTarget(vehicleID, ref data);
+	    base.ReleaseVehicle(vehicleID, ref data);
         }
 
-        [HarmonyPatch(typeof(PoliceCopterAI), "LoadVehicle")]
-        [HarmonyPrefix]
-        public static bool LoadVehicle(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle data) {
-            LoadVehicleHelicopterAI(__instance, vehicleID, ref data);
-            EnsureCitizenUnitsVehicleAI(__instance, vehicleID, ref data, m_policeCount + m_criminalCapacity);
+        public override void LoadVehicle(ushort vehicleID, ref Vehicle data) {
+            base.LoadVehicle(vehicleID, ref data);
+            base.EnsureCitizenUnits(vehicleID, ref data, m_policeCount + m_criminalCapacity);
             if (data.m_sourceBuilding != 0) {
                 Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].AddOwnVehicle(vehicleID, ref data);
             }
             if (data.m_targetBuilding != 0) {
                 Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].AddGuestVehicle(vehicleID, ref data);
             }
-            return false;
         }
 
-        [HarmonyPatch(typeof(PoliceCopterAI), "SetTarget")]
-        [HarmonyPrefix]
-        public static bool SetTarget(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+        public override void SetTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
 	{
-		RemoveTarget(__instance, vehicleID, ref data);
+		RemoveTarget(vehicleID, ref data);
 		data.m_targetBuilding = targetBuilding;
 		data.m_flags &= ~Vehicle.Flags.WaitingTarget;
 		data.m_waitCounter = 0;
 		if (targetBuilding != 0)
 		{
-                    if (__instance.m_info.m_class.m_level < ItemClass.Level.Level4) {
+                    data.m_flags &= ~Vehicle.Flags.Landing;
+                    Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].AddGuestVehicle(vehicleID, ref data);
+		}
+                else
+                {
+		    data.m_flags &= ~Vehicle.Flags.Emergency2;
+		    if ((data.m_transferSize < m_criminalCapacity && m_info.m_class.m_level >= ItemClass.Level.Level4) && !ShouldReturnToSource(vehicleID, ref data))
+		    {
+			TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+			offer.Priority = 7;
+			offer.Vehicle = vehicleID;
+			offer.Position = data.GetLastFramePosition();
+			offer.Amount = 1;
+			offer.Active = true;
+			Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer);
+			data.m_flags |= Vehicle.Flags.WaitingTarget;
+		    }
+		    else
+		    {
 			data.m_flags &= ~Vehicle.Flags.Landing;
-			if (PoliceCopterAI.CountCriminals(targetBuilding) != 0)
-			{
-				data.m_flags |= Vehicle.Flags.Emergency2;
-			}
-			else
-			{
-				data.m_flags &= ~Vehicle.Flags.Emergency2;
-			}
-			Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].AddGuestVehicle(vehicleID, ref data);
-                    }
+			data.m_flags |= Vehicle.Flags.GoingBack;
+		    }
 		}
-		else
+		if (!StartPathFind(vehicleID, ref data))
 		{
-			data.m_flags &= ~Vehicle.Flags.Emergency2;
-			if (data.m_transferSize < __instance.m_crimeCapacity && !ShouldReturnToSource(__instance, vehicleID, ref data))
-			{
-				TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
-				offer.Priority = 7;
-				offer.Vehicle = vehicleID;
-				offer.Position = data.GetLastFramePosition();
-				offer.Amount = 1;
-				offer.Active = true;
-				Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)data.m_transferType, offer);
-				data.m_flags |= Vehicle.Flags.WaitingTarget;
-			}
-			else
-			{
-				data.m_flags &= ~Vehicle.Flags.Landing;
-				data.m_flags |= Vehicle.Flags.GoingBack;
-			}
+		    data.Unspawn(vehicleID);
 		}
-		if (!StartPathFind(__instance, vehicleID, ref data))
-		{
-			data.Unspawn(vehicleID);
-		}
-                return false;
 	}
 
-        [HarmonyPatch(typeof(PoliceCopterAI), "SimulationStep",
-            new Type[] { typeof(ushort), typeof(Vehicle), typeof(Vehicle.Frame), typeof(ushort), typeof(Vehicle), typeof(int) },
-            new ArgumentType[] { ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Ref, ArgumentType.Normal, ArgumentType.Ref, ArgumentType.Normal })]
-        [HarmonyPrefix]
-        public static bool SimulationStep(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics) {
-            if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4) {
-                SimulationStepHelicopterAI(__instance, vehicleID, ref vehicleData, ref frameData, leaderID, ref leaderData, lodPhysics);
-                if ((vehicleData.m_flags & Vehicle.Flags.Stopped) != 0 && __instance.CanLeave(vehicleID, ref vehicleData)) {
-                    vehicleData.m_flags &= ~Vehicle.Flags.Stopped;
-                    vehicleData.m_flags |= Vehicle.Flags.Leaving;
-                }
-                if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && ShouldReturnToSource(__instance, vehicleID, ref vehicleData)) {
-                    SetTarget(__instance, vehicleID, ref vehicleData, 0);
-                }
-                return false;
+        public override void GetSize(ushort vehicleID, ref Vehicle data, out int size, out int max)
+	{
+	    size = data.m_transferSize;
+            max = m_criminalCapacity;
+	}
+
+        public override void SimulationStep(ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics) {
+            base.SimulationStep(vehicleID, ref vehicleData, ref frameData, leaderID, ref leaderData, lodPhysics);
+            if ((vehicleData.m_flags & Vehicle.Flags.Stopped) != 0 && CanLeave(vehicleID, ref vehicleData)) {
+                vehicleData.m_flags &= ~Vehicle.Flags.Stopped;
+                vehicleData.m_flags |= Vehicle.Flags.Leaving;
             }
-            frameData.m_blinkState = (((vehicleData.m_flags & Vehicle.Flags.Emergency2) == 0) ? 0f : 10f);
-            TryCollectCrime(__instance, vehicleID, ref vehicleData, ref frameData);
-            SimulationStepHelicopterAI(__instance, vehicleID, ref vehicleData, ref frameData, leaderID, ref leaderData, lodPhysics);
-            if ((vehicleData.m_flags & Vehicle.Flags.Stopped) != 0) {
-                if (__instance.CanLeave(vehicleID, ref vehicleData)) {
-                    vehicleData.m_flags &= ~Vehicle.Flags.Stopped;
-                    vehicleData.m_flags |= Vehicle.Flags.Leaving;
-                }
-            } else if ((vehicleData.m_flags & Vehicle.Flags.Arriving) != 0 && vehicleData.m_targetBuilding != 0 && (vehicleData.m_flags & (Vehicle.Flags.Emergency2 | Vehicle.Flags.WaitingPath | Vehicle.Flags.GoingBack | Vehicle.Flags.WaitingTarget)) == 0) {
-                Boolean result = false;
-                ArriveAtTarget(__instance, vehicleID, ref vehicleData, ref result);
+            else if ((vehicleData.m_flags & Vehicle.Flags.Arriving) != 0 && vehicleData.m_targetBuilding != 0 && (vehicleData.m_flags & (Vehicle.Flags.Emergency2 | Vehicle.Flags.WaitingPath | Vehicle.Flags.GoingBack | Vehicle.Flags.WaitingTarget)) == 0)
+	    {
+		ArriveAtTarget(vehicleID, ref vehicleData);
+	    }
+	    if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && ((m_info.m_class.m_level < ItemClass.Level.Level4 && vehicleData.m_transferSize >= m_crimeCapacity) || ShouldReturnToSource(vehicleID, ref vehicleData)))
+	    {
+		SetTarget(vehicleID, ref vehicleData, 0);
+	    }
+            if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && ShouldReturnToSource(vehicleID, ref vehicleData)) {
+                SetTarget(vehicleID, ref vehicleData, 0);
             }
-            if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && (vehicleData.m_transferSize >= __instance.m_crimeCapacity || ShouldReturnToSource(__instance, vehicleID, ref vehicleData))) {
-                SetTarget(__instance, vehicleID, ref vehicleData, 0);
-            }
-            return false;
         }
 
-        [HarmonyPatch(typeof(PoliceCopterAI), "ArriveAtTarget")]
-        [HarmonyPrefix]
-        private static bool ArriveAtTarget(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle data, ref bool __result)
+        private bool ShouldReturnToSource(ushort vehicleID, ref Vehicle data)
 	{
-		if (data.m_targetBuilding == 0)
+	    if (data.m_sourceBuilding != 0)
+	    {
+		BuildingManager instance = Singleton<BuildingManager>.instance;
+		if ((instance.m_buildings.m_buffer[data.m_sourceBuilding].m_flags & Building.Flags.Active) == 0 && instance.m_buildings.m_buffer[data.m_sourceBuilding].m_fireIntensity == 0)
 		{
-                        __result = true;
-                        return false;
+		    return true;
 		}
-		if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
-		{
-			ArrestCriminals(__instance, vehicleID, ref data, data.m_targetBuilding);
-			data.m_flags |= Vehicle.Flags.Stopped;
-		}
-		else
-		{
-			int amountDelta = -__instance.m_crimeCapacity;
-			BuildingInfo info = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
-			info.m_buildingAI.ModifyMaterialBuffer(data.m_targetBuilding, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding], (TransferManager.TransferReason)data.m_transferType, ref amountDelta);
-		}
-		__instance.SetTarget(vehicleID, ref data, 0);
-                __result = false;
-                return false;
+	    }
+	    return false;
 	}
 
-        [HarmonyPatch(typeof(PoliceCopterAI), "UpdateBuildingTargetPositions")]
-        [HarmonyPrefix]
-        public static bool UpdateBuildingTargetPositions(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle vehicleData, Vector3 refPos, ushort leaderID, ref Vehicle leaderData, ref int index, float minSqrDistance)
+        private void RemoveOffers(ushort vehicleID, ref Vehicle data)
 	{
-		if ((leaderData.m_flags & Vehicle.Flags.WaitingTarget) != 0)
-		{
-			return false;
-		}
-		if ((leaderData.m_flags & Vehicle.Flags.GoingBack) != 0)
-		{
-			if (leaderData.m_sourceBuilding != 0)
-			{
-				BuildingManager instance = Singleton<BuildingManager>.instance;
-				BuildingInfo info = instance.m_buildings.m_buffer[leaderData.m_sourceBuilding].Info;
-				Randomizer randomizer = new Randomizer(vehicleID);
-				info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[leaderData.m_sourceBuilding], ref randomizer, __instance.m_info, out var _, out var target);
-				vehicleData.SetTargetPos(index++, CalculateTargetPoint(__instance, refPos, target, minSqrDistance, 0f));
-			}
-		}
-		else if (((leaderData.m_flags & Vehicle.Flags.Emergency2) != 0 || __instance.m_info.m_class.m_level >= ItemClass.Level.Level4) && leaderData.m_targetBuilding != 0)
-		{
-			BuildingManager instance2 = Singleton<BuildingManager>.instance;
-			BuildingInfo info2 = instance2.m_buildings.m_buffer[leaderData.m_targetBuilding].Info;
-			Randomizer randomizer2 = new Randomizer(vehicleID);
-			info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[leaderData.m_targetBuilding], ref randomizer2, __instance.m_info, out var _, out var target2);
-			vehicleData.SetTargetPos(index++, CalculateTargetPoint(__instance, refPos, target2, minSqrDistance, info2.m_size.y + 10f));
-		}
-                return false;
+	    if ((data.m_flags & Vehicle.Flags.WaitingTarget) != 0)
+	    {
+		TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		offer.Vehicle = vehicleID;
+		Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)data.m_transferType, offer);
+	    }
 	}
 
-        private static void UnloadCriminals(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle data)
+        private void RemoveSource(ushort vehicleID, ref Vehicle data)
+	{
+	    if (data.m_sourceBuilding != 0)
+	    {
+		Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].RemoveOwnVehicle(vehicleID, ref data);
+		data.m_sourceBuilding = 0;
+	    }
+	}
+
+        private void RemoveTarget(ushort vehicleID, ref Vehicle data)
+	{
+	    if (data.m_targetBuilding != 0)
+	    {
+		Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].RemoveGuestVehicle(vehicleID, ref data);
+		data.m_targetBuilding = 0;
+	    }
+	}
+
+        private bool ArriveAtTarget(ushort vehicleID, ref Vehicle data)
+	{
+	    if (data.m_targetBuilding == 0)
+	    {
+                    return true;
+	    }
+            ArrestCriminals(vehicleID, ref data, data.m_targetBuilding);
+	    data.m_flags |= Vehicle.Flags.Stopped;
+	    SetTarget(vehicleID, ref data, 0);
+            return false;
+	}
+
+        private bool ArriveAtSource(ushort vehicleID, ref Vehicle data)
+	{
+	    if (data.m_sourceBuilding == 0)
+	    {
+		Singleton<VehicleManager>.instance.ReleaseVehicle(vehicleID);
+		return true;
+	    }
+            int amountDelta = data.m_transferSize;
+	    BuildingInfo info = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].Info;
+	    info.m_buildingAI.ModifyMaterialBuffer(data.m_sourceBuilding, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding], (TransferManager.TransferReason)data.m_transferType, ref amountDelta);
+	    data.m_transferSize = (ushort)Mathf.Clamp(data.m_transferSize - amountDelta, 0, data.m_transferSize);
+	    UnloadCriminals(vehicleID, ref data);
+	    RemoveSource(vehicleID, ref data);
+	    return true;
+	}
+
+        protected override bool StartPathFind(ushort vehicleID, ref Vehicle vehicleData)
+	{
+	    if ((vehicleData.m_flags & Vehicle.Flags.WaitingTarget) != 0)
+	    {
+		    return true;
+	    }
+	    if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) != 0)
+	    {
+		if (vehicleData.m_sourceBuilding != 0)
+		{
+		    BuildingManager instance = Singleton<BuildingManager>.instance;
+		    BuildingInfo info = instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding].Info;
+		    Randomizer randomizer = new Randomizer(vehicleID);
+		    info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding], ref randomizer, m_info, out var _, out var target);
+		    return StartPathFind(vehicleID, ref vehicleData, vehicleData.m_targetPos3, target);
+		}
+	    }
+	    else if (vehicleData.m_targetBuilding != 0)
+	    {
+		BuildingManager instance2 = Singleton<BuildingManager>.instance;
+		BuildingInfo info2 = instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding].Info;
+		Randomizer randomizer2 = new Randomizer(vehicleID);
+		info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out var _, out var target2);
+		return StartPathFind(vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2);
+	    }
+	    return false;
+	}
+
+        private void UnloadCriminals(ushort vehicleID, ref Vehicle data)
 	{
 	    CitizenManager instance = Singleton<CitizenManager>.instance;
 	    uint num = data.m_citizenUnits;
@@ -293,10 +255,7 @@ namespace PrisonCopter {
 		    if (instance.m_citizens.m_buffer[citizen].m_visitBuilding != 0)
 		    {
 			instance.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Visit;
-			if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
-			{
-			    SpawnPrisoner(__instance, vehicleID, ref data, citizen);
-			}
+			SpawnPrisoner(vehicleID, ref data, citizen);
 		    }
 		    else
 		    {
@@ -322,14 +281,27 @@ namespace PrisonCopter {
 	    }
 	}
 
-        private static void SpawnPrisoner(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle data, uint citizen)
+        public override bool ArriveAtDestination(ushort vehicleID, ref Vehicle vehicleData)
+	{
+	    if ((vehicleData.m_flags & Vehicle.Flags.WaitingTarget) != 0)
+	    {
+		return false;
+	    }
+	    if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) != 0)
+	    {
+		return ArriveAtSource(vehicleID, ref vehicleData);
+	    }
+	    return ArriveAtTarget(vehicleID, ref vehicleData);
+	}
+
+        private void SpawnPrisoner( ushort vehicleID, ref Vehicle data, uint citizen)
 	{
 	    if (data.m_sourceBuilding != 0)
 	    {
 		SimulationManager instance = Singleton<SimulationManager>.instance;
 		CitizenManager instance2 = Singleton<CitizenManager>.instance;
 		Citizen.Gender gender = Citizen.GetGender(citizen);
-		CitizenInfo groupCitizenInfo = instance2.GetGroupCitizenInfo(ref instance.m_randomizer, __instance.m_info.m_class.m_service, gender, Citizen.SubCulture.Generic, Citizen.AgePhase.Young0);
+		CitizenInfo groupCitizenInfo = instance2.GetGroupCitizenInfo(ref instance.m_randomizer, m_info.m_class.m_service, gender, Citizen.SubCulture.Generic, Citizen.AgePhase.Young0);
 		if (groupCitizenInfo != null && instance2.CreateCitizenInstance(out var instance3, ref instance.m_randomizer, groupCitizenInfo, citizen))
 		{
 		    Vector3 randomDoorPosition = data.GetRandomDoorPosition(ref instance.m_randomizer, VehicleInfo.DoorType.Exit);
@@ -339,7 +311,7 @@ namespace PrisonCopter {
 	    }
 	}
 
-        private static void ArrestCriminals(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle vehicleData, ushort building)
+        private void ArrestCriminals(ushort vehicleID, ref Vehicle vehicleData, ushort building)
 	{
 	    if (vehicleData.m_transferSize >= m_criminalCapacity)
 	    {
@@ -384,5 +356,76 @@ namespace PrisonCopter {
 		}
 	    }
 	}
+
+        public override bool CanLeave(ushort vehicleID, ref Vehicle vehicleData)
+	{
+		CitizenManager instance = Singleton<CitizenManager>.instance;
+		bool flag = true;
+		bool flag2 = false;
+		uint num = vehicleData.m_citizenUnits;
+		int num2 = 0;
+		while (num != 0)
+		{
+			uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
+			for (int i = 0; i < 5; i++)
+			{
+				uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
+				if (citizen == 0)
+				{
+					continue;
+				}
+				ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
+				if (instance2 == 0)
+				{
+					continue;
+				}
+				CitizenInfo info = instance.m_instances.m_buffer[instance2].Info;
+				if (info.m_class.m_service == m_info.m_class.m_service)
+				{
+					if ((instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.EnteringVehicle) == 0 && (instance.m_instances.m_buffer[instance2].m_flags & CitizenInstance.Flags.Character) != 0)
+					{
+						flag2 = true;
+					}
+					flag = false;
+				}
+			}
+			num = nextUnit;
+			if (++num2 > 524288)
+			{
+				CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+				break;
+			}
+		}
+		if (!flag2 && !flag)
+		{
+			num = vehicleData.m_citizenUnits;
+			num2 = 0;
+			while (num != 0)
+			{
+				uint nextUnit2 = instance.m_units.m_buffer[num].m_nextUnit;
+				for (int j = 0; j < 5; j++)
+				{
+					uint citizen2 = instance.m_units.m_buffer[num].GetCitizen(j);
+					if (citizen2 != 0)
+					{
+						ushort instance3 = instance.m_citizens.m_buffer[citizen2].m_instance;
+						if (instance3 != 0 && (instance.m_instances.m_buffer[instance3].m_flags & CitizenInstance.Flags.EnteringVehicle) == 0)
+						{
+							CitizenInfo info2 = instance.m_instances.m_buffer[instance3].Info;
+							info2.m_citizenAI.SetTarget(instance3, ref instance.m_instances.m_buffer[instance3], 0);
+						}
+					}
+				}
+				num = nextUnit2;
+				if (++num2 > 524288)
+				{
+					CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+					break;
+				}
+			}
+		}
+		return flag;
+	}
+
     }
 }
