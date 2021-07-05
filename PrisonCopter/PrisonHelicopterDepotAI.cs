@@ -120,8 +120,10 @@ namespace PrisonCopter {
 		{
 		    VehicleInfo info = instance.m_vehicles.m_buffer[num6].Info;
 		    info.m_vehicleAI.GetSize(num6, ref instance.m_vehicles.m_buffer[num6], out var size, out var max);
-                    num15 = size;
-                    num16 = max;
+                    if(transferType == TransferManager.TransferReason.CriminalMove) {
+                        num15 = size;
+                        num16 = max;
+                    }
 		    num3++;
 		    if ((instance.m_vehicles.m_buffer[num6].m_flags & Vehicle.Flags.GoingBack) != 0)
 		    {
@@ -156,12 +158,12 @@ namespace PrisonCopter {
                 var loadedBuildingInfoCount = PrefabCollection<BuildingInfo>.LoadedCount();
                 for (uint i = 0; i < loadedBuildingInfoCount; i++) {
                     var bi = PrefabCollection<BuildingInfo>.GetLoaded(i);
-                    if(bi.GetAI() is PoliceStationAI policeStationAI && bi.m_class.m_level >= ItemClass.Level.Level4) {
+                    if(bi.GetAI() is PoliceStationAI policeStationAI && bi.m_class.m_level < ItemClass.Level.Level4) {
                         var JailCapacity = policeStationAI.m_jailCapacity;
                         if (num15 + num16 <= JailCapacity - 20)
 		        {
 		            TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
-		            offer.Priority = 2 - num3;
+		            offer.Priority = 1;
 		            offer.Building = buildingID;
 		            offer.Position = buildingData.m_position;
 		            offer.Amount = 1;
