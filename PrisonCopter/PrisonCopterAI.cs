@@ -23,18 +23,18 @@ namespace PrisonCopter {
                 if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
 	        {
 		    target = InstanceID.Empty;
-		    return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_COPTER_RETURN");
+		    return "Returning to depot";
 	        }
 	        if ((data.m_flags & (Vehicle.Flags.Stopped | Vehicle.Flags.WaitingTarget)) != 0)
 	        {
 		    target = InstanceID.Empty;
-		    return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_COPTER_WAIT");
+		    return "Loading criminals";
 	        }
 	        if ((data.m_flags & Vehicle.Flags.Emergency2) != 0)
 	        {
 		    target = InstanceID.Empty;
 		    target.Building = data.m_targetBuilding;
-		    return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_COPTER_CARRYING");
+		    return "Transporting criminals to ";
 	        } 
             }
             else
@@ -42,18 +42,18 @@ namespace PrisonCopter {
                 if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
 		{
 			target = InstanceID.Empty;
-			return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_COPTER_RETURN");
+			return "Returning to depot";
 		}
 		if ((data.m_flags & Vehicle.Flags.WaitingTarget) != 0)
 		{
 			target = InstanceID.Empty;
-			return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_COPTER_WAIT2");
+			return "Making flight plan";
 		}
 		if ((data.m_flags & Vehicle.Flags.Emergency2) != 0)
 		{
 			target = InstanceID.Empty;
 			target.Building = data.m_targetBuilding;
-			return ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_COPTER_PICKINGUP");
+			return "Picking up criminals from ";
 		}
             }
             target = InstanceID.Empty;
@@ -107,6 +107,7 @@ namespace PrisonCopter {
 		if (targetBuilding != 0)
 		{
                     data.m_flags &= ~Vehicle.Flags.Landing;
+                    data.m_flags |= Vehicle.Flags.Emergency2;
                     Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].AddGuestVehicle(vehicleID, ref data);
 		}
                 else if(data.m_transferSize >= m_criminalCapacity || ShouldReturnToSource(vehicleID, ref data))
@@ -231,14 +232,15 @@ namespace PrisonCopter {
             if(building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity) {
                 ArrestCriminals(vehicleID, ref data, data.m_targetBuilding);
             }
-            else
+            else if(building.Info.m_class.m_level >= ItemClass.Level.Level4)
             {
                 int amountDelta = data.m_transferSize;
-	        BuildingInfo info = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].Info;
-	        info.m_buildingAI.ModifyMaterialBuffer(data.m_sourceBuilding, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding], (TransferManager.TransferReason)data.m_transferType, ref amountDelta);
+	        BuildingInfo info = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
+	        info.m_buildingAI.ModifyMaterialBuffer(data.m_targetBuilding, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding], (TransferManager.TransferReason)data.m_transferType, ref amountDelta);
 	        data.m_transferSize = (ushort)Mathf.Clamp(data.m_transferSize - amountDelta, 0, data.m_transferSize);
                 UnloadCriminals(vehicleID, ref data);
             }
+            data.m_flags &= ~Vehicle.Flags.Emergency2;
             SetTarget(vehicleID, ref data, 0);
             return false;
 	}
@@ -336,7 +338,7 @@ namespace PrisonCopter {
 		    {
 			    instance.ReleaseCitizenInstance(instance2);
 		    }
-		    instance.m_citizens.m_buffer[citizen].SetVisitplace(citizen, data.m_sourceBuilding, 0u);
+		    instance.m_citizens.m_buffer[citizen].SetVisitplace(citizen, data.m_targetBuilding, 0u);
 		    if (instance.m_citizens.m_buffer[citizen].m_visitBuilding != 0)
 		    {
 			instance.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Visit;
@@ -357,11 +359,11 @@ namespace PrisonCopter {
 		}
 	    }
 	    data.m_transferSize = 0;
-	    if (num3 != 0 && data.m_sourceBuilding != 0)
+	    if (num3 != 0 && data.m_targetBuilding != 0)
 	    {
 		BuildingManager instance3 = Singleton<BuildingManager>.instance;
 		DistrictManager instance4 = Singleton<DistrictManager>.instance;
-		byte district = instance4.GetDistrict(instance3.m_buildings.m_buffer[data.m_sourceBuilding].m_position);
+		byte district = instance4.GetDistrict(instance3.m_buildings.m_buffer[data.m_targetBuilding].m_position);
 		instance4.m_districts.m_buffer[district].m_productionData.m_tempCriminalExtra += (uint)num3;
 	    }
 	}
@@ -381,7 +383,7 @@ namespace PrisonCopter {
 
         private void SpawnPrisoner( ushort vehicleID, ref Vehicle data, uint citizen)
 	{
-	    if (data.m_sourceBuilding != 0)
+	    if (data.m_targetBuilding != 0)
 	    {
 		SimulationManager instance = Singleton<SimulationManager>.instance;
 		CitizenManager instance2 = Singleton<CitizenManager>.instance;
@@ -391,7 +393,7 @@ namespace PrisonCopter {
 		{
 		    Vector3 randomDoorPosition = data.GetRandomDoorPosition(ref instance.m_randomizer, VehicleInfo.DoorType.Exit);
 		    groupCitizenInfo.m_citizenAI.SetCurrentVehicle(instance3, ref instance2.m_instances.m_buffer[instance3], 0, 0u, randomDoorPosition);
-		    groupCitizenInfo.m_citizenAI.SetTarget(instance3, ref instance2.m_instances.m_buffer[instance3], data.m_sourceBuilding);
+		    groupCitizenInfo.m_citizenAI.SetTarget(instance3, ref instance2.m_instances.m_buffer[instance3], data.m_targetBuilding);
 		}
 	    }
 	}
