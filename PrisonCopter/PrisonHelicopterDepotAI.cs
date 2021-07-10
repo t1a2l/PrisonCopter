@@ -18,6 +18,9 @@ namespace PrisonCopter {
         private delegate void CalculateOwnVehiclesDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside);
         private static CalculateOwnVehiclesDelegate CalculateOwnVehicles = AccessTools.MethodDelegate<CalculateOwnVehiclesDelegate>(typeof(CommonBuildingAI).GetMethod("CalculateOwnVehicles", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
+        private delegate void BuildingDeactivatedDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building data);
+        private static BuildingDeactivatedDelegate BaseBuildingDeactivated = AccessTools.MethodDelegate<BuildingDeactivatedDelegate>(typeof(PlayerBuildingAI).GetMethod("BuildingDeactivated", BindingFlags.Instance | BindingFlags.Public), null, false);
+
         [HarmonyPatch(typeof(HelicopterDepotAI), "GetTransferReason1")]
         [HarmonyPostfix]
         private static void GetTransferReason1(HelicopterDepotAI __instance, ref TransferManager.TransferReason __result) {
@@ -90,8 +93,9 @@ namespace PrisonCopter {
                         CalculateOwnVehicles(__instance, buildingID, ref data, transferReason, ref count, ref cargo, ref capacity, ref outside);
                         CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.CriminalMove, ref count1, ref cargo1, ref capacity1, ref outside1);
                     }
-                    else
+                    else if(transferReason != TransferManager.TransferReason.CriminalMove)
                     {
+          
                         CalculateOwnVehicles(__instance, buildingID, ref data, transferReason, ref count, ref cargo, ref capacity, ref outside);
                     }
 		}
@@ -106,11 +110,32 @@ namespace PrisonCopter {
                     text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
                     __result = text;
                 }
-                else
+                else if(transferReason != TransferManager.TransferReason.CriminalMove)
                 {
                     __result = LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
                 }
 		return false;
+	}
+
+        [HarmonyPatch(typeof(HelicopterDepotAI), "BuildingDeactivated")]
+        [HarmonyPrefix]
+        public static bool BuildingDeactivated(HelicopterDepotAI __instance, ushort buildingID, ref Building data)
+	{
+	    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+	    offer.Building = buildingID;
+	    TransferManager.TransferReason transferReason = TransferManager.TransferReason.None;
+            GetTransferReason1(__instance, ref transferReason);
+            TransferManager.TransferReason transferReason2 = GetTransferReason2(__instance);
+	    if (transferReason != TransferManager.TransferReason.None)
+	    {
+		    Singleton<TransferManager>.instance.RemoveIncomingOffer(transferReason, offer);
+	    }
+	    if (transferReason2 != TransferManager.TransferReason.None)
+	    {
+		    Singleton<TransferManager>.instance.RemoveIncomingOffer(transferReason2, offer);
+	    }
+	    BaseBuildingDeactivated(__instance, buildingID, ref data);
+            return false;
 	}
     }
 }
