@@ -29,7 +29,7 @@ namespace PrisonCopter {
                         if (bnum != 0) {
                             BuildingManager instance = Singleton<BuildingManager>.instance;
                             BuildingInfo info = instance.m_buildings.m_buffer[bnum].Info;
-                            if (info.GetAI() is HelicopterDepotAI helicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
+                            if (info.GetAI() is HelicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
                                 position = instance.m_buildings.m_buffer[bnum].m_position;
                             }
                         }
