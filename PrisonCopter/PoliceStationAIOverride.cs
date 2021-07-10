@@ -28,10 +28,19 @@ namespace PrisonCopter {
                         bnum = FindClosestPoliceStation(data.m_position);
                         if (bnum != 0) {
                             BuildingManager instance = Singleton<BuildingManager>.instance;
-                            BuildingInfo info = instance.m_buildings.m_buffer[bnum].Info;
-                            if (info.GetAI() is HelicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
-                                position = instance.m_buildings.m_buffer[bnum].m_position;
+                            Building building = instance.m_buildings.m_buffer[bnum];
+                            BuildingInfo info = building.Info;
+                            if (info.GetAI() is HelicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment && (building.m_flags & Building.Flags.Active) != 0) {
+                                position = building.m_position;
                             }
+                            else
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            return false;
                         }
                     }
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
