@@ -1,7 +1,7 @@
 using System;
-using PrisonCopter.OptionsFramework.Attibutes;
+using PrisonHelicopter.OptionsFramework.Attibutes;
 
-namespace PrisonCopter.Attributes
+namespace PrisonHelicopter.Attibutes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class HideWhenNotInAssetEditorConditionAttribute : HideConditionAttribute

@@ -4,13 +4,12 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using ColossalFramework.Plugins;
 using ColossalFramework.UI;
-using PrisonCopter.OptionsFramework.Attibutes;
+using PrisonHelicopter.OptionsFramework.Attibutes;
 using ICities;
 using UnityEngine;
 
-namespace PrisonCopter.OptionsFramework.Extensions
+namespace PrisonHelicopter.OptionsFramework.Extensions
 {
     public static class UIHelperBaseExtensions
     {

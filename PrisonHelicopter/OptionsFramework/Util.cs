@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace PrisonCopter.OptionsFramework
+namespace PrisonHelicopter.OptionsFramework
 {
     internal class Util
     {

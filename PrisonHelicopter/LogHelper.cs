@@ -1,5 +1,5 @@
 
-namespace PrisonCopter {
+namespace PrisonHelicopter {
     internal static class LogHelper {
         private const string Prefix = "Prison Helicopter: ";
 

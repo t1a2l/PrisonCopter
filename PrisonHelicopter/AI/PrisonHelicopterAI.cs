@@ -3,9 +3,10 @@ using UnityEngine;
 using ColossalFramework.Math;
 using System;
 
-namespace PrisonCopter {
+namespace PrisonHelicopter.AI {
 
-    public class PrisonCopterAI : PoliceCopterAI {
+    public class PrisonHelicopterAI : PoliceCopterAI {
+
         public int m_policeCount = 2;
 
         [CustomizableProperty("Criminal capacity")]

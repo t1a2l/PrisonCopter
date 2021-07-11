@@ -1,6 +1,6 @@
 using System;
 
-namespace PrisonCopter.OptionsFramework.Attibutes
+namespace PrisonHelicopter.OptionsFramework.Attibutes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public abstract class HideConditionAttribute : Attribute

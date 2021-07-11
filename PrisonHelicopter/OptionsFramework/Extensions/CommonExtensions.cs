@@ -1,7 +1,7 @@
 using System;
-using PrisonCopter.OptionsFramework.Attibutes;
+using PrisonHelicopter.OptionsFramework.Attibutes;
 
-namespace PrisonCopter.OptionsFramework.Attibutes
+namespace PrisonHelicopter.OptionsFramework.Attibutes
 {
     public static class CommonExtensions
     {

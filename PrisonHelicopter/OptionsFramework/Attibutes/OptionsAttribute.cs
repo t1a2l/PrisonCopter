@@ -1,6 +1,6 @@
 using System;
 
-namespace PrisonCopter.OptionsFramework.Attibutes
+namespace PrisonHelicopter.OptionsFramework.Attibutes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class OptionsAttribute : Attribute

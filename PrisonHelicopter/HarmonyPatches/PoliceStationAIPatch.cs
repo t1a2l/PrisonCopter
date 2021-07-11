@@ -4,9 +4,9 @@ using System.Reflection;
 using ColossalFramework;
 using UnityEngine;
 
-namespace PrisonCopter {
+namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
     [HarmonyPatch(typeof(PoliceStationAI))]
-    class PoliceStationAIOverride {
+    class PoliceStationAIPatch {
 
         private delegate void StartTransferDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer);
         private static StartTransferDelegate BaseStartTransfer = AccessTools.MethodDelegate<StartTransferDelegate>(typeof(CommonBuildingAI).GetMethod("StartTransfer", BindingFlags.Instance | BindingFlags.Public), null, false);

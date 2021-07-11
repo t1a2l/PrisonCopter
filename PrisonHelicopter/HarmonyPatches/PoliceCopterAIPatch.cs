@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PrisonCopter {
+namespace PrisonHelicopter.HarmonyPatches.PoliceCopterAIPatch {
 
     public delegate void SimulationStepHelicopterAIDelegate(HelicopterAI instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics);
 
@@ -135,7 +135,7 @@ namespace PrisonCopter {
     }
 
     [HarmonyPatch(typeof(PoliceCopterAI))]
-    public static class PoliceCopterAIOverride {
+    public static class PoliceCopterAIPatch {
 
         private static SimulationStepHelicopterAIDelegate SimulationStepHelicopterAI;
 

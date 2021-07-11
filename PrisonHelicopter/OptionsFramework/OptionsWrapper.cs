@@ -3,10 +3,10 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using ColossalFramework.IO;
-using PrisonCopter.OptionsFramework.Attibutes;
+using PrisonHelicopter.OptionsFramework.Attibutes;
 using UnityEngine;
 
-namespace PrisonCopter.OptionsFramework
+namespace PrisonHelicopter.OptionsFramework
 {
     public class OptionsWrapper<T>
     {

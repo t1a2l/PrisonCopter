@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace PrisonCopter.OptionsFramework.Attibutes
+namespace PrisonHelicopter.OptionsFramework.Attibutes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public abstract class AbstractOptionsAttribute : Attribute
