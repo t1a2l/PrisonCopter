@@ -1,4 +1,5 @@
 using PrisonHelicopter.OptionsFramework.Extensions;
+using PrisonHelicopter.Utils;
 using CitiesHarmony.API;
 using ICities;
 
@@ -14,7 +15,11 @@ namespace PrisonHelicopter {
         }
 
         public void OnEnabled() {
-            HarmonyHelper.EnsureHarmonyInstalled();
+            HarmonyHelper.DoOnHarmonyReady(() => PatchUtil.PatchAll());
+        }
+
+        public void OnDisabled() {
+            if (HarmonyHelper.IsHarmonyInstalled) PatchUtil.UnpatchAll();
         }
     }
 

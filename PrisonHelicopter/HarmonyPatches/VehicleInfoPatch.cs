@@ -1,43 +1,19 @@
 using System;
+using HarmonyLib;
 using PrisonHelicopter.AI;
 using PrisonHelicopter.Utils;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace PrisonHelicopter.HarmonyPatches
+namespace PrisonHelicopter.HarmonyPatches.VehicleInfoPatch
 {
+    [HarmonyPatch(typeof(VehicleInfo))]
     internal static class VehicleInfoPatch
     {
-        private static bool deployed;
-
-        public static void Apply()
-        {
-            if (deployed)
-            {
-                return;
-            }
-
-            PatchUtil.Patch(
-                new PatchUtil.MethodDefinition(typeof(VehicleInfo), nameof(VehicleInfo.InitializePrefab)),
-                new PatchUtil.MethodDefinition(typeof(VehicleInfoPatch), nameof(PreInitializePrefab)));
-
-            deployed = true;
-        }
-
-        public static void Undo()
-        {
-            if (!deployed)
-            {
-                return;
-            }
-
-            PatchUtil.Unpatch(
-                new PatchUtil.MethodDefinition(typeof(VehicleInfo), nameof(VehicleInfo.InitializePrefab)));
-
-            deployed = false;
-        }
-
-        private static bool PreInitializePrefab(VehicleInfo __instance)
+ 
+        [HarmonyPatch(typeof(VehicleInfo), "InitializePrefab")]
+        [HarmonyPrefix]
+        private static bool InitializePrefab(VehicleInfo __instance)
         {
             try
             {
@@ -48,8 +24,8 @@ namespace PrisonHelicopter.HarmonyPatches
 
                 var oldAi = __instance.GetComponent<PrefabAI>();
                 Object.DestroyImmediate(oldAi);
-                var ai = __instance.gameObject.AddComponent<PrisonHelicopterAI>();
-                PrefabUtil.TryCopyAttributes(oldAi, ai, false);
+                var newAI = (PrefabAI)__instance.gameObject.AddComponent<PrisonHelicopterAI>();
+                PrefabUtil.TryCopyAttributes(oldAi, newAI, false);
             }
             catch (Exception e)
             {
