@@ -11,6 +11,18 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
         private delegate void StartTransferDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer);
         private static StartTransferDelegate BaseStartTransfer = AccessTools.MethodDelegate<StartTransferDelegate>(typeof(CommonBuildingAI).GetMethod("StartTransfer", BindingFlags.Instance | BindingFlags.Public), null, false);
 
+        private delegate void CalculateOwnVehiclesDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside);
+        private static CalculateOwnVehiclesDelegate CalculateOwnVehicles = AccessTools.MethodDelegate<CalculateOwnVehiclesDelegate>(typeof(CommonBuildingAI).GetMethod("CalculateOwnVehicles", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
+        private delegate void CalculateGuestVehiclesDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside);
+        private static CalculateGuestVehiclesDelegate CalculateGuestVehicles = AccessTools.MethodDelegate<CalculateGuestVehiclesDelegate>(typeof(CommonBuildingAI).GetMethod("CalculateGuestVehicles", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
+        private delegate void ProduceGoodsDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount);
+        private static ProduceGoodsDelegate BaseProduceGoods = AccessTools.MethodDelegate<ProduceGoodsDelegate>(typeof(PlayerBuildingAI).GetMethod("ProduceGoods", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
+        private delegate void HandleDeadDelegate(CommonBuildingAI instance, ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, int citizenCount);
+        private static HandleDeadDelegate HandleDead = AccessTools.MethodDelegate<HandleDeadDelegate>(typeof(CommonBuildingAI).GetMethod("HandleDead", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
         [HarmonyPatch(typeof(PoliceStationAI), "StartTransfer")]
         [HarmonyPrefix]
         public static bool StartTransfer(PoliceStationAI __instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer) {
@@ -20,14 +32,20 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
                     ushort bnum = buildingID;
                     var position = data.m_position;
                     if (material == TransferManager.TransferReason.CriminalMove && randomVehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Helicopter) {
+                        BuildingManager instance = Singleton<BuildingManager>.instance;
+                        BuildingInfo police_building_info = instance.m_buildings.m_buffer[bnum].Info;
+                        if(police_building_info.GetAI() is PoliceStationAI policeStationAI && police_building_info.m_class.m_level < ItemClass.Level.Level4 && policeStationAI.JailCapacity < 60)
+                        {
+                            return false;
+                        }
                         ushort prison_id = FindClosestPrison(data.m_position);
                         // check for prison in the map
                         if (prison_id == 0) {
                             return false;
                         }
-                        bnum = FindClosestPoliceStation(data.m_position);
+                        bnum = FindClosestPoliceHelicopterDepot(data.m_position);
                         if (bnum != 0) {
-                            BuildingManager instance = Singleton<BuildingManager>.instance;
+                            
                             Building building = instance.m_buildings.m_buffer[bnum];
                             BuildingInfo info = building.Info;
                             if (info.GetAI() is HelicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment && (building.m_flags & Building.Flags.Active) != 0) {
@@ -56,7 +74,251 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
             return false;
         }
 
-        private static ushort FindClosestPoliceStation(Vector3 pos) {
+        [HarmonyPatch(typeof(PoliceStationAI), "GetLocalizedStats")]
+        [HarmonyPrefix]
+        public static bool GetLocalizedStats(PoliceStationAI __instance, ushort buildingID, ref Building data, ref string __result)
+	{
+	    CitizenManager instance = Singleton<CitizenManager>.instance;
+	    uint num = data.m_citizenUnits;
+	    int num2 = 0;
+	    int num3 = 0;
+	    while (num != 0)
+	    {
+		    uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
+		    if ((instance.m_units.m_buffer[num].m_flags & CitizenUnit.Flags.Visit) != 0)
+		    {
+			    for (int i = 0; i < 5; i++)
+			    {
+				    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
+				    if (citizen != 0 && instance.m_citizens.m_buffer[citizen].CurrentLocation == Citizen.Location.Visit)
+				    {
+					    num3++;
+				    }
+			    }
+		    }
+		    num = nextUnit;
+		    if (++num2 > 524288)
+		    {
+			    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+			    break;
+		    }
+	    }
+	    int budget = Singleton<EconomyManager>.instance.GetBudget(__instance.m_info.m_class);
+	    int productionRate = PlayerBuildingAI.GetProductionRate(100, budget);
+	    int num4 = (productionRate * __instance.PoliceCarCount + 99) / 100;
+            int num5 = (productionRate * __instance.PoliceCarCount + 99) / 100;
+	    int count = 0;
+            int count1 = 0;
+	    int cargo = 0;
+            int cargo1 = 0;
+	    int capacity = 0;
+            int capacity1 = 0;
+	    int outside = 0;
+            int outside1 = 0;
+	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    {
+		CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.CriminalMove, ref count, ref cargo, ref capacity, ref outside);
+	    }
+            else if(__instance.m_info.m_class.m_level < ItemClass.Level.Level4 && __instance.JailCapacity >= 60)
+            {
+                CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
+                CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.CriminalMove, ref count1, ref cargo1, ref capacity1, ref outside1);
+            }
+	    else
+	    {
+		CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
+	    }
+	    string text;
+	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    {
+		    text = LocaleFormatter.FormatGeneric("AIINFO_PRISON_CRIMINALS", num3, __instance.JailCapacity) + Environment.NewLine;
+		    __result = text + LocaleFormatter.FormatGeneric("AIINFO_PRISON_CARS", count, num4);
+	    }
+            else if(__instance.m_info.m_class.m_level < ItemClass.Level.Level4 && __instance.JailCapacity >= 60)
+            {
+                text = LocaleFormatter.FormatGeneric("AIINFO_POLICESTATION_CRIMINALS", num3, __instance.JailCapacity) + Environment.NewLine;
+                text += LocaleFormatter.FormatGeneric("AIINFO_POLICE_CARS", count, num4);
+                __result = text + LocaleFormatter.FormatGeneric("AIINFO_PRISON_CARS", count, num5);
+            }
+            else
+            {
+                text = LocaleFormatter.FormatGeneric("AIINFO_POLICESTATION_CRIMINALS", num3, __instance.JailCapacity) + Environment.NewLine;
+		__result = text + LocaleFormatter.FormatGeneric("AIINFO_POLICE_CARS", count, num4);
+            }
+            return false;
+		
+	}
+
+        
+	[HarmonyPatch(typeof(PoliceStationAI), "ProduceGoods")]
+        [HarmonyPrefix]
+        protected static bool ProduceGoods(PoliceStationAI __instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
+	{
+	    BaseProduceGoods(__instance, buildingID, ref buildingData, ref frameData, productionRate, finalProductionRate, ref behaviour, aliveWorkerCount, totalWorkerCount, workPlaceCount, aliveVisitorCount, totalVisitorCount, visitPlaceCount);
+	    DistrictManager instance = Singleton<DistrictManager>.instance;
+	    byte district = instance.GetDistrict(buildingData.m_position);
+	    DistrictPolicies.Services servicePolicies = instance.m_districts.m_buffer[district].m_servicePolicies;
+	    if ((servicePolicies & DistrictPolicies.Services.RecreationalUse) != 0)
+	    {
+		instance.m_districts.m_buffer[district].m_servicePoliciesEffect |= DistrictPolicies.Services.RecreationalUse;
+		int num = __instance.GetMaintenanceCost() / 100;
+		num = (finalProductionRate * num + 666) / 667;
+		if (num != 0)
+		{
+		    Singleton<EconomyManager>.instance.FetchResource(EconomyManager.Resource.Maintenance, num, __instance.m_info.m_class);
+		}
+	    }
+	    int num2 = productionRate * __instance.PoliceDepartmentAccumulation / 100;
+	    if (num2 != 0)
+	    {
+		Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.PoliceDepartment, num2, buildingData.m_position, __instance.m_policeDepartmentRadius);
+	    }
+	    if (finalProductionRate == 0)
+	    {
+		return false;
+	    }
+	    int num3 = finalProductionRate * __instance.m_noiseAccumulation / 100;
+	    if (num3 != 0)
+	    {
+		Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, num3, buildingData.m_position, __instance.m_noiseRadius);
+	    }
+	    int num4 = __instance.m_sentenceWeeks;
+	    if ((servicePolicies & DistrictPolicies.Services.DoubleSentences) != 0)
+	    {
+		instance.m_districts.m_buffer[district].m_servicePoliciesEffect |= DistrictPolicies.Services.DoubleSentences;
+		num4 <<= 1;
+	    }
+	    int num5 = 1000000 / Mathf.Max(1, num4 * 16);
+	    CitizenManager instance2 = Singleton<CitizenManager>.instance;
+	    uint num6 = buildingData.m_citizenUnits;
+	    int num7 = 0;
+	    int num8 = 0;
+	    int num9 = 0;
+	    while (num6 != 0)
+	    {
+		uint nextUnit = instance2.m_units.m_buffer[num6].m_nextUnit;
+		if ((instance2.m_units.m_buffer[num6].m_flags & CitizenUnit.Flags.Visit) != 0)
+		{
+		    for (int i = 0; i < 5; i++)
+		    {
+			uint citizen = instance2.m_units.m_buffer[num6].GetCitizen(i);
+			if (citizen == 0)
+			{
+			    continue;
+			}
+			if (!instance2.m_citizens.m_buffer[citizen].Dead && instance2.m_citizens.m_buffer[citizen].Arrested && instance2.m_citizens.m_buffer[citizen].CurrentLocation == Citizen.Location.Visit)
+			{
+			    if (Singleton<SimulationManager>.instance.m_randomizer.Int32(1000000u) < num5)
+			    {
+				instance2.m_citizens.m_buffer[citizen].Arrested = false;
+				ushort instance3 = instance2.m_citizens.m_buffer[citizen].m_instance;
+				if (instance3 != 0)
+				{
+				    instance2.ReleaseCitizenInstance(instance3);
+				}
+				ushort homeBuilding = instance2.m_citizens.m_buffer[citizen].m_homeBuilding;
+				if (homeBuilding != 0)
+				{
+				    CitizenInfo citizenInfo = instance2.m_citizens.m_buffer[citizen].GetCitizenInfo(citizen);
+				    HumanAI humanAI = citizenInfo.m_citizenAI as HumanAI;
+				    if (humanAI != null)
+				    {
+					instance2.m_citizens.m_buffer[citizen].m_flags &= ~Citizen.Flags.Evacuating;
+					humanAI.StartMoving(citizen, ref instance2.m_citizens.m_buffer[citizen], buildingID, homeBuilding);
+				    }
+				}
+				if (instance2.m_citizens.m_buffer[citizen].CurrentLocation != Citizen.Location.Visit && instance2.m_citizens.m_buffer[citizen].m_visitBuilding == buildingID)
+				{
+				    instance2.m_citizens.m_buffer[citizen].SetVisitplace(citizen, 0, 0u);
+				}
+			    }
+			    num8++;
+			}
+			num7++;
+		    }
+		}
+		num6 = nextUnit;
+		if (++num9 > 524288)
+		{
+		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+		    break;
+		}
+	    }
+	    HandleDead(__instance, buildingID, ref buildingData, ref behaviour, totalWorkerCount + totalVisitorCount);
+	    if (__instance.JailCapacity != 0)
+	    {
+		instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)num8;
+		instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalCapacity += (uint)__instance.JailCapacity;
+	    }
+	    int count = 0;
+	    int cargo = 0;
+	    int capacity = 0;
+	    int outside = 0;
+	    int count2 = 0;
+	    int cargo2 = 0;
+	    int capacity2 = 0;
+	    int outside2 = 0;
+	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    {
+		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count, ref cargo, ref capacity, ref outside);
+		cargo = Mathf.Max(0, Mathf.Min(__instance.JailCapacity - num8, cargo));
+		instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo;
+	    }
+	    else
+	    {
+		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
+		CalculateGuestVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count2, ref cargo2, ref capacity2, ref outside2);
+	    }
+	    int num10 = (finalProductionRate * __instance.PoliceCarCount + 99) / 100;
+	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    {
+		if (count < num10 && capacity + num7 <= __instance.JailCapacity - 20)
+		{
+		    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		    offer.Priority = 2 - count;
+		    offer.Building = buildingID;
+		    offer.Position = buildingData.m_position;
+		    offer.Amount = 1;
+		    offer.Active = true;
+		    Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer);
+		}
+		return false;
+	    }
+            if (__instance.m_info.m_class.m_level < ItemClass.Level.Level4 && __instance.JailCapacity >= 60)
+	    {
+		TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		offer.Priority = 2 - count;
+		offer.Building = buildingID;
+		offer.Position = buildingData.m_position;
+		offer.Amount = 1;
+		offer.Active = true;
+		Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer);
+	    }
+	    if (count < num10)
+	    {
+		TransferManager.TransferOffer offer2 = default(TransferManager.TransferOffer);
+		offer2.Priority = 2 - count;
+		offer2.Building = buildingID;
+		offer2.Position = buildingData.m_position;
+		offer2.Amount = 1;
+		offer2.Active = true;
+		Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.Crime, offer2);
+	    }
+	    if (num8 - capacity2 > 0)
+	    {
+		TransferManager.TransferOffer offer3 = default(TransferManager.TransferOffer);
+		offer3.Priority = (num8 - capacity2) * 8 / Mathf.Max(1, __instance.JailCapacity);
+		offer3.Building = buildingID;
+		offer3.Position = buildingData.m_position;
+		offer3.Amount = 1;
+		offer3.Active = false;
+		Singleton<TransferManager>.instance.AddOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer3);
+	    }
+            return false;
+	}
+
+
+        private static ushort FindClosestPoliceHelicopterDepot(Vector3 pos) {
             BuildingManager instance = Singleton<BuildingManager>.instance;
             int num = Mathf.Max((int)(pos.x / 64f + 135f), 0);
             int num2 = Mathf.Max((int)(pos.z / 64f + 135f), 0);
