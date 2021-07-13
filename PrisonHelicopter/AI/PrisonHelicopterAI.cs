@@ -110,11 +110,18 @@ namespace PrisonHelicopter.AI {
 		data.m_targetBuilding = targetBuilding;
 		data.m_flags &= ~Vehicle.Flags.WaitingTarget;
 		data.m_waitCounter = 0;
-		if (targetBuilding != 0)
+                BuildingManager instance = Singleton<BuildingManager>.instance;
+                BuildingInfo building_info = instance.m_buildings.m_buffer[targetBuilding].Info;
+		if (targetBuilding != 0 && building_info.GetAI() is PoliceStationAI policeStationAI && data.m_transferSize == 0)
 		{
-                    data.m_flags &= ~Vehicle.Flags.Landing;
-                    data.m_flags |= Vehicle.Flags.Emergency2;
-                    Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].AddGuestVehicle(vehicleID, ref data);
+                    if((building_info.m_class.m_level < ItemClass.Level.Level4 && policeStationAI.JailCapacity >= 60) ||  building_info.m_class.m_level >= ItemClass.Level.Level4)
+                    {
+                        data.m_flags &= ~Vehicle.Flags.Landing;
+                        data.m_flags |= Vehicle.Flags.Emergency2;
+                        Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].AddGuestVehicle(vehicleID, ref data);
+                    } else {
+                        return;
+                    }
 		}
                 else if(data.m_transferSize >= m_criminalCapacity || ShouldReturnToSource(vehicleID, ref data))
                 {
