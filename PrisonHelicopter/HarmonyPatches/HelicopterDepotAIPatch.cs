@@ -49,12 +49,6 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
             GetTransferReason1(__instance, ref transferReason);
             TransferManager.TransferReason transferReason2 = GetTransferReason2(__instance);
             if (material != TransferManager.TransferReason.None && (material == transferReason || material == transferReason2)) {
-                BuildingManager instance = Singleton<BuildingManager>.instance;
-                BuildingInfo building_info = instance.m_buildings.m_buffer[offer.Building].Info;
-                if(building_info.GetAI() is PoliceStationAI policeStationAI && building_info.m_class.m_level < ItemClass.Level.Level4 && policeStationAI.JailCapacity < 60 && material == TransferManager.TransferReason.CriminalMove)
-                {
-                    return false;
-                }
                 VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, __instance.m_info.m_class.m_service, __instance.m_info.m_class.m_subService, __instance.m_info.m_class.m_level, VehicleInfo.VehicleType.Helicopter);
                 if (randomVehicleInfo != null) {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
