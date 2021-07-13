@@ -7,7 +7,7 @@
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <LangVersion>preview</LangVersion>
-    <AssemblyName>PrisonCopter</AssemblyName>
+    <AssemblyName>PrisonHelicopter</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>none</DebugType>
