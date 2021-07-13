@@ -6,7 +6,7 @@ namespace PrisonHelicopter
 {
     public static class ItemClasses
     {
-        public static readonly ItemClass prisonHelicopterVehicle = CreatePrisonHelicopterItemClass("Prison Helicopter");
+        public static readonly ItemClass prisonHelicopterVehicle = CreatePrisonHelicopterItemClass("PrisonHelicopter");
 
         public static void Register()
         {

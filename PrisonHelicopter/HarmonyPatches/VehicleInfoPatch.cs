@@ -13,7 +13,7 @@ namespace PrisonHelicopter.HarmonyPatches.VehicleInfoPatch
  
         [HarmonyPatch(typeof(VehicleInfo), "InitializePrefab")]
         [HarmonyPrefix]
-        private static bool InitializePrefab(VehicleInfo __instance)
+        public static bool InitializePrefab(VehicleInfo __instance)
         {
             try
             {
@@ -23,6 +23,7 @@ namespace PrisonHelicopter.HarmonyPatches.VehicleInfoPatch
                 }
 
                 var oldAi = __instance.GetComponent<PrefabAI>();
+                var oldInfo = __instance.GetComponent<PrefabInfo>();
                 Object.DestroyImmediate(oldAi);
                 var newAI = (PrefabAI)__instance.gameObject.AddComponent<PrisonHelicopterAI>();
                 PrefabUtil.TryCopyAttributes(oldAi, newAI, false);
