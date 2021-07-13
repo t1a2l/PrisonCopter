@@ -10,7 +10,12 @@ namespace PrisonHelicopter.AI {
         public int m_policeCount = 2;
 
         [CustomizableProperty("Criminal capacity")]
-        public int m_criminalCapacity = 20;
+        public int m_criminalCapacity;
+
+        public PrisonHelicopterAI() {
+            m_crimeCapacity = 0;
+            m_criminalCapacity = 10;
+        }
 
         public override string GetLocalizedStatus(ushort vehicleID, ref Vehicle data, out InstanceID target)
 	{
