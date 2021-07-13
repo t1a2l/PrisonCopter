@@ -1,8 +1,6 @@
 using HarmonyLib;
 using System;
-using System.Reflection;
-using System.Collections.Generic;
-using System.Linq;
+using PrisonHelicopter.Utils;
 
 namespace PrisonHelicopter.HarmonyPatches.PoliceCopterAIPatch {
 
@@ -14,8 +12,8 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCopterAIPatch {
 
     public delegate bool ShouldReturnToSourceDelegate(PoliceCopterAI instance, ushort vehicleID, ref Vehicle data);
 
-    class PrisonCopterAIConnection {
-        internal PrisonCopterAIConnection(SimulationStepHelicopterAIDelegate simulationStepHelicopterAI,
+    public class PoliceCopterAIConnection {
+        internal PoliceCopterAIConnection(SimulationStepHelicopterAIDelegate simulationStepHelicopterAI,
                                           TryCollectCrimeDelegate tryCollectCrime,
                                           ArriveAtTargetDelegate arriveAtTarget,
                                           ShouldReturnToSourceDelegate shouldReturnToSource) {
@@ -34,62 +32,13 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCopterAIPatch {
         public ShouldReturnToSourceDelegate ShouldReturnToSource { get; }
     }
 
-    public static class TranspilerUtil {
-        internal static Type[] GetParameterTypes<TDelegate>(bool instance = false) where TDelegate : Delegate {
-            IEnumerable<ParameterInfo> parameters = typeof(TDelegate).GetMethod("Invoke").GetParameters();
-            if (instance) {
-                parameters = parameters.Skip(1);
-            }
-
-            return parameters.Select(p => p.ParameterType).ToArray();
-        }
-
-        internal static MethodInfo DeclaredMethod<TDelegate>(Type type, string name, bool instance = false)
-            where TDelegate : Delegate {
-            var args = GetParameterTypes<TDelegate>(instance);
-            var ret = AccessTools.DeclaredMethod(type, name, args);
-            if (ret == null)
-                LogHelper.Error($"failed to retrieve method {type}.{name}({args.ToSTR()})");
-            return ret;
-        }
-
-        public static TDelegate CreateDelegate<TDelegate>(Type type, string name, bool instance)
-            where TDelegate : Delegate {
-
-            var types = GetParameterTypes<TDelegate>(instance);
-            var ret = type.GetMethod(
-                name,
-                BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
-                null,
-                types,
-                new ParameterModifier[0]);
-            if (ret == null)
-                LogHelper.Error($"failed to retrieve method {type}.{name}({types.ToSTR()})");
-
-            return (TDelegate)Delegate.CreateDelegate(typeof(TDelegate), ret);
-        }
-
-        internal static string ToSTR<T>(this IEnumerable<T> enumerable) {
-            if (enumerable == null)
-                return "Null";
-            string ret = "{ ";
-            foreach (T item in enumerable) {
-                ret += $"{item}, ";
-            }
-            ret.Remove(ret.Length - 2, 2);
-            ret += " }";
-            return ret;
-        }
-
-    }
-
-    public static class PrisonCopterAIHook {
+    public static class PoliceCopterAIHook {
 
         private delegate void SimulationStepTarget(ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics);
 
         private delegate void TryCollectCrimeTarget(ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData);
 
-        internal static PrisonCopterAIConnection GetConnection() {
+        internal static PoliceCopterAIConnection GetConnection() {
             try {
                 SimulationStepHelicopterAIDelegate simulationStepHelicopterAI =
                     AccessTools.MethodDelegate<SimulationStepHelicopterAIDelegate>(
@@ -111,7 +60,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCopterAIPatch {
                         typeof(PoliceCopterAI),
                         "ShouldReturnToSource",
                         true);
-                return new PrisonCopterAIConnection(simulationStepHelicopterAI, tryCollectCrime, arriveAtTarget, shouldReturnToSource);
+                return new PoliceCopterAIConnection(simulationStepHelicopterAI, tryCollectCrime, arriveAtTarget, shouldReturnToSource);
             }
             catch (Exception e) {
                 LogHelper.Error(e.Message);
@@ -120,19 +69,6 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCopterAIPatch {
         }
     }
 
-    internal class GameConnectionManager {
-
-        internal static GameConnectionManager Instance;
-        static GameConnectionManager() {
-            Instance = new GameConnectionManager();
-        }
-
-        GameConnectionManager() {
-            PrisonCopterAIConnection = PrisonCopterAIHook.GetConnection();
-        }
-
-        public PrisonCopterAIConnection PrisonCopterAIConnection { get; }
-    }
 
     [HarmonyPatch(typeof(PoliceCopterAI))]
     public static class PoliceCopterAIPatch {
@@ -146,10 +82,10 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCopterAIPatch {
         private static ShouldReturnToSourceDelegate ShouldReturnToSource;
 
         public static void Prepare() {
-            SimulationStepHelicopterAI = GameConnectionManager.Instance.PrisonCopterAIConnection.SimulationStepHelicopterAI;
-            TryCollectCrime = GameConnectionManager.Instance.PrisonCopterAIConnection.TryCollectCrime;
-            ArriveAtTarget = GameConnectionManager.Instance.PrisonCopterAIConnection.ArriveAtTarget;
-            ShouldReturnToSource = GameConnectionManager.Instance.PrisonCopterAIConnection.ShouldReturnToSource;
+            SimulationStepHelicopterAI = GameConnectionManager.Instance.PoliceCopterAIConnection.SimulationStepHelicopterAI;
+            TryCollectCrime = GameConnectionManager.Instance.PoliceCopterAIConnection.TryCollectCrime;
+            ArriveAtTarget = GameConnectionManager.Instance.PoliceCopterAIConnection.ArriveAtTarget;
+            ShouldReturnToSource = GameConnectionManager.Instance.PoliceCopterAIConnection.ShouldReturnToSource;
         }
 
 

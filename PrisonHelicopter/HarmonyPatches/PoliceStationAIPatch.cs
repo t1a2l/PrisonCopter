@@ -3,25 +3,63 @@ using System;
 using System.Reflection;
 using ColossalFramework;
 using UnityEngine;
+using PrisonHelicopter.Utils;
 
 namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
+
+    public delegate void CalculateGuestVehiclesCommonBuildingAIDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside);
+
+    public class PoliceStationAIConnection {
+        internal PoliceStationAIConnection(CalculateGuestVehiclesCommonBuildingAIDelegate calculateGuestVehiclesCommonBuildingAI) {
+            CalculateGuestVehiclesCommonBuildingAI = calculateGuestVehiclesCommonBuildingAI ?? throw new ArgumentNullException(nameof(calculateGuestVehiclesCommonBuildingAI));
+        }
+
+        public CalculateGuestVehiclesCommonBuildingAIDelegate CalculateGuestVehiclesCommonBuildingAI { get; }
+
+    }
+
+    public static class PoliceStationAIHook {
+
+        private delegate void CalculateGuestVehiclesTarget(ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside);
+
+        internal static PoliceStationAIConnection GetConnection() {
+            try {
+                CalculateGuestVehiclesCommonBuildingAIDelegate calculateGuestVehiclesCommonBuildingAI =
+                    AccessTools.MethodDelegate<CalculateGuestVehiclesCommonBuildingAIDelegate>(
+                    TranspilerUtil.DeclaredMethod<CalculateGuestVehiclesTarget>(typeof(CommonBuildingAI), "CalculateGuestVehicles"),
+                    null,
+                    false);
+                return new PoliceStationAIConnection(calculateGuestVehiclesCommonBuildingAI);
+            }
+            catch (Exception e) {
+                LogHelper.Error(e.Message);
+                return null;
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(PoliceStationAI))]
     class PoliceStationAIPatch {
-
         private delegate void StartTransferDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer);
         private static StartTransferDelegate BaseStartTransfer = AccessTools.MethodDelegate<StartTransferDelegate>(typeof(CommonBuildingAI).GetMethod("StartTransfer", BindingFlags.Instance | BindingFlags.Public), null, false);
 
         private delegate void CalculateOwnVehiclesDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside);
         private static CalculateOwnVehiclesDelegate CalculateOwnVehicles = AccessTools.MethodDelegate<CalculateOwnVehiclesDelegate>(typeof(CommonBuildingAI).GetMethod("CalculateOwnVehicles", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
-        private delegate void CalculateGuestVehiclesDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside);
-        private static CalculateGuestVehiclesDelegate CalculateGuestVehicles = AccessTools.MethodDelegate<CalculateGuestVehiclesDelegate>(typeof(CommonBuildingAI).GetMethod("CalculateGuestVehicles", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
-
         private delegate void ProduceGoodsDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount);
         private static ProduceGoodsDelegate BaseProduceGoods = AccessTools.MethodDelegate<ProduceGoodsDelegate>(typeof(PlayerBuildingAI).GetMethod("ProduceGoods", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
         private delegate void HandleDeadDelegate(CommonBuildingAI instance, ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, int citizenCount);
         private static HandleDeadDelegate HandleDead = AccessTools.MethodDelegate<HandleDeadDelegate>(typeof(CommonBuildingAI).GetMethod("HandleDead", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
+        private static CalculateGuestVehiclesCommonBuildingAIDelegate CalculateGuestVehiclesCommonBuildingAI;
+
+
+        public static void Prepare() {
+            CalculateGuestVehiclesCommonBuildingAI = GameConnectionManager.Instance.PoliceStationAIConnection.CalculateGuestVehiclesCommonBuildingAI;
+        }
+
+
 
         [HarmonyPatch(typeof(PoliceStationAI), "StartTransfer")]
         [HarmonyPrefix]
@@ -267,7 +305,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 	    else
 	    {
 		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-		CalculateGuestVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count2, ref cargo2, ref capacity2, ref outside2);
+		CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count2, ref cargo2, ref capacity2, ref outside2);
 	    }
 	    int num10 = (finalProductionRate * __instance.PoliceCarCount + 99) / 100;
 	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
