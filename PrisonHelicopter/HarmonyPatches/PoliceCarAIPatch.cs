@@ -16,10 +16,22 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
 	{
 	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
 	    {
+                BuildingManager instance = Singleton<BuildingManager>.instance;
+                BuildingInfo police_source = instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
+                BuildingInfo police_target = instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
 		if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
 		{
                     target = InstanceID.Empty;
-                     __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_RETURN");
+                    if(police_source.m_class.m_level < ItemClass.Level.Level4)
+                    {
+                        target.Building = data.m_sourceBuilding;
+                        __result = "Transporting criminals to ";
+                    }
+                    else
+                    {
+                        __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_RETURN");
+                    }
+                    
 		}
 		else if ((data.m_flags & (Vehicle.Flags.Stopped | Vehicle.Flags.WaitingTarget)) != 0)
 		{
@@ -28,11 +40,9 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
 		}
 		else if (data.m_targetBuilding != 0)
                 {
-                    BuildingManager instance = Singleton<BuildingManager>.instance;
-                    BuildingInfo police_building_info1 = instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
                     target = InstanceID.Empty;
                     target.Building = data.m_targetBuilding;
-                    if(police_building_info1.GetAI() is PoliceStationAI policeStationAI && police_building_info1.m_class.m_level < ItemClass.Level.Level4 && policeStationAI.JailCapacity >= 60)
+                    if(police_target.m_class.m_level < ItemClass.Level.Level4)
                     {
 		        __result = "Transporting criminals to ";
                     }
