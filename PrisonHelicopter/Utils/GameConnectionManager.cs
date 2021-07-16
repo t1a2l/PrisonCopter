@@ -17,5 +17,6 @@ namespace PrisonHelicopter.Utils {
         public PoliceCopterAIConnection PoliceCopterAIConnection { get; }
 
         public PoliceStationAIConnection PoliceStationAIConnection { get; }
+
     }
 }
