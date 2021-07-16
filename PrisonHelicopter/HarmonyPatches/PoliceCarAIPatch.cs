@@ -3,10 +3,12 @@ using HarmonyLib;
 using System;
 using UnityEngine;
 
+
 namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
 
     [HarmonyPatch(typeof(PoliceCarAI))]
     public static class PoliceCarAIPatch {
+
 
         [HarmonyPatch(typeof(PoliceCarAI), "GetLocalizedStatus")]
         [HarmonyPrefix]
@@ -14,21 +16,10 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
 	{
 	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
 	    {
-                BuildingManager instance = Singleton<BuildingManager>.instance;
-                BuildingInfo police_building_info = instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
 		if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
 		{
-                   
                     target = InstanceID.Empty;
-                    if(police_building_info.GetAI() is PoliceStationAI policeStationAI && police_building_info.m_class.m_level < ItemClass.Level.Level4 && policeStationAI.JailCapacity >= 60)
-                    {
-                        target.Building = data.m_targetBuilding;
-		        __result = "Transporting criminals to ";
-                    }
-                    else
-                    {
-                        __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_RETURN");
-                    }
+                     __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_RETURN");
 		}
 		else if ((data.m_flags & (Vehicle.Flags.Stopped | Vehicle.Flags.WaitingTarget)) != 0)
 		{
@@ -36,10 +27,12 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
 		    __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_WAIT");
 		}
 		else if (data.m_targetBuilding != 0)
-                { 
+                {
+                    BuildingManager instance = Singleton<BuildingManager>.instance;
+                    BuildingInfo police_building_info1 = instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
                     target = InstanceID.Empty;
                     target.Building = data.m_targetBuilding;
-                    if(police_building_info.GetAI() is PoliceStationAI policeStationAI && police_building_info.m_class.m_level < ItemClass.Level.Level4 && policeStationAI.JailCapacity >= 60)
+                    if(police_building_info1.GetAI() is PoliceStationAI policeStationAI && police_building_info1.m_class.m_level < ItemClass.Level.Level4 && policeStationAI.JailCapacity >= 60)
                     {
 		        __result = "Transporting criminals to ";
                     }
@@ -131,7 +124,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
 		    if (instance.m_citizens.m_buffer[citizen].m_visitBuilding != 0)
 		    {
                         BuildingManager binstance = Singleton<BuildingManager>.instance;
-                        BuildingInfo police_building_info = binstance.m_buildings.m_buffer[data.m_targetBuilding].Info;
+                        BuildingInfo police_building_info = binstance.m_buildings.m_buffer[data.m_sourceBuilding].Info;
 			instance.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Visit;
 			if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4 && police_building_info.m_class.m_level >= ItemClass.Level.Level4)
 			{
@@ -163,7 +156,6 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
             return false;
 	}
 
-
         private static void SpawnPrisoner(PoliceCarAI __instance, ushort vehicleID, ref Vehicle data, uint citizen)
 	{
 	    if (data.m_sourceBuilding != 0)
@@ -180,5 +172,6 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
 		}
 	    }
 	}
+
     }
 }
