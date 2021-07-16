@@ -62,15 +62,16 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
         [HarmonyPatch(typeof(PoliceStationAI), "StartTransfer")]
         [HarmonyPrefix]
         public static bool StartTransfer(PoliceStationAI __instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer) {
-            if (material == TransferManager.TransferReason.Crime || material == TransferManager.TransferReason.CriminalMove) {
+            if (material == TransferManager.TransferReason.Crime || material == TransferManager.TransferReason.CriminalMove || material == (TransferManager.TransferReason)127) {
                 ushort bnum = buildingID;
                 BuildingManager instance = Singleton<BuildingManager>.instance;
                 BuildingInfo police_building_info = instance.m_buildings.m_buffer[bnum].Info;
                 var vehicle_level = __instance.m_info.m_class.m_level;
+                // if police hedquarters and criminal move spawn prison van
                 if(police_building_info.GetAI() is PoliceStationAI policeStationAI1 &&
                    police_building_info.m_class.m_level < ItemClass.Level.Level4 &&
                    policeStationAI1.JailCapacity >= 60 &&
-                   material == TransferManager.TransferReason.CriminalMove)
+                   material == (TransferManager.TransferReason)127)
                 {
                     vehicle_level = ItemClass.Level.Level4;
                 }
@@ -78,14 +79,9 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
                 if (randomVehicleInfo != null) {
                     var position = data.m_position;
                     if (material == TransferManager.TransferReason.CriminalMove && randomVehicleInfo.m_vehicleType == VehicleInfo.VehicleType.Helicopter) {
-                        
+                        // ignore small police stations
                         if(police_building_info.GetAI() is PoliceStationAI policeStationAI && police_building_info.m_class.m_level < ItemClass.Level.Level4 && policeStationAI.JailCapacity < 60)
                         {
-                            return false;
-                        }
-                        ushort prison_id = FindClosestPrison(data.m_position);
-                        // check for prison in the map
-                        if (prison_id == 0) {
                             return false;
                         }
                         bnum = FindClosestPoliceHelicopterDepot(data.m_position);
@@ -167,7 +163,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
             else if(__instance.m_info.m_class.m_level < ItemClass.Level.Level4 && __instance.JailCapacity >= 60)
             {
                 CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-                CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.CriminalMove, ref count1, ref cargo1, ref capacity1, ref outside1);
+                CalculateOwnVehicles(__instance, buildingID, ref data, (TransferManager.TransferReason)127, ref count1, ref cargo1, ref capacity1, ref outside1);
             }
 	    else
 	    {
@@ -197,7 +193,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
         
 	[HarmonyPatch(typeof(PoliceStationAI), "ProduceGoods")]
         [HarmonyPrefix]
-        protected static bool ProduceGoods(PoliceStationAI __instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
+        public static bool ProduceGoods(PoliceStationAI __instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
 	{
 	    BaseProduceGoods(__instance, buildingID, ref buildingData, ref frameData, productionRate, finalProductionRate, ref behaviour, aliveWorkerCount, totalWorkerCount, workPlaceCount, aliveVisitorCount, totalVisitorCount, visitPlaceCount);
 	    DistrictManager instance = Singleton<DistrictManager>.instance;
@@ -307,38 +303,40 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 	    int cargo3 = 0;
 	    int capacity3 = 0;
 	    int outside3 = 0;
-	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4) // prison 
 	    {
-		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count2, ref cargo2, ref capacity2, ref outside2);
-		cargo2 = Mathf.Max(0, Mathf.Min(__instance.JailCapacity - num8, cargo2));
-		instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo2;
+		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count3, ref cargo3, ref capacity3, ref outside3);
+		cargo3 = Mathf.Max(0, Mathf.Min(__instance.JailCapacity - num8, cargo3));
+		instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo3;
 	    }
-            else if (__instance.m_info.m_class.m_level < ItemClass.Level.Level4 && __instance.JailCapacity >= 60)
+            else if (__instance.m_info.m_class.m_level < ItemClass.Level.Level4 && __instance.JailCapacity >= 60) // big police station
             {
                 CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-                CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count2, ref cargo2, ref capacity2, ref outside2);
+                CalculateOwnVehicles(__instance, buildingID, ref buildingData, (TransferManager.TransferReason)127, ref count2, ref cargo2, ref capacity2, ref outside2);
                 cargo2 = Mathf.Max(0, Mathf.Min(__instance.JailCapacity - num8, cargo2));
 		instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo2;
 		CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count3, ref cargo3, ref capacity3, ref outside3);
             }
-	    else
+	    else // small police station
 	    {
 		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
+                CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, (TransferManager.TransferReason)127, ref count2, ref cargo2, ref capacity2, ref outside2);
 		CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count3, ref cargo3, ref capacity3, ref outside3);
+                
 	    }
 	    int num10 = (finalProductionRate * __instance.PoliceCarCount + 99) / 100;
             int num11 = num10 / 5;
 	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
 	    {
-		if (count2 < num10 && capacity2 + num7 <= __instance.JailCapacity - 20)
+		if (count3 < num10 && capacity3 + num7 <= __instance.JailCapacity - 20)
 		{
-		    TransferManager.TransferOffer offer2 = default(TransferManager.TransferOffer);
-		    offer2.Priority = 2 - count2;
-		    offer2.Building = buildingID;
-		    offer2.Position = buildingData.m_position;
-		    offer2.Amount = 1;
-		    offer2.Active = true;
-		    Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer2);
+		    TransferManager.TransferOffer offer4 = default(TransferManager.TransferOffer);
+		    offer4.Priority = 2 - count3;
+		    offer4.Building = buildingID;
+		    offer4.Position = buildingData.m_position;
+		    offer4.Amount = 1;
+		    offer4.Active = true;
+		    Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer4);
 		}
 		return false;
 	    }
@@ -347,12 +345,12 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
                 if (count2 < num11 && capacity2 + num7 <= __instance.JailCapacity - 20)
                 {
                     TransferManager.TransferOffer offer2 = default(TransferManager.TransferOffer);
-		    offer2.Priority = 3 - count2;
+		    offer2.Priority = 2 - count2;
 		    offer2.Building = buildingID;
 		    offer2.Position = buildingData.m_position;
 		    offer2.Amount = 1;
 		    offer2.Active = true;
-		    Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer2);
+		    Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)127, offer2);
                 }
 	    }
 	    if (count < num10)
@@ -373,11 +371,20 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 		offer3.Position = buildingData.m_position;
 		offer3.Amount = 1;
 		offer3.Active = false;
-		Singleton<TransferManager>.instance.AddOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer3);
+                Singleton<TransferManager>.instance.AddOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer3);
+                if (__instance.JailCapacity < 60) // small police station
+                {
+                    TransferManager.TransferOffer offer5 = default(TransferManager.TransferOffer);
+		    offer5.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, __instance.JailCapacity);
+		    offer5.Building = buildingID;
+		    offer5.Position = buildingData.m_position;
+		    offer5.Amount = 1;
+		    offer5.Active = false;
+                    Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)127, offer5);
+                }
 	    }
             return false;
 	}
-
 
         private static ushort FindClosestPoliceHelicopterDepot(Vector3 pos) {
             BuildingManager instance = Singleton<BuildingManager>.instance;
@@ -437,65 +444,5 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
             return num9;
         }
 
-        private static ushort FindClosestPrison(Vector3 pos) {
-            BuildingManager instance = Singleton<BuildingManager>.instance;
-            int num = Mathf.Max((int)(pos.x / 64f + 135f), 0);
-            int num2 = Mathf.Max((int)(pos.z / 64f + 135f), 0);
-            int num3 = Mathf.Min((int)(pos.x / 64f + 135f), 269);
-            int num4 = Mathf.Min((int)(pos.z / 64f + 135f), 269);
-            int num5 = num + 1;
-            int num6 = num2 + 1;
-            int num7 = num3 - 1;
-            int num8 = num4 - 1;
-            ushort num9 = 0;
-            float num10 = 1E+12f;
-            float num11 = 0f;
-            while (num != num5 || num2 != num6 || num3 != num7 || num4 != num8) {
-                for (int i = num2; i <= num4; i++) {
-                    for (int j = num; j <= num3; j++) {
-                        if (j >= num5 && i >= num6 && j <= num7 && i <= num8) {
-                            j = num7;
-                            continue;
-                        }
-                        ushort num12 = instance.m_buildingGrid[i * 270 + j];
-                        int num13 = 0;
-                        while (num12 != 0) {
-                            if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0) {
-
-                                BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
-                                if (info.GetAI() is PoliceStationAI policeStationAI
-                                    && info.m_class.m_service == ItemClass.Service.PoliceDepartment
-                                    && info.m_class.m_level >= ItemClass.Level.Level4) {
-                                    Vector3 position = instance.m_buildings.m_buffer[num12].m_position;
-                                    float num14 = Vector3.SqrMagnitude(position - pos);
-                                    if (num14 < num10) {
-                                        num9 = num12;
-                                        num10 = num14;
-                                    }
-                                }
-                            }
-                            num12 = instance.m_buildings.m_buffer[num12].m_nextGridBuilding;
-                            if (++num13 >= 49152) {
-                                CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (num9 != 0 && num10 <= num11 * num11) {
-                    return num9;
-                }
-                num11 += 64f;
-                num5 = num;
-                num6 = num2;
-                num7 = num3;
-                num8 = num4;
-                num = Mathf.Max(num - 1, 0);
-                num2 = Mathf.Max(num2 - 1, 0);
-                num3 = Mathf.Min(num3 + 1, 269);
-                num4 = Mathf.Min(num4 + 1, 269);
-            }
-            return num9;
-        }
     }
 }
