@@ -178,8 +178,8 @@ namespace PrisonHelicopter.AI {
 
         public override void GetSize(ushort vehicleID, ref Vehicle data, out int size, out int max)
 	{
-	    size = data.m_transferSize;
-            max = m_criminalCapacity;
+	    size = data.m_transferSize; // how many people needs to be transffered
+            max = m_criminalCapacity; // how many places inside the vehicle
 	}
 
         public override void SimulationStep(ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics) {
