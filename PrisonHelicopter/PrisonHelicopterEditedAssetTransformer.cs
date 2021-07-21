@@ -4,7 +4,6 @@ namespace PrisonHelicopter
 {
     public static class PrisonHelicopterEditedAssetTransformer
     {
-
         public static void ToPrisonHelicopter() {
             var vehicleInfo = ToolsModifierControl.toolController?.m_editPrefabInfo as VehicleInfo;
             if (vehicleInfo?.m_vehicleType != VehicleInfo.VehicleType.Helicopter) 

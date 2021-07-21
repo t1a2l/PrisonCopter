@@ -20,9 +20,12 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
         private delegate void BuildingDeactivatedDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building data);
         private static BuildingDeactivatedDelegate BaseBuildingDeactivated = AccessTools.MethodDelegate<BuildingDeactivatedDelegate>(typeof(PlayerBuildingAI).GetMethod("BuildingDeactivated", BindingFlags.Instance | BindingFlags.Public), null, false);
 
+        public static bool acceptPrisonHelicopters;
+
+
         [HarmonyPatch(typeof(HelicopterDepotAI), "GetTransferReason1")]
         [HarmonyPostfix]
-        private static void GetTransferReason1(HelicopterDepotAI __instance, ref TransferManager.TransferReason __result) {
+        public static void GetTransferReason1(HelicopterDepotAI __instance, ref TransferManager.TransferReason __result) {
             switch (__instance.m_info.m_class.m_service) {
                 case ItemClass.Service.HealthCare:
                     __result = TransferManager.TransferReason.Sick2;
@@ -51,7 +54,7 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
             TransferManager.TransferReason transferReason2 = GetTransferReason2(__instance);
             if (material != TransferManager.TransferReason.None && (material == transferReason || material == transferReason2)) {
                 // no prison don't spawn prison helicopter
-                if(material == TransferManager.TransferReason.CriminalMove && FindClosestPrison(data.m_position) == 0)
+                if(material == TransferManager.TransferReason.CriminalMove && (FindClosestPrison(data.m_position) == 0 || !acceptPrisonHelicopters))
                 {
                     return false;
                 }
@@ -110,8 +113,11 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
                 if(transferReason == TransferManager.TransferReason.Crime)
                 {
                     text += "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
-                    text += Environment.NewLine;
-                    text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
+                    if(acceptPrisonHelicopters)
+                    {
+                        text += Environment.NewLine;
+                        text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
+                    }
                     __result = text;
                 }
                 else if(transferReason != TransferManager.TransferReason.CriminalMove)
@@ -141,6 +147,16 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
 	    BaseBuildingDeactivated(__instance, buildingID, ref data);
             return false;
 	}
+
+        [HarmonyPatch(typeof(BuildingAI), "SetEmptying")]
+        [HarmonyPostfix]
+        public static void SetEmptying(ushort buildingID, ref Building data, bool emptying)
+        {
+            if(data.Info.GetAI() is HelicopterDepotAI && data.Info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
+               data.m_flags = data.m_flags.SetFlags(Building.Flags.Downgrading, emptying);
+               acceptPrisonHelicopters = !emptying;
+            }
+        }
 
         private static ushort FindClosestPrison(Vector3 pos) {
             BuildingManager instance = Singleton<BuildingManager>.instance;

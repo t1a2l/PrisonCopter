@@ -12,4 +12,5 @@ namespace PrisonHelicopter.Attibutes
                    || SimulationManager.instance.m_metaData is not {m_updateMode: SimulationManager.UpdateMode.LoadAsset or SimulationManager.UpdateMode.NewAsset};
         }
     }
+
 }

@@ -4,6 +4,7 @@ using System.Reflection;
 using ColossalFramework;
 using UnityEngine;
 using PrisonHelicopter.Utils;
+using PrisonHelicopter.OptionsFramework;
 
 namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 
@@ -54,7 +55,6 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 
         private static CalculateGuestVehiclesCommonBuildingAIDelegate CalculateGuestVehiclesCommonBuildingAI;
 
-
         public static void Prepare() {
             CalculateGuestVehiclesCommonBuildingAI = GameConnectionManager.Instance.PoliceStationAIConnection.CalculateGuestVehiclesCommonBuildingAI;
         }
@@ -85,11 +85,12 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
                             return false;
                         }
                         bnum = FindClosestPoliceHelicopterDepot(data.m_position);
-                        if (bnum != 0) {
-                            
+                        if (bnum != 0)
+                        {
+                            var acceptPrisonHelicopters = HelicopterDepotAIPatch.HelicopterDepotAIPatch.acceptPrisonHelicopters;
                             Building building = instance.m_buildings.m_buffer[bnum];
                             BuildingInfo info = building.Info;
-                            if (info.GetAI() is HelicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment && (building.m_flags & Building.Flags.Active) != 0) {
+                            if (info.GetAI() is HelicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment && (building.m_flags & Building.Flags.Active) != 0 && acceptPrisonHelicopters) {
                                 position = building.m_position;
                             }
                             else
@@ -190,7 +191,6 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 		
 	}
 
-        
 	[HarmonyPatch(typeof(PoliceStationAI), "ProduceGoods")]
         [HarmonyPrefix]
         public static bool ProduceGoods(PoliceStationAI __instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
@@ -322,7 +322,6 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
                 CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, (TransferManager.TransferReason)127, ref count2, ref cargo2, ref capacity2, ref outside2);
 		CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count3, ref cargo3, ref capacity3, ref outside3);
-                
 	    }
 	    int num10 = (finalProductionRate * __instance.PoliceCarCount + 99) / 100;
             int num11 = num10 / 5;
@@ -363,7 +362,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 		offer.Active = true;
 		Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.Crime, offer);
 	    }
-	    if (num8 - capacity3 > 0)
+	    if (num8 - capacity3 > 0 && num8 >= ((__instance.JailCapacity * OptionsWrapper<Options>.Options.priosnersPercentage) / 100))
 	    {
 		TransferManager.TransferOffer offer3 = default(TransferManager.TransferOffer);
 		offer3.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, __instance.JailCapacity);
