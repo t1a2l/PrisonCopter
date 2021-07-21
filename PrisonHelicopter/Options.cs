@@ -18,7 +18,7 @@ namespace PrisonHelicopter
 
 
         [HideWhenNotInGameCondition]
-        [DropDown("Wait for this percentage capacity before calling a transport", nameof(percentNum), SETTINGS_UI)]
+        [DropDown("Wait for this percentage capacity before calling a transport", nameof(percentNum), "Settings")]
         public int priosnersPercentage { get; set; } = (int)percentNum.Ninty;
     }
 }
