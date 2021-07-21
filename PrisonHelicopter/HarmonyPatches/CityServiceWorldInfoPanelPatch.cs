@@ -10,13 +10,20 @@ namespace PrisonHelicopter.HarmonyPatches.CityServiceWorldInfoPanelPatches
 
         private static string _originalTooltip;
 
+        private static string _originalCheckBoxText;
+
+        private static string _originalCheckBoxTooltip;
+
         [HarmonyPatch(typeof(CityServiceWorldInfoPanel), "UpdateBindings")]
         [HarmonyPostfix]
         internal static void UpdateBindings(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID, UIPanel ___m_intercityTrainsPanel)
         {
             var label = ___m_intercityTrainsPanel.Find<UILabel>("Label");
+            var checkbox = ___m_intercityTrainsPanel.Find<UICheckBox>("AcceptIntercityTrains");
             _originalLabel ??= label.text;
             _originalTooltip ??= label.tooltip;
+            _originalCheckBoxText ??= checkbox.text;
+            _originalCheckBoxTooltip ??= checkbox.tooltip;
             var building1 = ___m_InstanceID.Building;
             var instance = BuildingManager.instance;
             var building2 = instance.m_buildings.m_buffer[building1];
@@ -32,12 +39,16 @@ namespace PrisonHelicopter.HarmonyPatches.CityServiceWorldInfoPanelPatches
                 ___m_intercityTrainsPanel.isVisible = true;
                 label.text = "Allow Prison Helicopters";
                 label.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
+                checkbox.text = "Allow Prison Helicopters";
+                checkbox.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
             }
             else
             {
                 ___m_intercityTrainsPanel.isVisible = false;
                 label.text = _originalLabel;
                 label.tooltip = _originalTooltip;
+                checkbox.text = _originalCheckBoxText;
+                checkbox.tooltip = _originalCheckBoxTooltip;
             }
         }
     }

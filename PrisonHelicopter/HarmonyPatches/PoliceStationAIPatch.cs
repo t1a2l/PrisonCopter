@@ -87,10 +87,9 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
                         bnum = FindClosestPoliceHelicopterDepot(data.m_position);
                         if (bnum != 0)
                         {
-                            var acceptPrisonHelicopters = HelicopterDepotAIPatch.HelicopterDepotAIPatch.acceptPrisonHelicopters;
                             Building building = instance.m_buildings.m_buffer[bnum];
                             BuildingInfo info = building.Info;
-                            if (info.GetAI() is HelicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment && (building.m_flags & Building.Flags.Active) != 0 && acceptPrisonHelicopters) {
+                            if (info.GetAI() is HelicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment && (building.m_flags & Building.Flags.Active) != 0 && (building.m_flags & Building.Flags.Downgrading) == 0) {
                                 position = building.m_position;
                             }
                             else

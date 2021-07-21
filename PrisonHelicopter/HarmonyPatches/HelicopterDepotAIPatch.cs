@@ -20,9 +20,6 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
         private delegate void BuildingDeactivatedDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building data);
         private static BuildingDeactivatedDelegate BaseBuildingDeactivated = AccessTools.MethodDelegate<BuildingDeactivatedDelegate>(typeof(PlayerBuildingAI).GetMethod("BuildingDeactivated", BindingFlags.Instance | BindingFlags.Public), null, false);
 
-        public static bool acceptPrisonHelicopters;
-
-
         [HarmonyPatch(typeof(HelicopterDepotAI), "GetTransferReason1")]
         [HarmonyPostfix]
         public static void GetTransferReason1(HelicopterDepotAI __instance, ref TransferManager.TransferReason __result) {
@@ -54,7 +51,7 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
             TransferManager.TransferReason transferReason2 = GetTransferReason2(__instance);
             if (material != TransferManager.TransferReason.None && (material == transferReason || material == transferReason2)) {
                 // no prison don't spawn prison helicopter
-                if(material == TransferManager.TransferReason.CriminalMove && (FindClosestPrison(data.m_position) == 0 || !acceptPrisonHelicopters))
+                if(material == TransferManager.TransferReason.CriminalMove && (FindClosestPrison(data.m_position) == 0 || (data.m_flags & Building.Flags.Downgrading) != 0))
                 {
                     return false;
                 }
@@ -113,7 +110,7 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
                 if(transferReason == TransferManager.TransferReason.Crime)
                 {
                     text += "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
-                    if(acceptPrisonHelicopters)
+                    if((data.m_flags & Building.Flags.Downgrading) == 0)
                     {
                         text += Environment.NewLine;
                         text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
@@ -154,7 +151,6 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
         {
             if(data.Info.GetAI() is HelicopterDepotAI && data.Info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
                data.m_flags = data.m_flags.SetFlags(Building.Flags.Downgrading, emptying);
-               acceptPrisonHelicopters = !emptying;
             }
         }
 
