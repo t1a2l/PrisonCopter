@@ -17,7 +17,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
 	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4)
 	    {
                 BuildingManager instance = Singleton<BuildingManager>.instance;
-                BuildingInfo police_source = instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
+                BuildingInfo police_source = instance.m_buildings.m_buffer[data.m_sourceBuilding].Info;
                 BuildingInfo police_target = instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
 		if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
 		{
