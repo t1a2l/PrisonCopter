@@ -44,4 +44,12 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <None Update="PrisonHelicopter\Assets\CH-47 Chinook Columbia Prison Helicopter.crp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="PrisonHelicopter\Assets\mi-8 hip prison helicopter.crp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
