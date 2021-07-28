@@ -1,8 +1,5 @@
 using HarmonyLib;
 using System;
-using System.Reflection;
-using ColossalFramework;
-using UnityEngine;
 
 namespace PrisonHelicopter.HarmonyPatches.TransferManagerPatch {
 
@@ -13,10 +10,10 @@ namespace PrisonHelicopter.HarmonyPatches.TransferManagerPatch {
         [HarmonyPostfix]
         public static void Awake()
 	{
-            bool isValueDefined = Enum.IsDefined(typeof(TransferManager.TransferReason), 127);
-            if(!isValueDefined)
+            bool isValueDefined1 = Enum.IsDefined(typeof(TransferManager.TransferReason), 126);
+            if(!isValueDefined1)
             {
-                TransferManager.TransferReason CriminalMove2 = (TransferManager.TransferReason)127;
+                TransferManager.TransferReason CriminalMove2 = (TransferManager.TransferReason)126;
             }
 	}
 
@@ -26,9 +23,9 @@ namespace PrisonHelicopter.HarmonyPatches.TransferManagerPatch {
 	{
 	    if(__result == TransferManager.TransferReason.None)
             {
-                if(frameIndex == 117)
+                if(frameIndex == 109)
                 {
-                    __result = (TransferManager.TransferReason)127;
+                    __result = (TransferManager.TransferReason)126;
                 }
             }
 	}
@@ -37,7 +34,7 @@ namespace PrisonHelicopter.HarmonyPatches.TransferManagerPatch {
         [HarmonyPostfix]
         public static void GetDistanceMultiplier(TransferManager.TransferReason material, ref float __result)
         {
-            if(material == (TransferManager.TransferReason)127)
+            if(material == (TransferManager.TransferReason)126)
             {
                 __result = 5E-07f;
             }
