@@ -30,8 +30,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
                     else
                     {
                         __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_RETURN");
-                    }
-                    
+                    }  
 		}
 		else if ((data.m_flags & (Vehicle.Flags.Stopped | Vehicle.Flags.WaitingTarget)) != 0)
 		{
@@ -42,14 +41,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
                 {
                     target = InstanceID.Empty;
                     target.Building = data.m_targetBuilding;
-                    if(police_target.m_class.m_level < ItemClass.Level.Level4)
-                    {
-		        __result = "Transporting criminals to ";
-                    }
-                    else 
-                    {
-		        __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_PICKINGUP");
-                    }
+                    __result = ColossalFramework.Globalization.Locale.Get("VEHICLE_STATUS_PRISON_PICKINGUP");
 		}
                 else
                 {
