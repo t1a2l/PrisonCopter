@@ -126,7 +126,7 @@ namespace PrisonHelicopter.AI {
                     return;
                 }
 	    }
-            else if(data.m_transferSize >= m_criminalCapacity || ShouldReturnToSource(vehicleID, ref data))
+            else if(ShouldReturnToSource(vehicleID, ref data))
             {
                 data.m_flags &= ~Vehicle.Flags.Landing;
 		data.m_flags |= Vehicle.Flags.GoingBack;
