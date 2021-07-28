@@ -99,7 +99,6 @@ namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
                     }
                     else if(transferReason != TransferManager.TransferReason.CriminalMove)
                     {
-          
                         CalculateOwnVehicles(__instance, buildingID, ref data, transferReason, ref count, ref cargo, ref capacity, ref outside);
                     }
 		}
