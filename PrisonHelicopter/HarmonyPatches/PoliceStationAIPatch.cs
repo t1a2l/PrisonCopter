@@ -62,16 +62,16 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
         [HarmonyPatch(typeof(PoliceStationAI), "StartTransfer")]
         [HarmonyPrefix]
         public static bool StartTransfer(PoliceStationAI __instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer) {
-            if (material == TransferManager.TransferReason.Crime || material == TransferManager.TransferReason.CriminalMove || material == (TransferManager.TransferReason)127) {
+            if (material == TransferManager.TransferReason.Crime || material == TransferManager.TransferReason.CriminalMove || material == (TransferManager.TransferReason)126) {
                 ushort bnum = buildingID;
                 BuildingManager instance = Singleton<BuildingManager>.instance;
                 BuildingInfo police_building_info = instance.m_buildings.m_buffer[bnum].Info;
                 var vehicle_level = __instance.m_info.m_class.m_level;
-                // if police hedquarters and criminal move spawn prison van
+                // if police hedquarters and criminalmove2 spawn prison van
                 if(police_building_info.GetAI() is PoliceStationAI policeStationAI1 &&
                    police_building_info.m_class.m_level < ItemClass.Level.Level4 &&
                    policeStationAI1.JailCapacity >= 60 &&
-                   material == (TransferManager.TransferReason)127)
+                   material == (TransferManager.TransferReason)126)
                 {
                     vehicle_level = ItemClass.Level.Level4;
                 }
@@ -163,7 +163,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
             else if(__instance.m_info.m_class.m_level < ItemClass.Level.Level4 && __instance.JailCapacity >= 60)
             {
                 CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-                CalculateOwnVehicles(__instance, buildingID, ref data, (TransferManager.TransferReason)127, ref count1, ref cargo1, ref capacity1, ref outside1);
+                CalculateOwnVehicles(__instance, buildingID, ref data, (TransferManager.TransferReason)126, ref count1, ref cargo1, ref capacity1, ref outside1);
             }
 	    else
 	    {
@@ -304,14 +304,17 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 	    int outside3 = 0;
 	    if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4) // prison 
 	    {
-		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count3, ref cargo3, ref capacity3, ref outside3);
-		cargo3 = Mathf.Max(0, Mathf.Min(__instance.JailCapacity - num8, cargo3));
+                CalculateOwnVehicles(__instance, buildingID, ref buildingData, (TransferManager.TransferReason)126, ref count2, ref cargo2, ref capacity2, ref outside2); // small police stations
+		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count3, ref cargo3, ref capacity3, ref outside3); // big police stations
+                cargo2 = Mathf.Max(0, Mathf.Min(__instance.JailCapacity - num8, cargo2));
+                cargo3 = Mathf.Max(0, Mathf.Min(__instance.JailCapacity - num8, cargo3));
+                instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo2;
 		instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo3;
 	    }
             else if (__instance.m_info.m_class.m_level < ItemClass.Level.Level4 && __instance.JailCapacity >= 60) // big police station
             {
                 CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-                CalculateOwnVehicles(__instance, buildingID, ref buildingData, (TransferManager.TransferReason)127, ref count2, ref cargo2, ref capacity2, ref outside2);
+                CalculateOwnVehicles(__instance, buildingID, ref buildingData, (TransferManager.TransferReason)126, ref count2, ref cargo2, ref capacity2, ref outside2); // small police stations
                 cargo2 = Mathf.Max(0, Mathf.Min(__instance.JailCapacity - num8, cargo2));
 		instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo2;
 		CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count3, ref cargo3, ref capacity3, ref outside3);
@@ -319,7 +322,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 	    else // small police station
 	    {
 		CalculateOwnVehicles(__instance, buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-                CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, (TransferManager.TransferReason)127, ref count2, ref cargo2, ref capacity2, ref outside2);
+                CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, (TransferManager.TransferReason)126, ref count2, ref cargo2, ref capacity2, ref outside2);
 		CalculateGuestVehiclesCommonBuildingAI(__instance, buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count3, ref cargo3, ref capacity3, ref outside3);
 	    }
 	    int num10 = (finalProductionRate * __instance.PoliceCarCount + 99) / 100;
@@ -335,6 +338,14 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 		    offer4.Amount = 1;
 		    offer4.Active = true;
 		    Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer4);
+
+                    TransferManager.TransferOffer offer2 = default(TransferManager.TransferOffer);
+		    offer2.Priority = 2 - count2;
+		    offer2.Building = buildingID;
+		    offer2.Position = buildingData.m_position;
+		    offer2.Amount = 1;
+		    offer2.Active = true;
+		    Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)126, offer2);
 		}
 		return false;
 	    }
@@ -348,7 +359,7 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 		    offer2.Position = buildingData.m_position;
 		    offer2.Amount = 1;
 		    offer2.Active = true;
-		    Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)127, offer2);
+		    Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)126, offer2);
                 }
 	    }
 	    if (count < num10)
@@ -363,22 +374,25 @@ namespace PrisonHelicopter.HarmonyPatches.PoliceStationAIPatch {
 	    }
 	    if (num8 - capacity3 > 0 && num8 >= ((__instance.JailCapacity * OptionsWrapper<Options>.Options.priosnersPercentage) / 100))
 	    {
-		TransferManager.TransferOffer offer3 = default(TransferManager.TransferOffer);
-		offer3.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, __instance.JailCapacity);
-		offer3.Building = buildingID;
-		offer3.Position = buildingData.m_position;
-		offer3.Amount = 1;
-		offer3.Active = false;
-                Singleton<TransferManager>.instance.AddOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer3);
-                if (__instance.JailCapacity < 60) // small police station
+                if (__instance.JailCapacity >= 60) // big police stations
                 {
-                    TransferManager.TransferOffer offer5 = default(TransferManager.TransferOffer);
-		    offer5.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, __instance.JailCapacity);
-		    offer5.Building = buildingID;
-		    offer5.Position = buildingData.m_position;
-		    offer5.Amount = 1;
-		    offer5.Active = false;
-                    Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)127, offer5);
+                    TransferManager.TransferOffer offer3 = default(TransferManager.TransferOffer);
+		    offer3.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, __instance.JailCapacity);
+		    offer3.Building = buildingID;
+		    offer3.Position = buildingData.m_position;
+		    offer3.Amount = 1;
+		    offer3.Active = false;
+                    Singleton<TransferManager>.instance.AddOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer3);
+                }
+                else if (__instance.JailCapacity < 60) // small police stations
+                {
+                    TransferManager.TransferOffer offer3 = default(TransferManager.TransferOffer);
+		    offer3.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, __instance.JailCapacity);
+		    offer3.Building = buildingID;
+		    offer3.Position = buildingData.m_position;
+		    offer3.Amount = 1;
+		    offer3.Active = false;
+                    Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)126, offer3);
                 }
 	    }
             return false;
