@@ -2,15 +2,186 @@ using System;
 using ColossalFramework;
 using UnityEngine;
 using PrisonHelicopter.OptionsFramework;
+using ColossalFramework.DataBinding;
 
 namespace PrisonHelicopter.AI {
 
-    class NewPoliceStationAI : PoliceStationAI {
+    class NewPoliceStationAI : PlayerBuildingAI {
+
+        [CustomizableProperty("Uneducated Workers", "Workers", 0)]
+	public int m_workPlaceCount0 = 4;
+
+	[CustomizableProperty("Educated Workers", "Workers", 1)]
+	public int m_workPlaceCount1 = 16;
+
+	[CustomizableProperty("Well Educated Workers", "Workers", 2)]
+	public int m_workPlaceCount2 = 16;
+
+	[CustomizableProperty("Highly Educated Workers", "Workers", 3)]
+	public int m_workPlaceCount3 = 4;
+
+	[CustomizableProperty("Police Car Count")]
+	public int m_policeCarCount = 10;
 
         [CustomizableProperty("Police Van Count")]
 	public int m_policeVanCount = 5;
 
+	[CustomizableProperty("Jail Capacity")]
+	public int m_jailCapacity = 20;
+
+	[CustomizableProperty("Average Sentence Length")]
+	public int m_sentenceWeeks = 15;
+
+	[CustomizableProperty("Police Department Accumulation")]
+	public int m_policeDepartmentAccumulation = 100;
+
+	[CustomizableProperty("Police Department Radius")]
+	public float m_policeDepartmentRadius = 500f;
+
+	[CustomizableProperty("Noise Accumulation")]
+	public int m_noiseAccumulation;
+
+	[CustomizableProperty("Noise Radius")]
+	public float m_noiseRadius = 200f;
+
+        public int PoliceCarCount => UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Police, m_policeCarCount);
         public int PoliceVanCount => UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Police, m_policeVanCount);
+        public int JailCapacity => UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Police, m_jailCapacity);
+	public int PoliceDepartmentAccumulation => UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Police, m_policeDepartmentAccumulation);
+
+        public override void GetImmaterialResourceRadius(ushort buildingID, ref Building data, out ImmaterialResourceManager.Resource resource1, out float radius1, out ImmaterialResourceManager.Resource resource2, out float radius2)
+	{
+	    if (m_noiseAccumulation != 0)
+	    {
+		resource1 = ImmaterialResourceManager.Resource.NoisePollution;
+		radius1 = m_noiseRadius;
+	    }
+	    else
+	    {
+		resource1 = ImmaterialResourceManager.Resource.None;
+		radius1 = 0f;
+	    }
+	    resource2 = ImmaterialResourceManager.Resource.None;
+	    radius2 = 0f;
+	}
+
+        public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode)
+	{
+	    switch (infoMode)
+	    {
+	    case InfoManager.InfoMode.CrimeRate:
+		if ((data.m_flags & Building.Flags.Active) != 0)
+		{
+		    return Singleton<InfoManager>.instance.m_properties.m_modeProperties[(int)infoMode].m_activeColor;
+		}
+		return Singleton<InfoManager>.instance.m_properties.m_modeProperties[(int)infoMode].m_inactiveColor;
+	    case InfoManager.InfoMode.NoisePollution:
+		if (m_noiseAccumulation != 0)
+		{
+		    return CommonBuildingAI.GetNoisePollutionColor(m_noiseAccumulation);
+		}
+		break;
+	    }
+	    return base.GetColor(buildingID, ref data, infoMode);
+	}
+
+        public override int GetResourceRate(ushort buildingID, ref Building data, ImmaterialResourceManager.Resource resource)
+	{
+	    if (resource == ImmaterialResourceManager.Resource.NoisePollution)
+	    {
+		return m_noiseAccumulation;
+	    }
+	    return base.GetResourceRate(buildingID, ref data, resource);
+	}
+
+        public override void GetPlacementInfoMode(out InfoManager.InfoMode mode, out InfoManager.SubInfoMode subMode, float elevation)
+	{
+	    mode = InfoManager.InfoMode.CrimeRate;
+	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    {
+		subMode = InfoManager.SubInfoMode.WaterPower;
+	    }
+	    else
+	    {
+		subMode = InfoManager.SubInfoMode.Default;
+	    }
+	}
+
+        public override void CreateBuilding(ushort buildingID, ref Building data)
+	{
+	    base.CreateBuilding(buildingID, ref data);
+	    int workCount = m_workPlaceCount0 + m_workPlaceCount1 + m_workPlaceCount2 + m_workPlaceCount3;
+	    Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, buildingID, 0, 0, workCount, JailCapacity, 0, 0);
+	}
+
+        public override void BuildingLoaded(ushort buildingID, ref Building data, uint version)
+	{
+	    base.BuildingLoaded(buildingID, ref data, version);
+	    int workCount = m_workPlaceCount0 + m_workPlaceCount1 + m_workPlaceCount2 + m_workPlaceCount3;
+	    EnsureCitizenUnits(buildingID, ref data, 0, workCount, JailCapacity, 0);
+	}
+
+        public override void ReleaseBuilding(ushort buildingID, ref Building data)
+	{
+	    base.ReleaseBuilding(buildingID, ref data);
+	}
+
+	public override void EndRelocating(ushort buildingID, ref Building data)
+	{
+	    base.EndRelocating(buildingID, ref data);
+	    int workCount = m_workPlaceCount0 + m_workPlaceCount1 + m_workPlaceCount2 + m_workPlaceCount3;
+	    EnsureCitizenUnits(buildingID, ref data, 0, workCount, JailCapacity, 0);
+	}
+
+        protected override void ManualActivation(ushort buildingID, ref Building buildingData)
+	{
+	    if (PoliceDepartmentAccumulation != 0)
+	    {
+		Vector3 position = buildingData.m_position;
+		position.y += m_info.m_size.y;
+		Singleton<NotificationManager>.instance.AddEvent(NotificationEvent.Type.GainHappiness, position, 1.5f);
+	    }
+	    if (PoliceDepartmentAccumulation != 0 || m_noiseAccumulation != 0)
+	    {
+		Singleton<NotificationManager>.instance.AddWaveEvent(buildingData.m_position, NotificationEvent.Type.Happy, ImmaterialResourceManager.Resource.PoliceDepartment, PoliceDepartmentAccumulation, m_policeDepartmentRadius, buildingData.m_position, NotificationEvent.Type.Sad, ImmaterialResourceManager.Resource.NoisePollution, m_noiseAccumulation, m_noiseRadius);
+	    }
+	}
+
+        protected override void ManualDeactivation(ushort buildingID, ref Building buildingData)
+	{
+	    if ((buildingData.m_flags & Building.Flags.Collapsed) != 0)
+	    {
+		Singleton<NotificationManager>.instance.AddWaveEvent(buildingData.m_position, NotificationEvent.Type.Happy, ImmaterialResourceManager.Resource.Abandonment, -buildingData.Width * buildingData.Length, 64f);
+		return;
+	    }
+	    if (PoliceDepartmentAccumulation != 0)
+	    {
+		Vector3 position = buildingData.m_position;
+		position.y += m_info.m_size.y;
+		Singleton<NotificationManager>.instance.AddEvent(NotificationEvent.Type.LoseHappiness, position, 1.5f);
+	    }
+	    if (PoliceDepartmentAccumulation != 0 || m_noiseAccumulation != 0)
+	    {
+		Singleton<NotificationManager>.instance.AddWaveEvent(buildingData.m_position, NotificationEvent.Type.Sad, ImmaterialResourceManager.Resource.PoliceDepartment, -PoliceDepartmentAccumulation, m_policeDepartmentRadius, buildingData.m_position, NotificationEvent.Type.Happy, ImmaterialResourceManager.Resource.NoisePollution, -m_noiseAccumulation, m_noiseRadius);
+	    }
+	}
+
+        public override void BuildingDeactivated(ushort buildingID, ref Building data)
+	{
+	    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+	    offer.Building = buildingID;
+	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    {
+		Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.CriminalMove, offer);
+	    }
+	    else
+	    {
+		Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer);
+		Singleton<TransferManager>.instance.RemoveOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer);
+                Singleton<TransferManager>.instance.RemoveOutgoingOffer((TransferManager.TransferReason)126, offer);
+	    }
+	    base.BuildingDeactivated(buildingID, ref data);
+	}
 
         public override void StartTransfer(ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer) {
             if (material == TransferManager.TransferReason.Crime || material == TransferManager.TransferReason.CriminalMove || material == (TransferManager.TransferReason)126) {
@@ -65,78 +236,62 @@ namespace PrisonHelicopter.AI {
             }
         }
 
-
-        public override string GetLocalizedStats(ushort buildingID, ref Building data)
+        public override void ModifyMaterialBuffer(ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int amountDelta)
 	{
-	    CitizenManager instance = Singleton<CitizenManager>.instance;
-	    uint num = data.m_citizenUnits;
-	    int num2 = 0;
-	    int num3 = 0;
-	    while (num != 0)
+	    if (material == TransferManager.TransferReason.Crime)
 	    {
-		    uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
-		    if ((instance.m_units.m_buffer[num].m_flags & CitizenUnit.Flags.Visit) != 0)
-		    {
-			    for (int i = 0; i < 5; i++)
-			    {
-				    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
-				    if (citizen != 0 && instance.m_citizens.m_buffer[citizen].CurrentLocation == Citizen.Location.Visit)
-				    {
-					    num3++;
-				    }
-			    }
-		    }
-		    num = nextUnit;
-		    if (++num2 > 524288)
-		    {
-			    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-			    break;
-		    }
+		amountDelta = Mathf.Max(amountDelta, 0);
 	    }
-	    int budget = Singleton<EconomyManager>.instance.GetBudget(m_info.m_class);
-	    int productionRate = PlayerBuildingAI.GetProductionRate(100, budget);
-	    int num4 = (productionRate * PoliceCarCount + 99) / 100;
-            int num5 = (productionRate * PoliceVanCount + 99) / 100;
-	    int count = 0;
-            int count1 = 0;
-	    int cargo = 0;
-            int cargo1 = 0;
-	    int capacity = 0;
-            int capacity1 = 0;
-	    int outside = 0;
-            int outside1 = 0;
-	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
-	    {
-		CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.CriminalMove, ref count, ref cargo, ref capacity, ref outside);
-	    }
-            else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) == 0)
-            {
-                CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-                CalculateOwnVehicles(buildingID, ref data, (TransferManager.TransferReason)126, ref count1, ref cargo1, ref capacity1, ref outside1);
-            }
 	    else
 	    {
-		CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
+		base.ModifyMaterialBuffer(buildingID, ref data, material, ref amountDelta);
 	    }
-	    string text;
-	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
-	    {
-		    text = LocaleFormatter.FormatGeneric("AIINFO_PRISON_CRIMINALS", num3, JailCapacity) + Environment.NewLine;
-		    return text + LocaleFormatter.FormatGeneric("AIINFO_PRISON_CARS", count, num4);
-	    }
-            else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) == 0)
-            {
-                text = LocaleFormatter.FormatGeneric("AIINFO_POLICESTATION_CRIMINALS", num3, JailCapacity) + Environment.NewLine;
-                text += LocaleFormatter.FormatGeneric("AIINFO_POLICE_CARS", count, num4) + Environment.NewLine;
-                return text + LocaleFormatter.FormatGeneric("AIINFO_PRISON_CARS", count1, num5);
-            }
-            else
-            {
-                text = LocaleFormatter.FormatGeneric("AIINFO_POLICESTATION_CRIMINALS", num3, JailCapacity) + Environment.NewLine;
-		return text + LocaleFormatter.FormatGeneric("AIINFO_POLICE_CARS", count, num4);
-            }		
 	}
 
+        public override void GetMaterialAmount(ushort buildingID, ref Building data, TransferManager.TransferReason material, out int amount, out int max)
+	{
+	    if (material == TransferManager.TransferReason.Crime)
+	    {
+		amount = 0;
+		max = 1000000;
+	    }
+	    else
+	    {
+		base.GetMaterialAmount(buildingID, ref data, material, out amount, out max);
+	    }
+	}
+
+        public override float GetCurrentRange(ushort buildingID, ref Building data)
+	{
+	    int num = data.m_productionRate;
+	    if ((data.m_flags & (Building.Flags.Evacuating | Building.Flags.Active)) != Building.Flags.Active)
+	    {
+		num = 0;
+	    }
+	    else if ((data.m_flags & Building.Flags.RateReduced) != 0)
+	    {
+		num = Mathf.Min(num, 50);
+	    }
+	    int budget = Singleton<EconomyManager>.instance.GetBudget(m_info.m_class);
+	    num = PlayerBuildingAI.GetProductionRate(num, budget);
+	    return (float)num * m_policeDepartmentRadius * 0.01f;
+	}
+
+        protected override void HandleWorkAndVisitPlaces(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveWorkerCount, ref int totalWorkerCount, ref int workPlaceCount, ref int aliveVisitorCount, ref int totalVisitorCount, ref int visitPlaceCount)
+	{
+	    workPlaceCount += m_workPlaceCount0 + m_workPlaceCount1 + m_workPlaceCount2 + m_workPlaceCount3;
+	    GetWorkBehaviour(buildingID, ref buildingData, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount);
+	    HandleWorkPlaces(buildingID, ref buildingData, m_workPlaceCount0, m_workPlaceCount1, m_workPlaceCount2, m_workPlaceCount3, ref behaviour, aliveWorkerCount, totalWorkerCount);
+	    visitPlaceCount += JailCapacity;
+	    GetVisitBehaviour(buildingID, ref buildingData, ref behaviour, ref aliveVisitorCount, ref totalVisitorCount);
+	    behaviour.m_crimeAccumulation = 0;
+	}
+
+        protected override int AdjustMaintenanceCost(ushort buildingID, ref Building data, int maintenanceCost)
+	{
+	    int value = base.AdjustMaintenanceCost(buildingID, ref data, maintenanceCost);
+	    return UniqueFacultyAI.DecreaseByBonus(UniqueFacultyAI.FacultyBonus.Law, value);
+	}
 
         protected override void ProduceGoods(ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
 	{
@@ -320,7 +475,7 @@ namespace PrisonHelicopter.AI {
 	    }
 	    if (num8 - capacity3 > 0 && num8 >= (JailCapacity * OptionsWrapper<Options>.Options.priosnersPercentage / 100))
 	    {
-                if ((buildingData.m_flags & Building.Flags.Downgrading) == 0) // allow helicopters and prison vans
+                if ((buildingData.m_flags & Building.Flags.Downgrading) == 0) // allow helicopters to land and dispatch prison vans
                 {
                     TransferManager.TransferOffer offer3 = default(TransferManager.TransferOffer);
 		    offer3.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, JailCapacity);
@@ -330,7 +485,7 @@ namespace PrisonHelicopter.AI {
 		    offer3.Active = false;
                     Singleton<TransferManager>.instance.AddOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer3);
                 }
-                else if ((buildingData.m_flags & Building.Flags.Downgrading) != 0) // allow only police vans
+                else if ((buildingData.m_flags & Building.Flags.Downgrading) != 0) // allow only vans fro police station and prison to come
                 {
                     TransferManager.TransferOffer offer3 = default(TransferManager.TransferOffer);
 		    offer3.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, JailCapacity);
@@ -343,13 +498,126 @@ namespace PrisonHelicopter.AI {
 	    }
 	}
 
+        protected override bool CanEvacuate()
+	{
+	    return false;
+	}
+
+        public override bool EnableNotUsedGuide()
+	{
+	    return true;
+	}
+
+        public override void GetPollutionAccumulation(out int ground, out int noise)
+	{
+	    ground = 0;
+	    noise = m_noiseAccumulation;
+	}
+
+        public override string GetLocalizedTooltip()
+	{
+            Building data = Singleton<BuildingManager>.instance.m_buildings.m_buffer[m_info.GetInstanceID()];
+	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    {
+		string text = LocaleFormatter.FormatGeneric("AIINFO_WATER_CONSUMPTION", GetWaterConsumption() * 16) + Environment.NewLine + LocaleFormatter.FormatGeneric("AIINFO_ELECTRICITY_CONSUMPTION", GetElectricityConsumption() * 16);
+		return TooltipHelper.Append(base.GetLocalizedTooltip(), TooltipHelper.Format(LocaleFormatter.Info1, text, LocaleFormatter.Info2, LocaleFormatter.FormatGeneric("AIINFO_PRISONCAR_COUNT", m_policeCarCount)));
+	    }
+            else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) == 0)
+            {
+                string text2 = LocaleFormatter.FormatGeneric("AIINFO_WATER_CONSUMPTION", GetWaterConsumption() * 16) + Environment.NewLine + LocaleFormatter.FormatGeneric("AIINFO_ELECTRICITY_CONSUMPTION", GetElectricityConsumption() * 16);
+                string text3 = Environment.NewLine + LocaleFormatter.FormatGeneric("AIINFO_PRISONCAR_COUNT", m_policeVanCount);
+                return TooltipHelper.Append(base.GetLocalizedTooltip(), TooltipHelper.Format(LocaleFormatter.Info1, text2, LocaleFormatter.Info2, LocaleFormatter.FormatGeneric("AIINFO_POLICECAR_COUNT", m_policeCarCount), text3));
+            }
+            else
+            {
+                string text4 = LocaleFormatter.FormatGeneric("AIINFO_WATER_CONSUMPTION", GetWaterConsumption() * 16) + Environment.NewLine + LocaleFormatter.FormatGeneric("AIINFO_ELECTRICITY_CONSUMPTION", GetElectricityConsumption() * 16);
+	        return TooltipHelper.Append(base.GetLocalizedTooltip(), TooltipHelper.Format(LocaleFormatter.Info1, text4, LocaleFormatter.Info2, LocaleFormatter.FormatGeneric("AIINFO_POLICECAR_COUNT", m_policeCarCount)));
+            }
+	    
+	}
+
+        public override string GetLocalizedStats(ushort buildingID, ref Building data)
+	{
+	    CitizenManager instance = Singleton<CitizenManager>.instance;
+	    uint num = data.m_citizenUnits;
+	    int num2 = 0;
+	    int num3 = 0;
+	    while (num != 0)
+	    {
+		uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
+		if ((instance.m_units.m_buffer[num].m_flags & CitizenUnit.Flags.Visit) != 0)
+		{
+		    for (int i = 0; i < 5; i++)
+		    {
+			uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
+			if (citizen != 0 && instance.m_citizens.m_buffer[citizen].CurrentLocation == Citizen.Location.Visit)
+			{
+			    num3++;
+			}
+		    }
+		}
+		num = nextUnit;
+		if (++num2 > 524288)
+		{
+		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+		    break;
+		}
+	    }
+	    int budget = Singleton<EconomyManager>.instance.GetBudget(m_info.m_class);
+	    int productionRate = PlayerBuildingAI.GetProductionRate(100, budget);
+	    int num4 = (productionRate * PoliceCarCount + 99) / 100;
+            int num5 = (productionRate * PoliceVanCount + 99) / 100;
+	    int count = 0;
+            int count1 = 0;
+	    int cargo = 0;
+            int cargo1 = 0;
+	    int capacity = 0;
+            int capacity1 = 0;
+	    int outside = 0;
+            int outside1 = 0;
+	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    {
+		CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.CriminalMove, ref count, ref cargo, ref capacity, ref outside);
+	    }
+            else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) == 0)
+            {
+                CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
+                CalculateOwnVehicles(buildingID, ref data, (TransferManager.TransferReason)126, ref count1, ref cargo1, ref capacity1, ref outside1);
+            }
+	    else
+	    {
+		CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
+	    }
+	    string text;
+	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
+	    {
+		    text = LocaleFormatter.FormatGeneric("AIINFO_PRISON_CRIMINALS", num3, JailCapacity) + Environment.NewLine;
+		    return text + LocaleFormatter.FormatGeneric("AIINFO_PRISON_CARS", count, num4);
+	    }
+            else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) == 0)
+            {
+                text = LocaleFormatter.FormatGeneric("AIINFO_POLICESTATION_CRIMINALS", num3, JailCapacity) + Environment.NewLine;
+                text += LocaleFormatter.FormatGeneric("AIINFO_POLICE_CARS", count, num4) + Environment.NewLine;
+                return text + LocaleFormatter.FormatGeneric("AIINFO_PRISON_CARS", count1, num5);
+            }
+            else
+            {
+                text = LocaleFormatter.FormatGeneric("AIINFO_POLICESTATION_CRIMINALS", num3, JailCapacity) + Environment.NewLine;
+		return text + LocaleFormatter.FormatGeneric("AIINFO_POLICE_CARS", count, num4);
+            }		
+	}
+
+        public override bool RequireRoadAccess()
+	{
+	    return true;
+	}
+
         public override void SetEmptying(ushort buildingID, ref Building data, bool emptying)
         {
             if(data.Info.GetAI() is PoliceStationAI && data.Info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
                data.m_flags = data.m_flags.SetFlags(Building.Flags.Downgrading, emptying);
             }
         }
-
 
         private static ushort FindClosestPoliceHelicopterDepot(Vector3 pos) {
             BuildingManager instance = Singleton<BuildingManager>.instance;
