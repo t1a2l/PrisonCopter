@@ -1,4 +1,4 @@
-using PrisonHelicopter.HarmonyPatches.PoliceCopterAIPatch;
+using PrisonHelicopter.HarmonyPatches;
 
 namespace PrisonHelicopter.Utils {
     public class GameConnectionManager {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using PrisonHelicopter.AI.NewPoliceStationAI;
+using PrisonHelicopter.AI;
 
 namespace PrisonHelicopter.Utils {
     public static class AiReplacementHelper {
