@@ -1,7 +1,7 @@
 using HarmonyLib;
 using System;
 
-namespace PrisonHelicopter.HarmonyPatches.TransferManagerPatch {
+namespace PrisonHelicopter.HarmonyPatches {
 
     [HarmonyPatch(typeof(TransferManager))]
     public static class TransferManagerPatch {

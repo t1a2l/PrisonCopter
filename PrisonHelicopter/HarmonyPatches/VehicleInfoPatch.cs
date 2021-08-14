@@ -5,7 +5,7 @@ using PrisonHelicopter.Utils;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace PrisonHelicopter.HarmonyPatches.VehicleInfoPatch
+namespace PrisonHelicopter.HarmonyPatches
 {
     [HarmonyPatch(typeof(VehicleInfo))]
     internal static class VehicleInfoPatch

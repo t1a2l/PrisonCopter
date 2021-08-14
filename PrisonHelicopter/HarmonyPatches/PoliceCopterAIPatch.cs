@@ -2,7 +2,7 @@ using HarmonyLib;
 using System;
 using PrisonHelicopter.Utils;
 
-namespace PrisonHelicopter.HarmonyPatches.PoliceCopterAIPatch {
+namespace PrisonHelicopter.HarmonyPatches {
 
     public delegate void SimulationStepHelicopterAIDelegate(HelicopterAI instance, ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics);
 

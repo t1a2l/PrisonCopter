@@ -4,7 +4,7 @@ using System.Reflection;
 using ColossalFramework;
 using UnityEngine;
 
-namespace PrisonHelicopter.HarmonyPatches.HelicopterDepotAIPatch {
+namespace PrisonHelicopter.HarmonyPatches {
 
     [HarmonyPatch(typeof(HelicopterDepotAI))]
     public static class HelicopterDepotAIPatch {

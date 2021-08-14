@@ -4,7 +4,7 @@ using System;
 using UnityEngine;
 
 
-namespace PrisonHelicopter.HarmonyPatches.PoliceCarAIPatch {
+namespace PrisonHelicopter.HarmonyPatches {
 
     [HarmonyPatch(typeof(PoliceCarAI))]
     public static class PoliceCarAIPatch {
