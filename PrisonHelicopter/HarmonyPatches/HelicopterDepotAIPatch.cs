@@ -3,6 +3,7 @@ using System;
 using System.Reflection;
 using ColossalFramework;
 using UnityEngine;
+using PrisonHelicopter.AI;
 
 namespace PrisonHelicopter.HarmonyPatches {
 
@@ -14,12 +15,6 @@ namespace PrisonHelicopter.HarmonyPatches {
         private delegate TransferManager.TransferReason GetTransferReason2Delegate(HelicopterDepotAI instance);
         private static GetTransferReason2Delegate GetTransferReason2 = AccessTools.MethodDelegate<GetTransferReason2Delegate>(typeof(HelicopterDepotAI).GetMethod("GetTransferReason2", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
-        private delegate void CalculateOwnVehiclesDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside);
-        private static CalculateOwnVehiclesDelegate CalculateOwnVehicles = AccessTools.MethodDelegate<CalculateOwnVehiclesDelegate>(typeof(CommonBuildingAI).GetMethod("CalculateOwnVehicles", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
-
-        private delegate void BuildingDeactivatedDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building data);
-        private static BuildingDeactivatedDelegate BaseBuildingDeactivated = AccessTools.MethodDelegate<BuildingDeactivatedDelegate>(typeof(PlayerBuildingAI).GetMethod("BuildingDeactivated", BindingFlags.Instance | BindingFlags.Public), null, false);
-
         [HarmonyPatch(typeof(HelicopterDepotAI), "GetTransferReason1")]
         [HarmonyPostfix]
         public static void GetTransferReason1(HelicopterDepotAI __instance, ref TransferManager.TransferReason __result) {
@@ -28,10 +23,13 @@ namespace PrisonHelicopter.HarmonyPatches {
                     __result = TransferManager.TransferReason.Sick2;
                     break;
                 case ItemClass.Service.PoliceDepartment:
-                    if (__instance.m_info.m_class.name == "Prison Vehicle") {
-                        __result = TransferManager.TransferReason.CriminalMove;
-                    } else {
+                    if (__instance.m_info.m_class.m_level < ItemClass.Level.Level4)
+                    {
                         __result = TransferManager.TransferReason.Crime;
+                    }
+                    else
+                    {
+                        __result = TransferManager.TransferReason.CriminalMove;
                     }
                     break;
                 case ItemClass.Service.FireDepartment:
@@ -50,8 +48,8 @@ namespace PrisonHelicopter.HarmonyPatches {
             GetTransferReason1(__instance, ref transferReason);
             TransferManager.TransferReason transferReason2 = GetTransferReason2(__instance);
             if (material != TransferManager.TransferReason.None && (material == transferReason || material == transferReason2)) {
-                // no prison don't spawn prison helicopter
-                if(material == TransferManager.TransferReason.CriminalMove && (FindClosestPrison(data.m_position) == 0 || (data.m_flags & Building.Flags.Downgrading) != 0))
+                // if thereis no prison don't spawn prison helicopters
+                if(material == TransferManager.TransferReason.CriminalMove && FindClosestPrison(data.m_position) == 0)
                 {
                     return false;
                 }
@@ -68,89 +66,6 @@ namespace PrisonHelicopter.HarmonyPatches {
                 BaseStartTransfer(__instance, buildingID, ref data, material, offer);
             }
             return false;
-        }
-
-        [HarmonyPatch(typeof(HelicopterDepotAI), "GetLocalizedStats")]
-        [HarmonyPrefix]
-        public static bool GetLocalizedStats(HelicopterDepotAI __instance, ushort buildingID, ref Building data, ref string __result)
-	{
-		int budget = Singleton<EconomyManager>.instance.GetBudget(__instance.m_info.m_class);
-		int productionRate = PlayerBuildingAI.GetProductionRate(100, budget);
-		int num = (productionRate * __instance.m_helicopterCount + 99) / 100;
-                int num1 = (productionRate * __instance.m_helicopterCount + 99) / 100;
-		int count = 0;
-                int count1 = 0;
-		int cargo = 0;
-                int cargo1 = 0;
-		int capacity = 0;
-                int capacity1 = 0;
-		int outside = 0;
-                int outside1 = 0;
-                string text = string.Empty;
-		TransferManager.TransferReason transferReason = TransferManager.TransferReason.None;
-                GetTransferReason1(__instance, ref transferReason);
-		TransferManager.TransferReason transferReason2 =  GetTransferReason2(__instance);
-		if (transferReason != TransferManager.TransferReason.None)
-		{
-                    if(transferReason == TransferManager.TransferReason.Crime)
-                    {
-                        CalculateOwnVehicles(__instance, buildingID, ref data, transferReason, ref count, ref cargo, ref capacity, ref outside);
-                        CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.CriminalMove, ref count1, ref cargo1, ref capacity1, ref outside1);
-                    }
-                    else if(transferReason != TransferManager.TransferReason.CriminalMove)
-                    {
-                        CalculateOwnVehicles(__instance, buildingID, ref data, transferReason, ref count, ref cargo, ref capacity, ref outside);
-                    }
-		}
-		if (transferReason2 != TransferManager.TransferReason.None)
-		{
-			CalculateOwnVehicles(__instance, buildingID, ref data, transferReason2, ref count, ref cargo, ref capacity, ref outside);
-		}
-                if(transferReason == TransferManager.TransferReason.Crime)
-                {
-                    text += "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
-                    if((data.m_flags & Building.Flags.Downgrading) == 0)
-                    {
-                        text += Environment.NewLine;
-                        text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
-                    }
-                    __result = text;
-                }
-                else if(transferReason != TransferManager.TransferReason.CriminalMove)
-                {
-                    __result = LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
-                }
-		return false;
-	}
-
-        [HarmonyPatch(typeof(HelicopterDepotAI), "BuildingDeactivated")]
-        [HarmonyPrefix]
-        public static bool BuildingDeactivated(HelicopterDepotAI __instance, ushort buildingID, ref Building data)
-	{
-	    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
-	    offer.Building = buildingID;
-	    TransferManager.TransferReason transferReason = TransferManager.TransferReason.None;
-            GetTransferReason1(__instance, ref transferReason);
-            TransferManager.TransferReason transferReason2 = GetTransferReason2(__instance);
-	    if (transferReason != TransferManager.TransferReason.None)
-	    {
-		    Singleton<TransferManager>.instance.RemoveIncomingOffer(transferReason, offer);
-	    }
-	    if (transferReason2 != TransferManager.TransferReason.None)
-	    {
-		    Singleton<TransferManager>.instance.RemoveIncomingOffer(transferReason2, offer);
-	    }
-	    BaseBuildingDeactivated(__instance, buildingID, ref data);
-            return false;
-	}
-
-        [HarmonyPatch(typeof(BuildingAI), "SetEmptying")]
-        [HarmonyPostfix]
-        public static void SetEmptying(ushort buildingID, ref Building data, bool emptying)
-        {
-            if(data.Info.GetAI() is HelicopterDepotAI && data.Info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
-               data.m_flags = data.m_flags.SetFlags(Building.Flags.Downgrading, emptying);
-            }
         }
 
         private static ushort FindClosestPrison(Vector3 pos) {
@@ -179,7 +94,7 @@ namespace PrisonHelicopter.HarmonyPatches {
                             if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0) {
 
                                 BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
-                                if (info.GetAI() is PoliceStationAI policeStationAI
+                                if (info.GetAI() is NewPoliceStationAI
                                     && info.m_class.m_service == ItemClass.Service.PoliceDepartment
                                     && info.m_class.m_level >= ItemClass.Level.Level4) {
                                     Vector3 position = instance.m_buildings.m_buffer[num12].m_position;
