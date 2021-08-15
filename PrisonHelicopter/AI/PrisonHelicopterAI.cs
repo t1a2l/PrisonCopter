@@ -5,17 +5,21 @@ using System;
 
 namespace PrisonHelicopter.AI {
 
-    public class PrisonHelicopterAI : PoliceCopterAI {
+    public class PrisonHelicopterAI :  HelicopterAI {
 
         public int m_policeCount = 2;
 
         [CustomizableProperty("Criminal capacity")]
-        public int m_criminalCapacity;
+        public int m_criminalCapacity = 10;
 
-        public PrisonHelicopterAI() {
-            m_crimeCapacity = 0;
-            m_criminalCapacity = 10;
-        }
+        public override Color GetColor(ushort vehicleID, ref Vehicle data, InfoManager.InfoMode infoMode)
+	{
+	    if (infoMode == InfoManager.InfoMode.CrimeRate)
+	    {
+		return Singleton<InfoManager>.instance.m_properties.m_modeProperties[(int)infoMode].m_activeColor;
+	    }
+	    return base.GetColor(vehicleID, ref data, infoMode);
+	}
 
         public override string GetLocalizedStatus(ushort vehicleID, ref Vehicle data, out InstanceID target)
 	{
@@ -93,6 +97,22 @@ namespace PrisonHelicopter.AI {
 	    base.ReleaseVehicle(vehicleID, ref data);
         }
 
+        public override void SimulationStep(ushort vehicleID, ref Vehicle data, Vector3 physicsLodRefPos)
+	{
+	    if ((data.m_flags & Vehicle.Flags.WaitingTarget) != 0 && ++data.m_waitCounter > 20)
+	    {
+		RemoveOffers(vehicleID, ref data);
+		data.m_flags &= ~(Vehicle.Flags.Emergency2 | Vehicle.Flags.Landing | Vehicle.Flags.WaitingTarget);
+		data.m_flags |= Vehicle.Flags.GoingBack;
+		data.m_waitCounter = 0;
+		if (!StartPathFind(vehicleID, ref data))
+		{
+		    data.Unspawn(vehicleID);
+		}
+	    }
+	    base.SimulationStep(vehicleID, ref data, physicsLodRefPos);
+	}
+
         public override void LoadVehicle(ushort vehicleID, ref Vehicle data)
         {
             base.LoadVehicle(vehicleID, ref data);
@@ -107,6 +127,38 @@ namespace PrisonHelicopter.AI {
             }
         }
 
+        public override void SetSource(ushort vehicleID, ref Vehicle data, ushort sourceBuilding)
+	{
+	    RemoveSource(vehicleID, ref data);
+	    data.m_sourceBuilding = sourceBuilding;
+	    if (sourceBuilding != 0)
+	    {
+		BuildingManager instance = Singleton<BuildingManager>.instance;
+		BuildingInfo info = instance.m_buildings.m_buffer[sourceBuilding].Info;
+		data.Unspawn(vehicleID);
+		Randomizer randomizer = new Randomizer(vehicleID);
+		info.m_buildingAI.CalculateSpawnPosition(sourceBuilding, ref instance.m_buildings.m_buffer[sourceBuilding], ref randomizer, m_info, out var position, out var target);
+		Quaternion rotation = Quaternion.identity;
+		Vector3 forward = target - position;
+		if (forward.sqrMagnitude > 0.01f)
+		{
+			rotation = Quaternion.LookRotation(forward);
+		}
+		data.m_frame0 = new Vehicle.Frame(position, rotation);
+		data.m_frame1 = data.m_frame0;
+		data.m_frame2 = data.m_frame0;
+		data.m_frame3 = data.m_frame0;
+		data.m_targetPos0 = position;
+		data.m_targetPos0.w = 0f;
+		data.m_targetPos1 = target;
+		data.m_targetPos1.w = 0f;
+		data.m_targetPos2 = data.m_targetPos1;
+		data.m_targetPos3 = data.m_targetPos1;
+		FrameDataUpdated(vehicleID, ref data, ref data.m_frame0);
+		Singleton<BuildingManager>.instance.m_buildings.m_buffer[sourceBuilding].AddOwnVehicle(vehicleID, ref data);
+	    }
+	}
+
         public override void SetTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
 	{
 	    RemoveTarget(vehicleID, ref data);
@@ -115,9 +167,9 @@ namespace PrisonHelicopter.AI {
 	    data.m_waitCounter = 0;
             BuildingManager instance = Singleton<BuildingManager>.instance;
             BuildingInfo building_info = instance.m_buildings.m_buffer[targetBuilding].Info;
-	    if (targetBuilding != 0 && building_info.GetAI() is PoliceStationAI policeStationAI)
+	    if (targetBuilding != 0 && building_info.GetAI() is NewPoliceStationAI newPoliceStationAI)
 	    {
-                if((building_info.m_class.m_level < ItemClass.Level.Level4 && policeStationAI.JailCapacity >= 60 && data.m_transferSize == 0) ||  (building_info.m_class.m_level >= ItemClass.Level.Level4 && data.m_transferSize > 0))
+                if((building_info.m_class.m_level < ItemClass.Level.Level4 && newPoliceStationAI.JailCapacity >= 60 && data.m_transferSize == 0) ||  (building_info.m_class.m_level >= ItemClass.Level.Level4 && data.m_transferSize > 0))
                 {
                     data.m_flags &= ~Vehicle.Flags.Landing;
                     data.m_flags |= Vehicle.Flags.Emergency2;
@@ -158,6 +210,22 @@ namespace PrisonHelicopter.AI {
 	    if (!StartPathFind(vehicleID, ref data))
 	    {
 		data.Unspawn(vehicleID);
+	    }
+	}
+
+        public override void BuildingRelocated(ushort vehicleID, ref Vehicle data, ushort building)
+	{
+	    base.BuildingRelocated(vehicleID, ref data, building);
+	    if (building == data.m_sourceBuilding)
+	    {
+		if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
+		{
+		    InvalidPath(vehicleID, ref data, vehicleID, ref data);
+		}
+	    }
+	    else if (building == data.m_targetBuilding && (data.m_flags & Vehicle.Flags.GoingBack) == 0)
+	    {
+		InvalidPath(vehicleID, ref data, vehicleID, ref data);
 	    }
 	}
 
@@ -273,6 +341,19 @@ namespace PrisonHelicopter.AI {
 	    return true;
 	}
 
+        public override bool ArriveAtDestination(ushort vehicleID, ref Vehicle vehicleData)
+	{
+	    if ((vehicleData.m_flags & Vehicle.Flags.WaitingTarget) != 0)
+	    {
+		return false;
+	    }
+	    if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) != 0)
+	    {
+		return ArriveAtSource(vehicleID, ref vehicleData);
+	    }
+	    return ArriveAtTarget(vehicleID, ref vehicleData);
+	}
+
         public override void UpdateBuildingTargetPositions(ushort vehicleID, ref Vehicle vehicleData, Vector3 refPos, ushort leaderID, ref Vehicle leaderData, ref int index, float minSqrDistance)
 	{
 	    if ((leaderData.m_flags & Vehicle.Flags.WaitingTarget) != (Vehicle.Flags)0)
@@ -334,131 +415,18 @@ namespace PrisonHelicopter.AI {
 	    return false;
 	}
 
-        private void UnloadCriminals(ushort vehicleID, ref Vehicle data)
+        public override InstanceID GetTargetID(ushort vehicleID, ref Vehicle vehicleData)
 	{
-	    CitizenManager instance = Singleton<CitizenManager>.instance;
-	    uint num = data.m_citizenUnits;
-	    int num2 = 0;
-	    int num3 = 0;
-	    while (num != 0)
-	    {
-		uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
-		for (int i = 0; i < 5; i++)
-		{
-		    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
-		    if (citizen == 0 || instance.m_citizens.m_buffer[citizen].CurrentLocation != Citizen.Location.Moving || !instance.m_citizens.m_buffer[citizen].Arrested)
-		    {
-			continue;
-		    }
-		    ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
-		    if (instance2 != 0)
-		    {
-			instance.ReleaseCitizenInstance(instance2);
-		    }
-		    instance.m_citizens.m_buffer[citizen].SetVisitplace(citizen, data.m_targetBuilding, 0u);
-		    if (instance.m_citizens.m_buffer[citizen].m_visitBuilding != 0)
-		    {
-			instance.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Visit;
-			SpawnPrisoner(vehicleID, ref data, citizen);
-		    }
-		    else
-		    {
-			instance.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Home;
-			instance.m_citizens.m_buffer[citizen].Arrested = false;
-			num3++;
-		    }
-		}
-		num = nextUnit;
-		if (++num2 > 524288)
-		{
-		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-		    break;
-		}
-	    }
-	    data.m_transferSize = 0;
-	    if (num3 != 0 && data.m_targetBuilding != 0)
-	    {
-		BuildingManager instance3 = Singleton<BuildingManager>.instance;
-		DistrictManager instance4 = Singleton<DistrictManager>.instance;
-		byte district = instance4.GetDistrict(instance3.m_buildings.m_buffer[data.m_targetBuilding].m_position);
-		instance4.m_districts.m_buffer[district].m_productionData.m_tempCriminalExtra += (uint)num3;
-	    }
-	}
-
-        public override bool ArriveAtDestination(ushort vehicleID, ref Vehicle vehicleData)
-	{
-	    if ((vehicleData.m_flags & Vehicle.Flags.WaitingTarget) != 0)
-	    {
-		return false;
-	    }
+	    InstanceID result = default(InstanceID);
 	    if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) != 0)
 	    {
-		return ArriveAtSource(vehicleID, ref vehicleData);
+		result.Building = vehicleData.m_sourceBuilding;
 	    }
-	    return ArriveAtTarget(vehicleID, ref vehicleData);
-	}
-
-        private void SpawnPrisoner( ushort vehicleID, ref Vehicle data, uint citizen)
-	{
-	    if (data.m_targetBuilding != 0)
+	    else
 	    {
-		SimulationManager instance = Singleton<SimulationManager>.instance;
-		CitizenManager instance2 = Singleton<CitizenManager>.instance;
-		Citizen.Gender gender = Citizen.GetGender(citizen);
-		CitizenInfo groupCitizenInfo = instance2.GetGroupCitizenInfo(ref instance.m_randomizer, m_info.m_class.m_service, gender, Citizen.SubCulture.Generic, Citizen.AgePhase.Young0);
-		if (groupCitizenInfo != null && instance2.CreateCitizenInstance(out var instance3, ref instance.m_randomizer, groupCitizenInfo, citizen))
-		{
-		    Vector3 randomDoorPosition = data.GetRandomDoorPosition(ref instance.m_randomizer, VehicleInfo.DoorType.Exit);
-		    groupCitizenInfo.m_citizenAI.SetCurrentVehicle(instance3, ref instance2.m_instances.m_buffer[instance3], 0, 0u, randomDoorPosition);
-		    groupCitizenInfo.m_citizenAI.SetTarget(instance3, ref instance2.m_instances.m_buffer[instance3], data.m_targetBuilding);
-		}
+		result.Building = vehicleData.m_targetBuilding;
 	    }
-	}
-
-        private void ArrestCriminals(ushort vehicleID, ref Vehicle vehicleData, ushort building)
-	{
-	    if (vehicleData.m_transferSize >= m_criminalCapacity)
-	    {
-                return;
-	    }
-	    BuildingManager instance = Singleton<BuildingManager>.instance;
-	    CitizenManager instance2 = Singleton<CitizenManager>.instance;
-	    uint num = instance.m_buildings.m_buffer[building].m_citizenUnits;
-	    int num2 = 0;
-	    while (num != 0)
-	    {
-		uint nextUnit = instance2.m_units.m_buffer[num].m_nextUnit;
-		for (int i = 0; i < 5; i++)
-		{
-		    uint citizen = instance2.m_units.m_buffer[num].GetCitizen(i);
-		    if (citizen != 0 && (instance2.m_citizens.m_buffer[citizen].Criminal || instance2.m_citizens.m_buffer[citizen].Arrested) && !instance2.m_citizens.m_buffer[citizen].Dead && instance2.m_citizens.m_buffer[citizen].GetBuildingByLocation() == building)
-		    {
-			instance2.m_citizens.m_buffer[citizen].SetVehicle(citizen, vehicleID, 0u);
-			if (instance2.m_citizens.m_buffer[citizen].m_vehicle != vehicleID)
-			{
-			    vehicleData.m_transferSize = (ushort)m_criminalCapacity;
-			    return;
-			}
-			instance2.m_citizens.m_buffer[citizen].Arrested = true;
-			ushort instance3 = instance2.m_citizens.m_buffer[citizen].m_instance;
-			if (instance3 != 0)
-			{
-			    instance2.ReleaseCitizenInstance(instance3);
-			}
-			instance2.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Moving;
-			if (++vehicleData.m_transferSize >= m_criminalCapacity)
-			{
-			    return;
-			}
-		    }
-		}
-		num = nextUnit;
-		if (++num2 > 524288)
-		{
-		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-		    break;
-		}
-	    }
+	    return result;
 	}
 
         public override bool CanLeave(ushort vehicleID, ref Vehicle vehicleData)
@@ -529,6 +497,120 @@ namespace PrisonHelicopter.AI {
 		}
 	    }
 	    return flag;
+	}
+
+        private void UnloadCriminals(ushort vehicleID, ref Vehicle data)
+	{
+	    CitizenManager instance = Singleton<CitizenManager>.instance;
+	    uint num = data.m_citizenUnits;
+	    int num2 = 0;
+	    int num3 = 0;
+	    while (num != 0)
+	    {
+		uint nextUnit = instance.m_units.m_buffer[num].m_nextUnit;
+		for (int i = 0; i < 5; i++)
+		{
+		    uint citizen = instance.m_units.m_buffer[num].GetCitizen(i);
+		    if (citizen == 0 || instance.m_citizens.m_buffer[citizen].CurrentLocation != Citizen.Location.Moving || !instance.m_citizens.m_buffer[citizen].Arrested)
+		    {
+			continue;
+		    }
+		    ushort instance2 = instance.m_citizens.m_buffer[citizen].m_instance;
+		    if (instance2 != 0)
+		    {
+			instance.ReleaseCitizenInstance(instance2);
+		    }
+		    instance.m_citizens.m_buffer[citizen].SetVisitplace(citizen, data.m_targetBuilding, 0u);
+		    if (instance.m_citizens.m_buffer[citizen].m_visitBuilding != 0)
+		    {
+			instance.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Visit;
+			SpawnPrisoner(vehicleID, ref data, citizen);
+		    }
+		    else
+		    {
+			instance.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Home;
+			instance.m_citizens.m_buffer[citizen].Arrested = false;
+			num3++;
+		    }
+		}
+		num = nextUnit;
+		if (++num2 > 524288)
+		{
+		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+		    break;
+		}
+	    }
+	    data.m_transferSize = 0;
+	    if (num3 != 0 && data.m_targetBuilding != 0)
+	    {
+		BuildingManager instance3 = Singleton<BuildingManager>.instance;
+		DistrictManager instance4 = Singleton<DistrictManager>.instance;
+		byte district = instance4.GetDistrict(instance3.m_buildings.m_buffer[data.m_targetBuilding].m_position);
+		instance4.m_districts.m_buffer[district].m_productionData.m_tempCriminalExtra += (uint)num3;
+	    }
+	}
+
+        private void SpawnPrisoner( ushort vehicleID, ref Vehicle data, uint citizen)
+	{
+	    if (data.m_targetBuilding != 0)
+	    {
+		SimulationManager instance = Singleton<SimulationManager>.instance;
+		CitizenManager instance2 = Singleton<CitizenManager>.instance;
+		Citizen.Gender gender = Citizen.GetGender(citizen);
+		CitizenInfo groupCitizenInfo = instance2.GetGroupCitizenInfo(ref instance.m_randomizer, m_info.m_class.m_service, gender, Citizen.SubCulture.Generic, Citizen.AgePhase.Young0);
+		if (groupCitizenInfo != null && instance2.CreateCitizenInstance(out var instance3, ref instance.m_randomizer, groupCitizenInfo, citizen))
+		{
+		    Vector3 randomDoorPosition = data.GetRandomDoorPosition(ref instance.m_randomizer, VehicleInfo.DoorType.Exit);
+		    groupCitizenInfo.m_citizenAI.SetCurrentVehicle(instance3, ref instance2.m_instances.m_buffer[instance3], 0, 0u, randomDoorPosition);
+		    groupCitizenInfo.m_citizenAI.SetTarget(instance3, ref instance2.m_instances.m_buffer[instance3], data.m_targetBuilding);
+		}
+	    }
+	}
+
+        private void ArrestCriminals(ushort vehicleID, ref Vehicle vehicleData, ushort building)
+	{
+	    if (vehicleData.m_transferSize >= m_criminalCapacity)
+	    {
+                return;
+	    }
+	    BuildingManager instance = Singleton<BuildingManager>.instance;
+	    CitizenManager instance2 = Singleton<CitizenManager>.instance;
+	    uint num = instance.m_buildings.m_buffer[building].m_citizenUnits;
+	    int num2 = 0;
+	    while (num != 0)
+	    {
+		uint nextUnit = instance2.m_units.m_buffer[num].m_nextUnit;
+		for (int i = 0; i < 5; i++)
+		{
+		    uint citizen = instance2.m_units.m_buffer[num].GetCitizen(i);
+		    if (citizen != 0 && (instance2.m_citizens.m_buffer[citizen].Criminal || instance2.m_citizens.m_buffer[citizen].Arrested) && !instance2.m_citizens.m_buffer[citizen].Dead && instance2.m_citizens.m_buffer[citizen].GetBuildingByLocation() == building)
+		    {
+			instance2.m_citizens.m_buffer[citizen].SetVehicle(citizen, vehicleID, 0u);
+			if (instance2.m_citizens.m_buffer[citizen].m_vehicle != vehicleID)
+			{
+			    vehicleData.m_transferSize = (ushort)m_criminalCapacity;
+			    return;
+			}
+			instance2.m_citizens.m_buffer[citizen].Arrested = true;
+			ushort instance3 = instance2.m_citizens.m_buffer[citizen].m_instance;
+			if (instance3 != 0)
+			{
+			    instance2.ReleaseCitizenInstance(instance3);
+			}
+			instance2.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Moving;
+			if (++vehicleData.m_transferSize >= m_criminalCapacity)
+			{
+			    return;
+			}
+		    }
+		}
+		num = nextUnit;
+		if (++num2 > 524288)
+		{
+		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+		    break;
+		}
+	    }
 	}
 
         private uint GetArrestedCitizen(ushort vehicleID, ref Vehicle data)
