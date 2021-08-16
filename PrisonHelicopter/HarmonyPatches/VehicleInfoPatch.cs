@@ -8,9 +8,8 @@ using Object = UnityEngine.Object;
 namespace PrisonHelicopter.HarmonyPatches
 {
     [HarmonyPatch(typeof(VehicleInfo))]
-    internal static class VehicleInfoPatch
-    {
- 
+    internal static class InitializePrefabPatch
+    { 
         [HarmonyPatch(typeof(VehicleInfo), "InitializePrefab")]
         [HarmonyPrefix]
         public static bool InitializePrefab(VehicleInfo __instance)
@@ -21,7 +20,6 @@ namespace PrisonHelicopter.HarmonyPatches
                 {
                     return true;
                 }
-
                 var oldAi = __instance.GetComponent<PrefabAI>();
                 var oldInfo = __instance.GetComponent<PrefabInfo>();
                 Object.DestroyImmediate(oldAi);
