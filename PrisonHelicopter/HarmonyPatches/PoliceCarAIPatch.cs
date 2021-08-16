@@ -158,6 +158,46 @@ namespace PrisonHelicopter.HarmonyPatches {
             return false;
 	}
 
+/*        [HarmonyPatch(typeof(PoliceCarAI), "SetTarget")]
+        [HarmonyPrefix]
+        public override bool SetTarget(PoliceCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding) {
+            RemoveTarget(vehicleID, ref data);
+            data.m_targetBuilding = targetBuilding;
+            data.m_flags &= ~Vehicle.Flags.WaitingTarget;
+            data.m_waitCounter = 0;
+            if (targetBuilding != 0) {
+                if (__instance.m_info.m_class.m_level < ItemClass.Level.Level4) {
+                    if (CountCriminals(targetBuilding) != 0) {
+                        data.m_flags |= Vehicle.Flags.Emergency2;
+                    } else {
+                        data.m_flags &= ~Vehicle.Flags.Emergency2;
+                    }
+                }
+                Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].AddGuestVehicle(vehicleID, ref data);
+            } else {
+                data.m_flags &= ~Vehicle.Flags.Emergency2;
+                if (data.m_transferSize < __instance.m_criminalCapacity && !ShouldReturnToSource(vehicleID, ref data)) {
+                    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+                    offer.Priority = 7;
+                    offer.Vehicle = vehicleID;
+                    if (data.m_sourceBuilding != 0) {
+                        offer.Position = data.GetLastFramePosition() * 0.25f + Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].m_position * 0.75f;
+                    } else {
+                        offer.Position = data.GetLastFramePosition();
+                    }
+                    offer.Amount = 1;
+                    offer.Active = true;
+                    Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)data.m_transferType, offer);
+                    data.m_flags |= Vehicle.Flags.WaitingTarget;
+                } else {
+                    data.m_flags |= Vehicle.Flags.GoingBack;
+                }
+            }
+            if (!StartPathFind(vehicleID, ref data)) {
+                data.Unspawn(vehicleID);
+            }
+        }*/
+
         private static void SpawnPrisoner(PoliceCarAI __instance, ushort vehicleID, ref Vehicle data, uint citizen)
 	{
 	    if (data.m_sourceBuilding != 0)
