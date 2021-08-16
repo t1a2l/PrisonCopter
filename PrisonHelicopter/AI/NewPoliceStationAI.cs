@@ -467,16 +467,6 @@ namespace PrisonHelicopter.AI {
 		        offer4.Active = false;
                         Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)126, offer4);
                     }
-                    if(num8 - capacity4 > 0)
-                    {
-                        TransferManager.TransferOffer offer4 = default(TransferManager.TransferOffer); // ask for own prison vans to return home
-		        offer4.Priority = (num8 - capacity4) * 8 / Mathf.Max(1, JailCapacity);
-		        offer4.Building = buildingID;
-		        offer4.Position = buildingData.m_position;
-		        offer4.Amount = 1;
-		        offer4.Active = false;
-                        Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)125, offer4);
-                    }
                 }
                 else if ((buildingData.m_flags & Building.Flags.Downgrading) != 0)
                 {
