@@ -44,6 +44,8 @@ namespace PrisonHelicopter.AI {
 	[CustomizableProperty("Noise Radius")]
 	public float m_noiseRadius = 200f;
 
+        public int m_jailOccupancy;
+
         public int PoliceCarCount => UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Police, m_policeCarCount);
         public int PoliceVanCount => UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Police, m_policeVanCount);
         public int JailCapacity => UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Police, m_jailCapacity);
@@ -403,6 +405,7 @@ namespace PrisonHelicopter.AI {
             }
 	    int num10 = (finalProductionRate * PoliceCarCount + 99) / 100;
             int num11 = (finalProductionRate * PoliceVanCount + 99) / 100;
+            m_jailOccupancy = num8;
 	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
 	    {
 		if (count4 < num10 && capacity4 + num7 <= JailCapacity - 20)
@@ -456,13 +459,23 @@ namespace PrisonHelicopter.AI {
                     }
                     if(num8 - capacity4 > 0)
                     {
-                         TransferManager.TransferOffer offer4 = default(TransferManager.TransferOffer); // ask for guest prison vans from prison
+                        TransferManager.TransferOffer offer4 = default(TransferManager.TransferOffer); // ask for guest prison vans from prison
 		        offer4.Priority = (num8 - capacity4) * 8 / Mathf.Max(1, JailCapacity);
 		        offer4.Building = buildingID;
 		        offer4.Position = buildingData.m_position;
 		        offer4.Amount = 1;
 		        offer4.Active = false;
                         Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)126, offer4);
+                    }
+                    if(num8 - capacity4 > 0)
+                    {
+                        TransferManager.TransferOffer offer4 = default(TransferManager.TransferOffer); // ask for own prison vans to return home
+		        offer4.Priority = (num8 - capacity4) * 8 / Mathf.Max(1, JailCapacity);
+		        offer4.Building = buildingID;
+		        offer4.Position = buildingData.m_position;
+		        offer4.Amount = 1;
+		        offer4.Active = false;
+                        Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)125, offer4);
                     }
                 }
                 else if ((buildingData.m_flags & Building.Flags.Downgrading) != 0)
@@ -570,12 +583,12 @@ namespace PrisonHelicopter.AI {
             int outside1 = 0;
 	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
 	    {
-		CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.CriminalMove, ref count, ref cargo, ref capacity, ref outside);
+		CalculateOwnVehicles(buildingID, ref data, (TransferManager.TransferReason)126, ref count, ref cargo, ref capacity, ref outside);
 	    }
             else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) == 0)
             {
                 CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-                CalculateOwnVehicles(buildingID, ref data, (TransferManager.TransferReason)126, ref count1, ref cargo1, ref capacity1, ref outside1);
+                CalculateOwnVehicles(buildingID, ref data, (TransferManager.TransferReason)125, ref count1, ref cargo1, ref capacity1, ref outside1);
             }
 	    else
 	    {
@@ -610,64 +623,6 @@ namespace PrisonHelicopter.AI {
             if(data.Info.GetAI() is NewPoliceStationAI && data.Info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
                data.m_flags = data.m_flags.SetFlags(Building.Flags.Downgrading, emptying);
             }
-        }
-
-        private static ushort FindClosestPoliceHelicopterDepot(Vector3 pos) {
-            BuildingManager instance = Singleton<BuildingManager>.instance;
-            int num = Mathf.Max((int)(pos.x / 64f + 135f), 0);
-            int num2 = Mathf.Max((int)(pos.z / 64f + 135f), 0);
-            int num3 = Mathf.Min((int)(pos.x / 64f + 135f), 269);
-            int num4 = Mathf.Min((int)(pos.z / 64f + 135f), 269);
-            int num5 = num + 1;
-            int num6 = num2 + 1;
-            int num7 = num3 - 1;
-            int num8 = num4 - 1;
-            ushort num9 = 0;
-            float num10 = 1E+12f;
-            float num11 = 0f;
-            while (num != num5 || num2 != num6 || num3 != num7 || num4 != num8) {
-                for (int i = num2; i <= num4; i++) {
-                    for (int j = num; j <= num3; j++) {
-                        if (j >= num5 && i >= num6 && j <= num7 && i <= num8) {
-                            j = num7;
-                            continue;
-                        }
-                        ushort num12 = instance.m_buildingGrid[i * 270 + j];
-                        int num13 = 0;
-                        while (num12 != 0) {
-                            if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0) {
-                                BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
-                                if (info.GetAI() is HelicopterDepotAI helicopterDepotAI && info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
-                                    Vector3 position = instance.m_buildings.m_buffer[num12].m_position;
-                                    float num14 = Vector3.SqrMagnitude(position - pos);
-                                    if (num14 < num10) {
-                                        num9 = num12;
-                                        num10 = num14;
-                                    }
-                                }
-                            }
-                            num12 = instance.m_buildings.m_buffer[num12].m_nextGridBuilding;
-                            if (++num13 >= 49152) {
-                                CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (num9 != 0 && num10 <= num11 * num11) {
-                    return num9;
-                }
-                num11 += 64f;
-                num5 = num;
-                num6 = num2;
-                num7 = num3;
-                num8 = num4;
-                num = Mathf.Max(num - 1, 0);
-                num2 = Mathf.Max(num2 - 1, 0);
-                num3 = Mathf.Min(num3 + 1, 269);
-                num4 = Mathf.Min(num4 + 1, 269);
-            }
-            return num9;
         }
 
     }
