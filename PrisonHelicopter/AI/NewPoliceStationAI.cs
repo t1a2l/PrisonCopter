@@ -172,15 +172,23 @@ namespace PrisonHelicopter.AI {
 	{
 	    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
 	    offer.Building = buildingID;
+            BuildingManager instance = Singleton<BuildingManager>.instance;
+            Building building = instance.m_buildings.m_buffer[buildingID];
 	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
 	    {
-		Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.CriminalMove, offer);
+                Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)126, offer);
 	    }
+            else if (m_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0)
+            {
+                Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer);
+                Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)125, offer);
+                Singleton<TransferManager>.instance.RemoveOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer);
+            }
 	    else
 	    {
 		Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer);
-		Singleton<TransferManager>.instance.RemoveOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer);
                 Singleton<TransferManager>.instance.RemoveOutgoingOffer((TransferManager.TransferReason)126, offer);
+                Singleton<TransferManager>.instance.RemoveOutgoingOffer((TransferManager.TransferReason)125, offer);
 	    }
 	    base.BuildingDeactivated(buildingID, ref data);
 	}
