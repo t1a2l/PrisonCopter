@@ -24,18 +24,6 @@
     <Copy SourceFiles="@(ModFiles)" DestinationFolder="$(ModDirectory)" />
   </Target>
   <ItemGroup>
-    <None Remove="PrisonHelicopter\Assets\CH-47 Chinook Columbia Prison Helicopter.crp" />
-    <None Remove="PrisonHelicopter\Assets\mi-8 hip prison helicopter.crp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="PrisonHelicopter\Assets\CH-47 Chinook Columbia Prison Helicopter.crp">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="PrisonHelicopter\Assets\mi-8 hip prison helicopter.crp">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="CitiesHarmony.API" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
