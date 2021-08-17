@@ -30,7 +30,7 @@ namespace PrisonHelicopter.HarmonyPatches
             var building2 = instance.m_buildings.m_buffer[building1];
             var info = building2.Info;
             var buildingAi = info.m_buildingAI;
-            if(info.m_class.m_service == ItemClass.Service.PoliceDepartment && buildingAi as HelicopterDepotAI)
+            if(info.m_class.m_service == ItemClass.Service.PoliceDepartment && buildingAi is HelicopterDepotAI)
             {
                 ___m_intercityTrainsPanel.isVisible = true;
                 label.text = "Allow Prison Helicopters";
@@ -38,7 +38,7 @@ namespace PrisonHelicopter.HarmonyPatches
                 checkbox.text = "Allow Prison Helicopters";
                 checkbox.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
             }
-            else if(info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && buildingAi as PoliceStationAI)
+            else if(info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && buildingAi is PoliceStationAI)
             {
                 ___m_intercityTrainsPanel.isVisible = true;
                 label.text = "Allow Prison Helicopters and Police Vans fleet";
