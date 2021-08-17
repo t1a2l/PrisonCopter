@@ -30,9 +30,12 @@ namespace PrisonHelicopter.HarmonyPatches {
                     __result = TransferManager.TransferReason.Sick2;
                     break;
                 case ItemClass.Service.PoliceDepartment:
-                     if (__instance.m_info.m_class.name == "Prison Vehicle") {
+                    if (__instance.m_info.m_class.name == "Prison Vehicle")
+                    {
                         __result = TransferManager.TransferReason.CriminalMove;
-                    } else {
+                    }
+                    else
+                    {
                         __result = TransferManager.TransferReason.Crime;
                     }
                     break;
