@@ -30,14 +30,22 @@ namespace PrisonHelicopter.HarmonyPatches
             var building2 = instance.m_buildings.m_buffer[building1];
             var info = building2.Info;
             var buildingAi = info.m_buildingAI;
-            if(info.m_class.m_service == ItemClass.Service.PoliceDepartment && info.m_class.m_level < ItemClass.Level.Level4 && buildingAi is NewPoliceStationAI)
+            if(info.m_class.m_service == ItemClass.Service.PoliceDepartment && buildingAi as HelicopterDepotAI)
             {
                 ___m_intercityTrainsPanel.isVisible = true;
-                label.text = "Allow Prison Helicopters to land and a Prison Vans fleet";
-                label.tooltip = "Disable this if you prefer to get only prison vans from prisons and other police station";
-                checkbox.text = "Allow Prison Helicopters to land and a Prison Vans fleet";
-                checkbox.tooltip = "Disable this if you prefer to get only prison vans from prisons and other police station";
-            } 
+                label.text = "Allow Prison Helicopters";
+                label.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
+                checkbox.text = "Allow Prison Helicopters";
+                checkbox.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
+            }
+            else if(info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && buildingAi as PoliceStationAI)
+            {
+                ___m_intercityTrainsPanel.isVisible = true;
+                label.text = "Allow Prison Helicopters and Police Vans fleet";
+                label.tooltip = "Disable this if you prefer to allow only police vans to pick up prisoners from large police stations and prison vans from prison";
+                checkbox.text = "Allow Prison Helicopters and Police Vans fleet";
+                checkbox.tooltip = "Disable this if you prefer to allow only police vans to pick up prisoners from large police stations and prison vans from prison";
+            }  
             else
             {
                 ___m_intercityTrainsPanel.isVisible = false;

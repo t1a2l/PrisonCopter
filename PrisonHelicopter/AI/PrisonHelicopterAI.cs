@@ -5,12 +5,17 @@ using System;
 
 namespace PrisonHelicopter.AI {
 
-    public class PrisonHelicopterAI :  HelicopterAI {
+    public class PrisonHelicopterAI :  PoliceCopterAI {
 
         public int m_policeCount = 2;
 
         [CustomizableProperty("Criminal capacity")]
-        public int m_criminalCapacity = 10;
+        public int m_criminalCapacity;
+
+        public PrisonHelicopterAI() {
+            m_crimeCapacity = 0;
+            m_criminalCapacity = 10;
+        }
 
         public override Color GetColor(ushort vehicleID, ref Vehicle data, InfoManager.InfoMode infoMode)
 	{
@@ -167,9 +172,9 @@ namespace PrisonHelicopter.AI {
 	    data.m_waitCounter = 0;
             BuildingManager instance = Singleton<BuildingManager>.instance;
             BuildingInfo building_info = instance.m_buildings.m_buffer[targetBuilding].Info;
-	    if (targetBuilding != 0 && building_info.GetAI() is NewPoliceStationAI newPoliceStationAI)
+	    if (targetBuilding != 0 && building_info.GetAI() is PoliceStationAI policeStationAI)
 	    {
-                if((building_info.m_class.m_level < ItemClass.Level.Level4 && newPoliceStationAI.JailCapacity >= 60 && data.m_transferSize == 0) ||  (building_info.m_class.m_level >= ItemClass.Level.Level4 && data.m_transferSize > 0))
+                if((building_info.m_class.m_level < ItemClass.Level.Level4 &&  policeStationAI.JailCapacity >= 60 && data.m_transferSize == 0) ||  (building_info.m_class.m_level >= ItemClass.Level.Level4 && data.m_transferSize > 0))
                 {
                     data.m_flags &= ~Vehicle.Flags.Landing;
                     data.m_flags |= Vehicle.Flags.Emergency2;
@@ -672,10 +677,9 @@ namespace PrisonHelicopter.AI {
                             if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0) {
 
                                 BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
-                                if (info.GetAI() is NewPoliceStationAI newPoliceStationAI
+                                if (info.GetAI() is PoliceStationAI
                                     && info.m_class.m_service == ItemClass.Service.PoliceDepartment
-                                    && info.m_class.m_level >= ItemClass.Level.Level4
-                                    && newPoliceStationAI.m_jailOccupancy < newPoliceStationAI.JailCapacity - 10) {
+                                    && info.m_class.m_level >= ItemClass.Level.Level4) {
                                     Vector3 position = instance.m_buildings.m_buffer[num12].m_position;
                                     float num14 = Vector3.SqrMagnitude(position - pos);
                                     if (num14 < num10) {
