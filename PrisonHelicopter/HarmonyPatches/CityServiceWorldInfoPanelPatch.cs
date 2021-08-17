@@ -38,7 +38,7 @@ namespace PrisonHelicopter.HarmonyPatches
                 checkbox.text = "Allow Prison Helicopters";
                 checkbox.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
             }
-            else if(info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && buildingAi is PoliceStationAI)
+            else if(info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && buildingAi is NewPoliceStationAI)
             {
                 ___m_intercityTrainsPanel.isVisible = true;
                 label.text = "Allow Prison Helicopters and Police Vans fleet";
