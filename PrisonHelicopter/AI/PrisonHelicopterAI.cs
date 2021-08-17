@@ -173,9 +173,9 @@ namespace PrisonHelicopter.AI {
             BuildingManager instance = Singleton<BuildingManager>.instance;
             Building building = instance.m_buildings.m_buffer[targetBuilding];
             BuildingInfo building_info = building.Info;
-	    if (targetBuilding != 0 && building_info.GetAI() is NewPoliceStationAI newPoliceStationAI)
+	    if (targetBuilding != 0 && building_info.GetAI() is NewPoliceStationAI)
 	    {
-                if((building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) != 0 && data.m_transferSize == 0) ||  (building_info.m_class.m_level >= ItemClass.Level.Level4 && data.m_transferSize > 0))
+                if((building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0 && data.m_transferSize == 0) || (building_info.m_class.m_level >= ItemClass.Level.Level4 && data.m_transferSize > 0))
                 {
                     data.m_flags &= ~Vehicle.Flags.Landing;
                     data.m_flags |= Vehicle.Flags.Emergency2;
