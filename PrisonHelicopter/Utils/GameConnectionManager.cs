@@ -10,12 +10,10 @@ namespace PrisonHelicopter.Utils {
 
         GameConnectionManager() {
             PoliceCopterAIConnection = PoliceCopterAIHook.GetConnection();
-            PoliceStationAIConnection = PoliceStationAIHook.GetConnection();
         }
 
         public PoliceCopterAIConnection PoliceCopterAIConnection { get; }
 
-        public PoliceStationAIConnection PoliceStationAIConnection { get; }
 
     }
 }
