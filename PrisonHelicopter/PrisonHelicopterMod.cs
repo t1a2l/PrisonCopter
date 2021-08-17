@@ -23,6 +23,23 @@ namespace PrisonHelicopter {
         public void OnDisabled() {
             if (HarmonyHelper.IsHarmonyInstalled) PatchUtil.UnpatchAll();
         }
+
+        public override void OnLevelLoaded(LoadMode mode) {
+            try {
+                var loadedBuildingInfoCount = PrefabCollection<BuildingInfo>.LoadedCount();
+                for (uint i = 0; i < loadedBuildingInfoCount; i++) {
+                    var bi = PrefabCollection<BuildingInfo>.GetLoaded(i);
+                    if (bi is null) continue;
+                    if (bi.GetAI() is PoliceStationAI) {
+                        AiReplacementHelper.ApplyNewAIToBuilding(bi);
+                    }
+                }
+                LogHelper.Information("Reloaded Mod");
+            }
+            catch (Exception e) {
+                LogHelper.Information(e.ToString());
+            }
+        }
     }
 
 }
