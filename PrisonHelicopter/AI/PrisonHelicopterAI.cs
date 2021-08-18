@@ -5,7 +5,7 @@ using System;
 
 namespace PrisonHelicopter.AI {
 
-    public class PrisonHelicopterAI :  PoliceCopterAI {
+    public class PrisonHelicopterAI : PoliceCopterAI {
 
         public int m_policeCount = 2;
 
@@ -147,7 +147,7 @@ namespace PrisonHelicopter.AI {
 		Vector3 forward = target - position;
 		if (forward.sqrMagnitude > 0.01f)
 		{
-			rotation = Quaternion.LookRotation(forward);
+		    rotation = Quaternion.LookRotation(forward);
 		}
 		data.m_frame0 = new Vehicle.Frame(position, rotation);
 		data.m_frame1 = data.m_frame0;

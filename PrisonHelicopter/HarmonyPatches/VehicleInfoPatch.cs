@@ -21,7 +21,6 @@ namespace PrisonHelicopter.HarmonyPatches
                     return true;
                 }
                 var oldAi = __instance.GetComponent<PrefabAI>();
-                var oldInfo = __instance.GetComponent<PrefabInfo>();
                 Object.DestroyImmediate(oldAi);
                 var newAI = (PrefabAI)__instance.gameObject.AddComponent<PrisonHelicopterAI>();
                 PrefabUtil.TryCopyAttributes(oldAi, newAI, false);
