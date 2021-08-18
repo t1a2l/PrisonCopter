@@ -25,28 +25,26 @@ namespace PrisonHelicopter.HarmonyPatches {
         [HarmonyPatch(typeof(HelicopterDepotAI), "GetTransferReason2")]
         [HarmonyPostfix]
         public static void GetTransferReason2(HelicopterDepotAI __instance, ref TransferManager.TransferReason __result) {
-
-            ItemClass.Service service = __instance.m_info.m_class.m_service;
-	    if (service == ItemClass.Service.FireDepartment)
-	    {
-		__result = TransferManager.TransferReason.Fire2;
-	    }
-            else if (service == ItemClass.Service.PoliceDepartment)
-	    {
-		__result = TransferManager.TransferReason.CriminalMove;
-	    }
-            else 
-            {
-                __result = TransferManager.TransferReason.None;
+            switch (__instance.m_info.m_class.m_service) {
+                case ItemClass.Service.PoliceDepartment:
+                    __result = TransferManager.TransferReason.CriminalMove;
+                    break;
+                case ItemClass.Service.FireDepartment:
+                    __result = TransferManager.TransferReason.Fire2;
+                    break;
+                default:
+                    __result = TransferManager.TransferReason.None;
+                    break;
             }
         }
+
 
         [HarmonyPatch(typeof(HelicopterDepotAI), "StartTransfer")]
         [HarmonyPrefix]
         public static bool StartTransfer(HelicopterDepotAI __instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer) {
-            TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
+	    TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
             TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
-            GetTransferReason2(__instance, ref transferReason2);
+            GetTransferReason2(__instance, ref transferReason);
             if (material != TransferManager.TransferReason.None && (material == transferReason || material == transferReason2)) {
                 // no prison don't spawn prison helicopter
                 if(material == TransferManager.TransferReason.CriminalMove && (FindClosestPrison(data.m_position) == 0 || (data.m_flags & Building.Flags.Downgrading) != 0))
@@ -86,8 +84,8 @@ namespace PrisonHelicopter.HarmonyPatches {
             int outside1 = 0;
             string text = string.Empty;
             TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
-	    TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
-            GetTransferReason2(__instance, ref transferReason2);
+            TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
+            GetTransferReason2(__instance, ref transferReason);
 		
 	    if (transferReason != TransferManager.TransferReason.None)
 	    {
@@ -129,8 +127,8 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
 	    offer.Building = buildingID;
             TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
-	    TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
-            GetTransferReason2(__instance, ref transferReason2);
+            TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
+            GetTransferReason2(__instance, ref transferReason);
 	    if (transferReason != TransferManager.TransferReason.None)
 	    {
 		Singleton<TransferManager>.instance.RemoveIncomingOffer(transferReason, offer);
