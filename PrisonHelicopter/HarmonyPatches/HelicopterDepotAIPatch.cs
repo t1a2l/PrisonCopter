@@ -22,6 +22,12 @@ namespace PrisonHelicopter.HarmonyPatches {
         private delegate void BuildingDeactivatedDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building data);
         private static BuildingDeactivatedDelegate BaseBuildingDeactivated = AccessTools.MethodDelegate<BuildingDeactivatedDelegate>(typeof(PlayerBuildingAI).GetMethod("BuildingDeactivated", BindingFlags.Instance | BindingFlags.Public), null, false);
 
+        private delegate void BaseProduceGoodsDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount);
+        private static BaseProduceGoodsDelegate BaseProduceGoods = AccessTools.MethodDelegate<BaseProduceGoodsDelegate>(typeof(PlayerBuildingAI).GetMethod("ProduceGoods", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
+        private delegate void HandleDeadDelegate(CommonBuildingAI instance, ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, int citizenCount);
+        private static HandleDeadDelegate HandleDead = AccessTools.MethodDelegate<HandleDeadDelegate>(typeof(CommonBuildingAI).GetMethod("HandleDead", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
         [HarmonyPatch(typeof(HelicopterDepotAI), "GetTransferReason2")]
         [HarmonyPostfix]
         public static void GetTransferReason2(HelicopterDepotAI __instance, ref TransferManager.TransferReason __result) {
@@ -139,6 +145,164 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    }
 	    BaseBuildingDeactivated(__instance, buildingID, ref data);
             return false;
+	}
+
+        [HarmonyPatch(typeof(HelicopterDepotAI), "ProduceGoods")]
+        [HarmonyPrefix]
+        public static void ProduceGoods(HelicopterDepotAI __instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
+	{
+	    BaseProduceGoods(__instance, buildingID, ref buildingData, ref frameData, productionRate, finalProductionRate, ref behaviour, aliveWorkerCount, totalWorkerCount, workPlaceCount, aliveVisitorCount, totalVisitorCount, visitPlaceCount);
+	    if (finalProductionRate == 0)
+	    {
+		return;
+	    }
+	    int num = finalProductionRate * __instance.m_noiseAccumulation / 100;
+	    if (num != 0)
+	    {
+		Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.NoisePollution, num, buildingData.m_position, __instance.m_noiseRadius);
+	    }
+	    HandleDead(__instance, buildingID, ref buildingData, ref behaviour, totalWorkerCount);
+	    TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
+            TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
+            GetTransferReason2(__instance, ref transferReason);
+	    if (transferReason == TransferManager.TransferReason.ForestFire || transferReason2 == TransferManager.TransferReason.ForestFire)
+	    {
+		if (finalProductionRate != 0)
+		{
+		    Singleton<ImmaterialResourceManager>.instance.AddResource(ImmaterialResourceManager.Resource.FirewatchCoverage, finalProductionRate);
+		}
+	    }
+	    if (transferReason == TransferManager.TransferReason.None)
+	    {
+		    return;
+	    }
+	    int num2 = (finalProductionRate * __instance.m_helicopterCount + 99) / 100;
+            int num9 = (finalProductionRate * __instance.m_helicopterCount + 99) / 100;
+	    int num3 = 0;
+	    int num4 = 0;
+            int num10 = 0;
+            int num11 = 0;
+	    ushort num5 = 0;
+            ushort num12 = 0;
+	    VehicleManager instance = Singleton<VehicleManager>.instance;
+	    ushort num6 = buildingData.m_ownVehicles;
+	    int num7 = 0;
+	    while (num6 != 0)
+	    {
+		TransferManager.TransferReason transferType = (TransferManager.TransferReason)instance.m_vehicles.m_buffer[num6].m_transferType;
+                if(transferType == transferReason2 && transferReason2 == TransferManager.TransferReason.CriminalMove)
+                {
+                    VehicleInfo info = instance.m_vehicles.m_buffer[num6].Info;
+		    info.m_vehicleAI.GetSize(num6, ref instance.m_vehicles.m_buffer[num6], out var _, out var _);
+		    num10++;
+		    if ((instance.m_vehicles.m_buffer[num6].m_flags & Vehicle.Flags.GoingBack) != 0)
+		    {
+			num11++;
+		    }
+		    else if ((instance.m_vehicles.m_buffer[num6].m_flags & Vehicle.Flags.WaitingTarget) != 0)
+		    {
+			num12 = num6;
+		    }
+                }
+                else if (transferType == transferReason || (transferType == transferReason2 && transferReason2 != TransferManager.TransferReason.None))
+		{
+		    VehicleInfo info = instance.m_vehicles.m_buffer[num6].Info;
+		    info.m_vehicleAI.GetSize(num6, ref instance.m_vehicles.m_buffer[num6], out var _, out var _);
+		    num3++;
+		    if ((instance.m_vehicles.m_buffer[num6].m_flags & Vehicle.Flags.GoingBack) != 0)
+		    {
+			num4++;
+		    }
+		    else if ((instance.m_vehicles.m_buffer[num6].m_flags & Vehicle.Flags.WaitingTarget) != 0)
+		    {
+			num5 = num6;
+		    }
+		}
+		num6 = instance.m_vehicles.m_buffer[num6].m_nextOwnVehicle;
+		if (++num7 > 16384)
+		{
+		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+		    break;
+		}
+	    }
+	    if (__instance.m_helicopterCount < 16384 && num3 - num4 > num2 && num5 != 0)
+	    {
+                VehicleInfo info2 = instance.m_vehicles.m_buffer[num5].Info;
+		info2.m_vehicleAI.SetTarget(num5, ref instance.m_vehicles.m_buffer[num5], buildingID);
+	    }
+            if(transferReason2 == TransferManager.TransferReason.CriminalMove)
+            {
+                if (__instance.m_helicopterCount < 16384 && num10 - num11 > num9 && num12 != 0)
+		{
+                    VehicleInfo info2 = instance.m_vehicles.m_buffer[num12].Info;
+		    info2.m_vehicleAI.SetTarget(num12, ref instance.m_vehicles.m_buffer[num5], buildingID);
+		}
+            }
+	    if (num3 < num2 || transferReason2 == TransferManager.TransferReason.CriminalMove && num10 < num9)
+	    {
+		int num8 = num2 - num3;
+                int num13 = num9 - num10;
+                bool flag, flag2;
+                if(transferReason2 == TransferManager.TransferReason.CriminalMove)
+                {
+                    flag = num13 >= 2 || Singleton<SimulationManager>.instance.m_randomizer.Int32(2u) == 0;
+                    flag2 = num13 >= 2 || !flag;
+                    if (flag2 && flag)
+		    {
+			num13 = num13 + 1 >> 1;
+		    }
+		    if (flag2)
+		    {
+			TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+			offer.Priority = 6;
+			offer.Building = buildingID;
+			offer.Position = buildingData.m_position;
+			offer.Amount = Mathf.Min(2, num13);
+			offer.Active = true;
+			Singleton<TransferManager>.instance.AddIncomingOffer(transferReason, offer);
+		    }
+		    if (flag)
+		    {
+			TransferManager.TransferOffer offer2 = default(TransferManager.TransferOffer);
+			offer2.Priority = 6;
+			offer2.Building = buildingID;
+			offer2.Position = buildingData.m_position;
+			offer2.Amount = Mathf.Min(2, num13);
+			offer2.Active = true;
+			Singleton<TransferManager>.instance.AddIncomingOffer(transferReason2, offer2);
+		    }
+                }
+                else
+                {
+                    flag = transferReason2 != TransferManager.TransferReason.None && (num8 >= 2 || Singleton<SimulationManager>.instance.m_randomizer.Int32(2u) == 0);
+                    flag2 = num8 >= 2 || !flag;
+                    if (flag2 && flag)
+		    {
+			num8 = num8 + 1 >> 1;
+		    }
+		    if (flag2)
+		    {
+			TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+			offer.Priority = 6;
+			offer.Building = buildingID;
+			offer.Position = buildingData.m_position;
+			offer.Amount = Mathf.Min(2, num8);
+			offer.Active = true;
+			Singleton<TransferManager>.instance.AddIncomingOffer(transferReason, offer);
+		    }
+		    if (flag)
+		    {
+			TransferManager.TransferOffer offer2 = default(TransferManager.TransferOffer);
+			offer2.Priority = 6;
+			offer2.Building = buildingID;
+			offer2.Position = buildingData.m_position;
+			offer2.Amount = Mathf.Min(2, num8);
+			offer2.Active = true;
+			Singleton<TransferManager>.instance.AddIncomingOffer(transferReason2, offer2);
+		    }
+                }
+		    
+	    }
 	}
 
         [HarmonyPatch(typeof(BuildingAI), "SetEmptying")]
