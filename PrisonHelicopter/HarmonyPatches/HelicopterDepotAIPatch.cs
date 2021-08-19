@@ -29,39 +29,40 @@ namespace PrisonHelicopter.HarmonyPatches {
         private static HandleDeadDelegate HandleDead = AccessTools.MethodDelegate<HandleDeadDelegate>(typeof(CommonBuildingAI).GetMethod("HandleDead", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
 
-        [HarmonyPatch(typeof(HelicopterDepotAI), "GetTransferReason2")]
-        [HarmonyPrefix]
-        private static bool  GetTransferReason2(HelicopterDepotAI __instance, Building buildingData, ref TransferManager.TransferReason __result)
+        private static TransferManager.TransferReason GetTransferReason2Custom(HelicopterDepotAI __instance, Building buildingData)
 	{
 	    ItemClass.Service service = __instance.m_info.m_class.m_service;
 	    if (service == ItemClass.Service.FireDepartment)
 	    {
-		__result = TransferManager.TransferReason.Fire2;
+		return TransferManager.TransferReason.Fire2;
 	    }
             else if (service == ItemClass.Service.PoliceDepartment && (buildingData.m_flags & Building.Flags.Downgrading) == 0)
 	    {
-		__result = TransferManager.TransferReason.CriminalMove;
+		return TransferManager.TransferReason.CriminalMove;
 	    }
             else 
 	    {
-		__result = TransferManager.TransferReason.None;
+		return TransferManager.TransferReason.None;
 	    }
-	    return false;
 	}
 
         [HarmonyPatch(typeof(HelicopterDepotAI), "StartTransfer")]
         [HarmonyPrefix]
         public static bool StartTransfer(HelicopterDepotAI __instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer) {
 	    TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
-            TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
-            GetTransferReason2(__instance, data, ref transferReason2);
+            TransferManager.TransferReason transferReason2 = GetTransferReason2Custom(__instance, data);
             if (material != TransferManager.TransferReason.None && (material == transferReason || material == transferReason2)) {
+                ItemClass.Level vehicle_level = __instance.m_info.m_class.m_level;
                 // no prison don't spawn prison helicopter
                 if(material == TransferManager.TransferReason.CriminalMove && (FindClosestPrison(data.m_position) == 0 || (data.m_flags & Building.Flags.Downgrading) != 0))
                 {
                     return false;
                 }
-                VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, __instance.m_info.m_class.m_service, __instance.m_info.m_class.m_subService, __instance.m_info.m_class.m_level, VehicleInfo.VehicleType.Helicopter);
+                if(material == TransferManager.TransferReason.CriminalMove)
+                {
+                    vehicle_level = ItemClass.Level.Level4;
+                }
+                VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, __instance.m_info.m_class.m_service, __instance.m_info.m_class.m_subService, vehicle_level, VehicleInfo.VehicleType.Helicopter);
                 if (randomVehicleInfo != null) {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
                     ushort num;
@@ -94,8 +95,7 @@ namespace PrisonHelicopter.HarmonyPatches {
             int outside1 = 0;
             string text = string.Empty;
             TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
-            TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
-            GetTransferReason2(__instance, data, ref transferReason2);
+            TransferManager.TransferReason transferReason2 = GetTransferReason2Custom(__instance, data);
 	    if (transferReason != TransferManager.TransferReason.None)
 	    {
                 CalculateOwnVehicles(__instance, buildingID, ref data, transferReason, ref count, ref cargo, ref capacity, ref outside);
@@ -132,8 +132,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
 	    offer.Building = buildingID;
             TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
-            TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
-            GetTransferReason2(__instance, data, ref transferReason2);
+            TransferManager.TransferReason transferReason2 = GetTransferReason2Custom(__instance, data);
 	    if (transferReason != TransferManager.TransferReason.None)
 	    {
 		Singleton<TransferManager>.instance.RemoveIncomingOffer(transferReason, offer);
@@ -162,8 +161,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    }
 	    HandleDead(__instance, buildingID, ref buildingData, ref behaviour, totalWorkerCount);
 	    TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
-            TransferManager.TransferReason transferReason2 = TransferManager.TransferReason.None;
-            GetTransferReason2(__instance, buildingData, ref transferReason2);
+            TransferManager.TransferReason transferReason2 = GetTransferReason2Custom(__instance, buildingData);
 	    if (transferReason == TransferManager.TransferReason.ForestFire || transferReason2 == TransferManager.TransferReason.ForestFire)
 	    {
 		if (finalProductionRate != 0)
