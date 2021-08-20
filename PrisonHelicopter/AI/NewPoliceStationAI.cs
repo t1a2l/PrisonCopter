@@ -413,7 +413,7 @@ namespace PrisonHelicopter.AI {
             }
 	    int num10 = (finalProductionRate * PoliceCarCount + 99) / 100;
             int num11 = (finalProductionRate * PoliceVanCount + 99) / 100;
-            m_jailOccupancy = num8;
+            m_jailOccupancy = aliveVisitorCount;
 	    if (m_info.m_class.m_level >= ItemClass.Level.Level4)
 	    {
 		if (count4 < num10 && capacity4 + num7 <= JailCapacity - 20)
