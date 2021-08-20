@@ -323,7 +323,7 @@ namespace PrisonHelicopter.AI {
             if(building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity) {
                 var targetBuilding = FindClosestPrison(building.m_position);
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
-                if(targetBuilding == 0) { // don't take criminals if no space at prison
+                if(targetBuilding == 0 || (building.Info.GetAI() is NewPoliceStationAI policeStationAI && policeStationAI.m_jailOccupancy == 0)) { // don't take criminals if no space at prison or no crimianls in police station
                     SetTarget(vehicleID, ref data, 0);
                 } else {
                     ArrestCriminals(vehicleID, ref data, data.m_targetBuilding);
