@@ -16,8 +16,8 @@ namespace PrisonHelicopter.HarmonyPatches
                 {
                     __result = "PrisonHelicopter.AI.NewPoliceStationAI, PrisonHelicopter, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
                 }
-            }
-	    LogHelper.Information(__result);
+                LogHelper.Information(__result);
+            }  
 	}
     }
 }
