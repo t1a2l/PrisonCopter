@@ -5,14 +5,14 @@ using System;
 
 namespace PrisonHelicopter.AI {
 
-    public class PrisonHelicopterAI : PoliceCopterAI {
+    public class PrisonCopterAI : PoliceCopterAI {
 
         public int m_policeCount = 2;
 
         [CustomizableProperty("Criminal capacity")]
         public int m_criminalCapacity;
 
-        public PrisonHelicopterAI() {
+        public PrisonCopterAI() {
             m_crimeCapacity = 0;
             m_criminalCapacity = 10;
         }
@@ -34,7 +34,8 @@ namespace PrisonHelicopter.AI {
 	    {
 		flag = Singleton<CitizenManager>.instance.m_citizens.m_buffer[arrestedCitizen].CurrentLocation == Citizen.Location.Moving;
 	    }
-            if(flag) {
+            if(flag)
+            {
                 if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
 	        {
 		    target = InstanceID.Empty;
@@ -198,7 +199,7 @@ namespace PrisonHelicopter.AI {
 		offer.Position = data.GetLastFramePosition();
 		offer.Amount = 1;
 		offer.Active = true;
-		Singleton<TransferManager>.instance.AddOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer);
+		Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)126, offer);
 		data.m_flags |= Vehicle.Flags.WaitingTarget;
 	    }
             else
@@ -210,7 +211,7 @@ namespace PrisonHelicopter.AI {
 		offer.Position = data.GetLastFramePosition();
 		offer.Amount = 1;
 		offer.Active = true;
-		Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer);
+		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)126, offer);
 		data.m_flags |= Vehicle.Flags.WaitingTarget;
             }
 	    if (!StartPathFind(vehicleID, ref data))
@@ -252,7 +253,7 @@ namespace PrisonHelicopter.AI {
 
         public override void GetSize(ushort vehicleID, ref Vehicle data, out int size, out int max)
 	{
-	    size = data.m_transferSize; // how many people needs to be transffered
+	    size = data.m_transferSize; // how many people needs to be transfered
             max = m_criminalCapacity; // how many places inside the vehicle
 	}
 
@@ -672,11 +673,12 @@ namespace PrisonHelicopter.AI {
                             j = num7;
                             continue;
                         }
+
                         ushort num12 = instance.m_buildingGrid[i * 270 + j];
                         int num13 = 0;
                         while (num12 != 0) {
-                            if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0) {
-
+                            if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0)
+                            {
                                 BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
                                 if (info.GetAI() is NewPoliceStationAI newPoliceStationAI
                                     && info.m_class.m_service == ItemClass.Service.PoliceDepartment
