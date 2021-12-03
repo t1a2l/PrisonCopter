@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace PrisonHelicopter {
 
-    public enum percentNum
+    public enum PercentNum
     {
         [Description("1 not recomanded")]
         One = 1,

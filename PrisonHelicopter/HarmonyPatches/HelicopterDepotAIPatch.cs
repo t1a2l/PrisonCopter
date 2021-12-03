@@ -11,22 +11,22 @@ namespace PrisonHelicopter.HarmonyPatches {
     public static class HelicopterDepotAIPatch {
 
         private delegate void StartTransferDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer);
-        private static StartTransferDelegate BaseStartTransfer = AccessTools.MethodDelegate<StartTransferDelegate>(typeof(CommonBuildingAI).GetMethod("StartTransfer", BindingFlags.Instance | BindingFlags.Public), null, false);
+        private static readonly StartTransferDelegate BaseStartTransfer = AccessTools.MethodDelegate<StartTransferDelegate>(typeof(CommonBuildingAI).GetMethod("StartTransfer", BindingFlags.Instance | BindingFlags.Public), null, false);
 
         private delegate TransferManager.TransferReason GetTransferReason1Delegate(HelicopterDepotAI instance);
-        private static GetTransferReason1Delegate GetTransferReason1 = AccessTools.MethodDelegate<GetTransferReason1Delegate>(typeof(HelicopterDepotAI).GetMethod("GetTransferReason1", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+        private static readonly GetTransferReason1Delegate GetTransferReason1 = AccessTools.MethodDelegate<GetTransferReason1Delegate>(typeof(HelicopterDepotAI).GetMethod("GetTransferReason1", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
         private delegate void CalculateOwnVehiclesDelegate(CommonBuildingAI instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside);
-        private static CalculateOwnVehiclesDelegate CalculateOwnVehicles = AccessTools.MethodDelegate<CalculateOwnVehiclesDelegate>(typeof(CommonBuildingAI).GetMethod("CalculateOwnVehicles", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+        private static readonly CalculateOwnVehiclesDelegate CalculateOwnVehicles = AccessTools.MethodDelegate<CalculateOwnVehiclesDelegate>(typeof(CommonBuildingAI).GetMethod("CalculateOwnVehicles", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
         private delegate void BuildingDeactivatedDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building data);
-        private static BuildingDeactivatedDelegate BaseBuildingDeactivated = AccessTools.MethodDelegate<BuildingDeactivatedDelegate>(typeof(PlayerBuildingAI).GetMethod("BuildingDeactivated", BindingFlags.Instance | BindingFlags.Public), null, false);
+        private static readonly BuildingDeactivatedDelegate BaseBuildingDeactivated = AccessTools.MethodDelegate<BuildingDeactivatedDelegate>(typeof(PlayerBuildingAI).GetMethod("BuildingDeactivated", BindingFlags.Instance | BindingFlags.Public), null, false);
 
         private delegate void BaseProduceGoodsDelegate(PlayerBuildingAI instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount);
-        private static BaseProduceGoodsDelegate BaseProduceGoods = AccessTools.MethodDelegate<BaseProduceGoodsDelegate>(typeof(PlayerBuildingAI).GetMethod("ProduceGoods", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+        private static readonly BaseProduceGoodsDelegate BaseProduceGoods = AccessTools.MethodDelegate<BaseProduceGoodsDelegate>(typeof(PlayerBuildingAI).GetMethod("ProduceGoods", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
         private delegate void HandleDeadDelegate(CommonBuildingAI instance, ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, int citizenCount);
-        private static HandleDeadDelegate HandleDead = AccessTools.MethodDelegate<HandleDeadDelegate>(typeof(CommonBuildingAI).GetMethod("HandleDead", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+        private static readonly HandleDeadDelegate HandleDead = AccessTools.MethodDelegate<HandleDeadDelegate>(typeof(CommonBuildingAI).GetMethod("HandleDead", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
 
 
         private static TransferManager.TransferReason GetTransferReason2Custom(HelicopterDepotAI __instance, Building buildingData)
@@ -65,8 +65,7 @@ namespace PrisonHelicopter.HarmonyPatches {
                 VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, __instance.m_info.m_class.m_service, __instance.m_info.m_class.m_subService, vehicle_level, VehicleInfo.VehicleType.Helicopter);
                 if (randomVehicleInfo != null) {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
-                    ushort num;
-                    if (Singleton<VehicleManager>.instance.CreateVehicle(out num, ref Singleton<SimulationManager>.instance.m_randomizer, randomVehicleInfo, data.m_position, material, true, false)) {
+                    if (Singleton<VehicleManager>.instance.CreateVehicle(out ushort num, ref Singleton<SimulationManager>.instance.m_randomizer, randomVehicleInfo, data.m_position, material, true, false)) {
                         randomVehicleInfo.m_vehicleAI.SetSource(num, ref vehicles.m_buffer[(int)num], buildingID);
                         randomVehicleInfo.m_vehicleAI.StartTransfer(num, ref vehicles.m_buffer[(int)num], material, offer);
                     }
@@ -129,7 +128,7 @@ namespace PrisonHelicopter.HarmonyPatches {
         [HarmonyPrefix]
         public static bool BuildingDeactivated(HelicopterDepotAI __instance, ushort buildingID, ref Building data)
 	{
-	    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+	    TransferManager.TransferOffer offer = default;
 	    offer.Building = buildingID;
             TransferManager.TransferReason transferReason = GetTransferReason1(__instance);
             TransferManager.TransferReason transferReason2 = GetTransferReason2Custom(__instance, data);
@@ -220,7 +219,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 		}
 		if (flag2)
 		{
-		    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		    TransferManager.TransferOffer offer = default;
 		    offer.Priority = 6;
 		    offer.Building = buildingID;
 		    offer.Position = buildingData.m_position;
@@ -230,7 +229,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 		}
 		if (flag)
 		{
-		    TransferManager.TransferOffer offer2 = default(TransferManager.TransferOffer);
+		    TransferManager.TransferOffer offer2 = default;
 		    offer2.Priority = 6;
 		    offer2.Building = buildingID;
 		    offer2.Position = buildingData.m_position;

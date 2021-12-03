@@ -28,7 +28,7 @@ namespace PrisonHelicopter.AI {
 
         public override string GetLocalizedStatus(ushort vehicleID, ref Vehicle data, out InstanceID target)
 	{
-            uint arrestedCitizen = GetArrestedCitizen(vehicleID, ref data);
+            uint arrestedCitizen = GetArrestedCitizen(ref data);
 	    bool flag = false;
 	    if (arrestedCitizen != 0)
 	    {
@@ -96,7 +96,7 @@ namespace PrisonHelicopter.AI {
 
         public override void ReleaseVehicle(ushort vehicleID, ref Vehicle data)
         {
-            UnloadCriminals(vehicleID, ref data);
+            UnloadCriminals(ref data);
             RemoveOffers(vehicleID, ref data);
 	    RemoveSource(vehicleID, ref data);
 	    RemoveTarget(vehicleID, ref data);
@@ -142,7 +142,7 @@ namespace PrisonHelicopter.AI {
 		BuildingManager instance = Singleton<BuildingManager>.instance;
 		BuildingInfo info = instance.m_buildings.m_buffer[sourceBuilding].Info;
 		data.Unspawn(vehicleID);
-		Randomizer randomizer = new Randomizer(vehicleID);
+		Randomizer randomizer = new(vehicleID);
 		info.m_buildingAI.CalculateSpawnPosition(sourceBuilding, ref instance.m_buildings.m_buffer[sourceBuilding], ref randomizer, m_info, out var position, out var target);
 		Quaternion rotation = Quaternion.identity;
 		Vector3 forward = target - position;
@@ -185,15 +185,15 @@ namespace PrisonHelicopter.AI {
                     return;
                 }
 	    }
-            else if(ShouldReturnToSource(vehicleID, ref data))
+            else if(ShouldReturnToSource(ref data))
             {
                 data.m_flags &= ~Vehicle.Flags.Landing;
 		data.m_flags |= Vehicle.Flags.GoingBack;
             }
-            else if(GetArrestedCitizen(vehicleID, ref data) != 0) 
+            else if(GetArrestedCitizen(ref data) != 0) 
             {
 		data.m_flags &= ~Vehicle.Flags.Emergency2;
-		TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		TransferManager.TransferOffer offer = default;
 		offer.Priority = 7;
 		offer.Vehicle = vehicleID;
 		offer.Position = data.GetLastFramePosition();
@@ -205,7 +205,7 @@ namespace PrisonHelicopter.AI {
             else
             {
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
-		TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		TransferManager.TransferOffer offer = default;
 		offer.Priority = 7;
 		offer.Vehicle = vehicleID;
 		offer.Position = data.GetLastFramePosition();
@@ -264,18 +264,18 @@ namespace PrisonHelicopter.AI {
                 vehicleData.m_flags &= ~Vehicle.Flags.Stopped;
                 vehicleData.m_flags |= Vehicle.Flags.Leaving;
             }
-            if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && ShouldReturnToSource(vehicleID, ref vehicleData))
+            if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) == 0 && ShouldReturnToSource(ref vehicleData))
             {
                 SetTarget(vehicleID, ref vehicleData, 0);
             }
         }
 
-        private bool ShouldReturnToSource(ushort vehicleID, ref Vehicle data)
+        private bool ShouldReturnToSource(ref Vehicle data)
 	{
 	    if (data.m_sourceBuilding != 0)
 	    {
 		BuildingManager instance = Singleton<BuildingManager>.instance;
-		if ((instance.m_buildings.m_buffer[data.m_sourceBuilding].m_flags & Building.Flags.Active) == 0 && instance.m_buildings.m_buffer[data.m_sourceBuilding].m_fireIntensity == 0 && GetArrestedCitizen(vehicleID, ref data) == 0)
+		if ((instance.m_buildings.m_buffer[data.m_sourceBuilding].m_flags & Building.Flags.Active) == 0 && instance.m_buildings.m_buffer[data.m_sourceBuilding].m_fireIntensity == 0 && GetArrestedCitizen(ref data) == 0)
 		{
 		    return true;
 		}
@@ -287,7 +287,7 @@ namespace PrisonHelicopter.AI {
 	{
 	    if ((data.m_flags & Vehicle.Flags.WaitingTarget) != 0)
 	    {
-		TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		TransferManager.TransferOffer offer = default;
 		offer.Vehicle = vehicleID;
 		Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)data.m_transferType, offer);
 	    }
@@ -337,7 +337,7 @@ namespace PrisonHelicopter.AI {
 	        BuildingInfo info = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
 	        info.m_buildingAI.ModifyMaterialBuffer(data.m_targetBuilding, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding], (TransferManager.TransferReason)data.m_transferType, ref amountDelta);
 	        data.m_transferSize = (ushort)Mathf.Clamp(data.m_transferSize - amountDelta, 0, data.m_transferSize);
-                UnloadCriminals(vehicleID, ref data);
+                UnloadCriminals(ref data);
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
                 SetTarget(vehicleID, ref data, 0);
             }
@@ -380,11 +380,9 @@ namespace PrisonHelicopter.AI {
 		{
 		    BuildingManager instance = Singleton<BuildingManager>.instance;
 		    BuildingInfo info = instance.m_buildings.m_buffer[(int)leaderData.m_sourceBuilding].Info;
-		    Randomizer randomizer = new Randomizer((int)vehicleID);
-		    Vector3 vector;
-		    Vector3 targetPos;
-		    info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[(int)leaderData.m_sourceBuilding], ref randomizer, m_info, out vector, out targetPos);
-		    vehicleData.SetTargetPos(index++, CalculateTargetPoint(refPos, targetPos, minSqrDistance, 0f));
+		    Randomizer randomizer = new((int)vehicleID);
+                    info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[(int)leaderData.m_sourceBuilding], ref randomizer, m_info, out _, out Vector3 targetPos);
+                    vehicleData.SetTargetPos(index++, CalculateTargetPoint(refPos, targetPos, minSqrDistance, 0f));
 		    return;
 		}
 	    }
@@ -392,11 +390,9 @@ namespace PrisonHelicopter.AI {
 	    {
 		BuildingManager instance2 = Singleton<BuildingManager>.instance;
 		BuildingInfo info2 = instance2.m_buildings.m_buffer[(int)leaderData.m_targetBuilding].Info;
-		Randomizer randomizer2 = new Randomizer((int)vehicleID);
-		Vector3 vector2;
-		Vector3 targetPos2;
-		info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[(int)leaderData.m_targetBuilding], ref randomizer2, m_info, out vector2, out targetPos2);
-		vehicleData.SetTargetPos(index++, CalculateTargetPoint(refPos, targetPos2, minSqrDistance, 0));
+		Randomizer randomizer2 = new((int)vehicleID);
+                info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[(int)leaderData.m_targetBuilding], ref randomizer2, m_info, out _, out Vector3 targetPos2);
+                vehicleData.SetTargetPos(index++, CalculateTargetPoint(refPos, targetPos2, minSqrDistance, 0));
 		return;
 	    }
 	}
@@ -413,7 +409,7 @@ namespace PrisonHelicopter.AI {
 		{
 		    BuildingManager instance = Singleton<BuildingManager>.instance;
 		    BuildingInfo info = instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding].Info;
-		    Randomizer randomizer = new Randomizer(vehicleID);
+		    Randomizer randomizer = new(vehicleID);
 		    info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding], ref randomizer, m_info, out var _, out var target);
 		    return StartPathFind(vehicleID, ref vehicleData, vehicleData.m_targetPos3, target);
 		}
@@ -422,7 +418,7 @@ namespace PrisonHelicopter.AI {
 	    {
 		BuildingManager instance2 = Singleton<BuildingManager>.instance;
 		BuildingInfo info2 = instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding].Info;
-		Randomizer randomizer2 = new Randomizer(vehicleID);
+		Randomizer randomizer2 = new(vehicleID);
 		info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out var _, out var target2);
 		return StartPathFind(vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2);
 	    }
@@ -431,7 +427,7 @@ namespace PrisonHelicopter.AI {
 
         public override InstanceID GetTargetID(ushort vehicleID, ref Vehicle vehicleData)
 	{
-	    InstanceID result = default(InstanceID);
+	    InstanceID result = default;
 	    if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) != 0)
 	    {
 		result.Building = vehicleData.m_sourceBuilding;
@@ -513,7 +509,7 @@ namespace PrisonHelicopter.AI {
 	    return flag;
 	}
 
-        private void UnloadCriminals(ushort vehicleID, ref Vehicle data)
+        private void UnloadCriminals(ref Vehicle data)
 	{
 	    CitizenManager instance = Singleton<CitizenManager>.instance;
 	    uint num = data.m_citizenUnits;
@@ -538,7 +534,7 @@ namespace PrisonHelicopter.AI {
 		    if (instance.m_citizens.m_buffer[citizen].m_visitBuilding != 0)
 		    {
 			instance.m_citizens.m_buffer[citizen].CurrentLocation = Citizen.Location.Visit;
-			SpawnPrisoner(vehicleID, ref data, citizen);
+			SpawnPrisoner(ref data, citizen);
 		    }
 		    else
 		    {
@@ -564,7 +560,7 @@ namespace PrisonHelicopter.AI {
 	    }
 	}
 
-        private void SpawnPrisoner( ushort vehicleID, ref Vehicle data, uint citizen)
+        private void SpawnPrisoner(ref Vehicle data, uint citizen)
 	{
 	    if (data.m_targetBuilding != 0)
 	    {
@@ -627,7 +623,7 @@ namespace PrisonHelicopter.AI {
 	    }
 	}
 
-        public uint GetArrestedCitizen(ushort vehicleID, ref Vehicle data)
+        public uint GetArrestedCitizen(ref Vehicle data)
 	{
 	    CitizenManager instance = Singleton<CitizenManager>.instance;
 	    uint num = data.m_citizenUnits;

@@ -28,8 +28,7 @@ namespace PrisonHelicopter.Utils
 
                 if (copyField)
                 {
-                    FieldInfo newAIField;
-                    newAIFieldDic.TryGetValue(fieldInfo.Name, out newAIField);
+                    newAIFieldDic.TryGetValue(fieldInfo.Name, out FieldInfo newAIField);
                     try
                     {
                         if (newAIField != null && newAIField.GetType().Equals(fieldInfo.GetType()))

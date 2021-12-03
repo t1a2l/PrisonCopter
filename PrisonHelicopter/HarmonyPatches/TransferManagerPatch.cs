@@ -14,11 +14,13 @@ namespace PrisonHelicopter.HarmonyPatches {
             if(!isValueDefined1)
             {
                 TransferManager.TransferReason CriminalMove2 = (TransferManager.TransferReason)126;
+                LogHelper.Information(CriminalMove2.ToString());
             }
             bool isValueDefined2 = Enum.IsDefined(typeof(TransferManager.TransferReason), 125);
             if(!isValueDefined2)
             {
                 TransferManager.TransferReason CriminalMove3 = (TransferManager.TransferReason)125;
+                LogHelper.Information(CriminalMove3.ToString());
             }
 	}
 

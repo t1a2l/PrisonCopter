@@ -170,7 +170,7 @@ namespace PrisonHelicopter.AI {
 
         public override void BuildingDeactivated(ushort buildingID, ref Building data)
 	{
-	    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+	    TransferManager.TransferOffer offer = default;
 	    offer.Building = buildingID;
             BuildingManager instance = Singleton<BuildingManager>.instance;
             Building building = instance.m_buildings.m_buffer[buildingID];
@@ -208,8 +208,7 @@ namespace PrisonHelicopter.AI {
                 VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, vehicle_level, VehicleInfo.VehicleType.Car);
                 if (randomVehicleInfo != null) {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
-                    ushort num;
-                    if (Singleton<VehicleManager>.instance.CreateVehicle(out num, ref Singleton<SimulationManager>.instance.m_randomizer, randomVehicleInfo, data.m_position, material, true, false)) {
+                    if (Singleton<VehicleManager>.instance.CreateVehicle(out ushort num, ref Singleton<SimulationManager>.instance.m_randomizer, randomVehicleInfo, data.m_position, material, true, false)) {
                         randomVehicleInfo.m_vehicleAI.SetSource(num, ref vehicles.m_buffer[(int)num], bnum);
                         randomVehicleInfo.m_vehicleAI.StartTransfer(num, ref vehicles.m_buffer[(int)num], material, offer);
                     }
@@ -420,7 +419,7 @@ namespace PrisonHelicopter.AI {
 	    {
 		if (count4 < num10 && capacity4 + num7 <= JailCapacity - 20)
 		{
-                    TransferManager.TransferOffer offer4 = default(TransferManager.TransferOffer); // prison offer prison vans
+                    TransferManager.TransferOffer offer4 = default; // prison offer prison vans
 		    offer4.Priority = 2 - count4;
 		    offer4.Building = buildingID;
 		    offer4.Position = buildingData.m_position;
@@ -434,7 +433,7 @@ namespace PrisonHelicopter.AI {
 	    {
                 if (count2 < num11 && capacity2 + num7 <= JailCapacity - 20)
                 {
-                    TransferManager.TransferOffer offer2 = default(TransferManager.TransferOffer); // police station offer prison vans
+                    TransferManager.TransferOffer offer2 = default; // police station offer prison vans
 		    offer2.Priority = 2 - count2;
 		    offer2.Building = buildingID;
 		    offer2.Position = buildingData.m_position;
@@ -445,7 +444,7 @@ namespace PrisonHelicopter.AI {
 	    }
 	    if (count < num10)
 	    {
-		TransferManager.TransferOffer offer = default(TransferManager.TransferOffer); // police station offer police cars
+		TransferManager.TransferOffer offer = default; // police station offer police cars
 		offer.Priority = 2 - count;
 		offer.Building = buildingID;
 		offer.Position = buildingData.m_position;
@@ -453,13 +452,13 @@ namespace PrisonHelicopter.AI {
 		offer.Active = true;
 		Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.Crime, offer);
 	    }
-	    if (num8 >= (JailCapacity * OptionsWrapper<Options>.Options.priosnersPercentage / 100)) // check if prisoner count is above or equal percentage option
+	    if (num8 >= (JailCapacity * OptionsWrapper<Options>.Options.PriosnersPercentage / 100)) // check if prisoner count is above or equal percentage option
 	    {
                 if ((buildingData.m_flags & Building.Flags.Downgrading) == 0) // big police station
                 {
                     if(num8 - capacity3 > 0)
                     {
-                        TransferManager.TransferOffer offer3 = default(TransferManager.TransferOffer); // ask for guest prison helicopter
+                        TransferManager.TransferOffer offer3 = default; // ask for guest prison helicopter
 		        offer3.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, JailCapacity);
 		        offer3.Building = buildingID;
 		        offer3.Position = buildingData.m_position;
@@ -470,7 +469,7 @@ namespace PrisonHelicopter.AI {
 
                     if(num8 - capacity4 > 0)
                     {
-                        TransferManager.TransferOffer offer4 = default(TransferManager.TransferOffer); // ask for guest prison vans from prison
+                        TransferManager.TransferOffer offer4 = default; // ask for guest prison vans from prison
 		        offer4.Priority = (num8 - capacity4) * 8 / Mathf.Max(1, JailCapacity);
 		        offer4.Building = buildingID;
 		        offer4.Position = buildingData.m_position;
@@ -483,7 +482,7 @@ namespace PrisonHelicopter.AI {
                 {
                     if(num8 - capacity4 > 0)
                     {
-                        TransferManager.TransferOffer offer4 = default(TransferManager.TransferOffer); // ask for guest prison vans from prison
+                        TransferManager.TransferOffer offer4 = default; // ask for guest prison vans from prison
 		        offer4.Priority = (num8 - capacity4) * 8 / Mathf.Max(1, JailCapacity);
 		        offer4.Building = buildingID;
 		        offer4.Position = buildingData.m_position;
@@ -493,7 +492,7 @@ namespace PrisonHelicopter.AI {
                     }
                     if(num8 - capacity2 > 0)
                     {
-                        TransferManager.TransferOffer offer2 = default(TransferManager.TransferOffer); // ask for guest prison vans from police station
+                        TransferManager.TransferOffer offer2 = default; // ask for guest prison vans from police station
 		        offer2.Priority = (num8 - capacity2) * 8 / Mathf.Max(1, JailCapacity);
 		        offer2.Building = buildingID;
 		        offer2.Position = buildingData.m_position;
