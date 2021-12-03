@@ -1,7 +1,6 @@
 using System;
 using ColossalFramework;
 using UnityEngine;
-using PrisonHelicopter.OptionsFramework;
 using ColossalFramework.DataBinding;
 
 namespace PrisonHelicopter.AI {
@@ -452,7 +451,7 @@ namespace PrisonHelicopter.AI {
 		offer.Active = true;
 		Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.Crime, offer);
 	    }
-	    if (num8 >= (JailCapacity * OptionsWrapper<Options>.Options.PriosnersPercentage / 100)) // check if prisoner count is above or equal percentage option
+	    if (num8 >= (JailCapacity * PrisonHelicopterMod.PriosnersPercentage / 100)) // check if prisoner count is above or equal percentage option
 	    {
                 if ((buildingData.m_flags & Building.Flags.Downgrading) == 0) // big police station
                 {
