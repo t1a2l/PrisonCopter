@@ -26,7 +26,8 @@ namespace PrisonHelicopter {
             if (IsInGame())
             {
                 string[] PercentNumList = Enum.GetValues(typeof(PercentNum)).Cast<int>().Select(x => x.ToString()).ToArray();
-                uiHelper.AddDropdown("Wait for this percentage capacity before calling a transport", PercentNumList, 8, b => PriosnersPercentage = Int16.Parse(PercentNumList[b]));
+                int index = Array.FindIndex(PercentNumList, item => { return item == "90"; });
+                uiHelper.AddDropdown("Wait for this percentage capacity before calling a transport", PercentNumList, index, b => { PriosnersPercentage = Int16.Parse(PercentNumList[b]); ModSettings.Save(); });
             }
 
         }
