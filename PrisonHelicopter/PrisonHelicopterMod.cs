@@ -32,15 +32,19 @@ namespace PrisonHelicopter {
 
         }
 
-        public void OnEnabled() {
+        public void OnEnabled()
+        {
+            ModSettings.Load();
             HarmonyHelper.DoOnHarmonyReady(() => PatchUtil.PatchAll());
         }
 
-        public void OnDisabled() {
+        public void OnDisabled()
+        {
             if (HarmonyHelper.IsHarmonyInstalled) PatchUtil.UnpatchAll();
         }
 
-        public override void OnLevelLoaded(LoadMode mode) {
+        public override void OnLevelLoaded(LoadMode mode)
+        {
             try {
                 var loadedBuildingInfoCount = PrefabCollection<BuildingInfo>.LoadedCount();
                 for (uint i = 0; i < loadedBuildingInfoCount; i++) {
