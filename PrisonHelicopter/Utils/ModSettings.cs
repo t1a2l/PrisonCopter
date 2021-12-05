@@ -3,10 +3,24 @@ using System.IO;
 using System.Xml.Serialization;
 
 namespace PrisonHelicopter.Utils {
-    class ModSettings {
+
+    /// <summary>
+    /// Global mod settings.
+    /// </summary>
+    [XmlRoot("PrisonHelicopter")]
+    public class ModSettings {
+
         // Settings file name.
         [XmlIgnore]
         private static readonly string SettingsFileName = "PrisonHelicopter.xml";
+
+        // User settings directory.
+        [XmlIgnore]
+        private static readonly string UserSettingsDir = ColossalFramework.IO.DataLocation.localApplicationData;
+
+        // Full userdir settings file name.
+        [XmlIgnore]
+        private static readonly string SettingsFile = Path.Combine(UserSettingsDir, SettingsFileName);
 
         [XmlElement("DropDown")]
         public int PriosnersPercentage
@@ -16,7 +30,6 @@ namespace PrisonHelicopter.Utils {
             set => PrisonHelicopterMod.PriosnersPercentage = value;
         } 
 
-
         /// <summary>
         /// Load settings from XML file.
         /// </summary>
@@ -24,23 +37,30 @@ namespace PrisonHelicopter.Utils {
         {
             try
             {
-                // Check to see if configuration file exists.
-                if (File.Exists(SettingsFileName))
+                // Attempt to read new settings file (in user settings directory).
+                string fileName = SettingsFile;
+                if (!File.Exists(fileName))
                 {
-                    // Read it.
-                    using (StreamReader reader = new StreamReader(SettingsFileName))
+                    // No settings file in user directory; use application directory instead.
+                    fileName = SettingsFileName;
+
+                    if (!File.Exists(fileName))
                     {
-                        XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
-                        if (!(xmlSerializer.Deserialize(reader) is ModSettings settingsFile))
-                        {
-                            LogHelper.Error("couldn't deserialize settings file");
-                        }
+                        LogHelper.Information("no settings file found");
+                        return;
                     }
                 }
-                else
+
+                // Read settings file.
+                using (StreamReader reader = new StreamReader(fileName))
                 {
-                    LogHelper.Information("no settings file found");
+                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
+                    if (!(xmlSerializer.Deserialize(reader) is ModSettings settingsFile))
+                    {
+                        LogHelper.Error("couldn't deserialize settings file");
+                    }
                 }
+  
             }
             catch (Exception e)
             {
@@ -56,11 +76,17 @@ namespace PrisonHelicopter.Utils {
         {
             try
             {
-                // Pretty straightforward.  Serialisation is within GBRSettingsFile class.
-                using (StreamWriter writer = new StreamWriter(SettingsFileName))
+                // Pretty straightforward.
+                using (StreamWriter writer = new StreamWriter(SettingsFile))
                 {
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
                     xmlSerializer.Serialize(writer, new ModSettings());
+                }
+
+                // Cleaning up after ourselves - delete any old config file in the application direcotry.
+                if (File.Exists(SettingsFileName))
+                {
+                    File.Delete(SettingsFileName);
                 }
             }
             catch (Exception e)
