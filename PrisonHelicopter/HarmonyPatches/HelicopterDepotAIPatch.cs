@@ -58,8 +58,11 @@ namespace PrisonHelicopter.HarmonyPatches {
                 // check if asking for a prison helicopter
                 if(material == (TransferManager.TransferReason)126)
                 {
-                    // if no prison was found or the offering building is not a big police station - don't spawn a prison helicopter
-                    if(FindClosestPrison(data.m_position) == 0 || (data.m_flags & Building.Flags.Downgrading) != 0)
+                    // if no prison was found or
+                    // the offering building is not a big police station or
+                    // the target building has alreadya vehicle on the way --
+                    // -- don't spawn a prison helicopter
+                    if(FindClosestPrison(data.m_position) == 0 || (data.m_flags & Building.Flags.Downgrading) != 0 || (data.m_flags & Building.Flags.Incoming) != 0)
                     {
                         return false;
                     }
@@ -108,7 +111,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    }
 	    if (transferReason2 != TransferManager.TransferReason.None)
 	    {
-                if(transferReason2 == TransferManager.TransferReason.CriminalMove)
+                if(transferReason2 == (TransferManager.TransferReason)126)
                 {
                     CalculateOwnVehicles(__instance, buildingID, ref data, transferReason2, ref count1, ref cargo1, ref capacity1, ref outside1);
                 }

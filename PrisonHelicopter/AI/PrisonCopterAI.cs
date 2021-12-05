@@ -174,6 +174,14 @@ namespace PrisonHelicopter.AI {
             BuildingManager instance = Singleton<BuildingManager>.instance;
             Building building = instance.m_buildings.m_buffer[targetBuilding];
             BuildingInfo building_info = building.Info;
+            if(data.m_transferSize <= m_criminalCapacity)
+            {
+                building.m_flags.SetFlags(Building.Flags.Incoming, true);
+            }
+            else
+            {
+                building.m_flags.SetFlags(Building.Flags.Incoming, false);
+            }
 	    if (targetBuilding != 0 && building_info.GetAI() is NewPoliceStationAI)
 	    {
                 if((building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0 && data.m_transferSize == 0) || (building_info.m_class.m_level >= ItemClass.Level.Level4 && data.m_transferSize > 0))
@@ -328,6 +336,7 @@ namespace PrisonHelicopter.AI {
                     SetTarget(vehicleID, ref data, 0);
                 } else {
                     ArrestCriminals(vehicleID, ref data, data.m_targetBuilding);
+                    building.m_flags.SetFlags(Building.Flags.Incoming, false);
                     SetTarget(vehicleID, ref data, targetBuilding);
                 }
             }

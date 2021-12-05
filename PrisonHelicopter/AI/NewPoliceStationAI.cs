@@ -409,8 +409,7 @@ namespace PrisonHelicopter.AI {
 	    {
 		CalculateOwnVehicles(buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside); // own police cars
                 CalculateGuestVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)125, ref count2, ref cargo2, ref capacity2, ref outside2); // guest prison vans from police station
-                CalculateGuestVehicles(buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count4, ref cargo4, ref capacity4, ref outside4); // guest prison vans from prison
-                
+                CalculateGuestVehicles(buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count4, ref cargo4, ref capacity4, ref outside4); // guest prison vans from prison 
             }
 	    int num10 = (finalProductionRate * PoliceCarCount + 99) / 100;
             int num11 = (finalProductionRate * PoliceVanCount + 99) / 100;
