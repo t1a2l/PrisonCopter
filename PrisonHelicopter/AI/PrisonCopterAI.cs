@@ -172,7 +172,7 @@ namespace PrisonHelicopter.AI {
 	    data.m_flags &= ~Vehicle.Flags.WaitingTarget;
 	    data.m_waitCounter = 0;
             BuildingManager instance = Singleton<BuildingManager>.instance;
-            Building building = instance.m_buildings.m_buffer[targetBuilding];
+            ref Building building = ref instance.m_buildings.m_buffer[targetBuilding];
             BuildingInfo building_info = building.Info;
             if(data.m_transferSize <= m_criminalCapacity)
             {
