@@ -393,8 +393,8 @@ namespace PrisonHelicopter.AI {
 	    {
                 CalculateOwnVehicles(buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count4, ref cargo4, ref capacity4, ref outside4); // own prison vans
 		CalculateGuestVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)126, ref count3, ref cargo3, ref capacity3, ref outside3); // guest prison helicopters
-                cargo2 = Mathf.Max(0, Mathf.Min(JailCapacity - num8, cargo2));
-                instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo2;
+                cargo4 = Mathf.Max(0, Mathf.Min(JailCapacity - num8, cargo4));
+                instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo4;
 	    }
             else if (m_info.m_class.m_level < ItemClass.Level.Level4 && (buildingData.m_flags & Building.Flags.Downgrading) == 0) // big police station
             {
