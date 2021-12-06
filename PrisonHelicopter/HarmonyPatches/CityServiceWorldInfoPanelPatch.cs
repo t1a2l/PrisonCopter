@@ -36,8 +36,8 @@ namespace PrisonHelicopter.HarmonyPatches
             else if(policeStation)
             {
                  ___m_intercityTrainsPanel.isVisible = true;
-                label.text = "Allow Prison Helicopters and Police Vans fleet";
-                label.tooltip = "Disable this if you prefer to allow only police vans to pick up prisoners from large police stations and prison vans from prison";
+                label.text = "Allow Prison Helicopters to land and a Police Vans fleet";
+                label.tooltip = "Disable this if you prefer that prison helicopters would not land and no police vans fleet to pick up criminals from other stations";
             }
             else
             {
