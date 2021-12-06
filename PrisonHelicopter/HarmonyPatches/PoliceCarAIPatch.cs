@@ -1,6 +1,7 @@
 using ColossalFramework;
 using HarmonyLib;
 using System;
+using System.Reflection;
 using UnityEngine;
 
 
@@ -9,6 +10,74 @@ namespace PrisonHelicopter.HarmonyPatches {
     [HarmonyPatch(typeof(PoliceCarAI))]
     public static class PoliceCarAIPatch {
 
+        private delegate void RemoveTargetDelegate(PoliceCarAI instance, ushort vehicleID, ref Vehicle data);
+        private static readonly RemoveTargetDelegate RemoveTarget = AccessTools.MethodDelegate<RemoveTargetDelegate>(typeof(PoliceCarAI).GetMethod("RemoveTarget", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
+        private delegate bool StartPathFindDelegate(PoliceCarAI instance, ushort vehicleID, ref Vehicle vehicleData);
+        private static readonly StartPathFindDelegate StartPathFind = AccessTools.MethodDelegate<StartPathFindDelegate>(typeof(PoliceCarAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic), null, false);
+
+        [HarmonyPatch(typeof(PoliceCarAI), "SetTarget")]
+        [HarmonyPrefix]
+        public static void SetTarget(PoliceCarAI __instance, ushort vehicleID, ref Vehicle data, ushort targetBuilding)
+	{
+	    RemoveTarget(__instance, vehicleID, ref data);
+	    data.m_targetBuilding = targetBuilding;
+	    data.m_flags &= ~Vehicle.Flags.WaitingTarget;
+	    data.m_waitCounter = 0;
+	    if (targetBuilding != 0)
+	    {
+		if (__instance.m_info.m_class.m_level < ItemClass.Level.Level4)
+		{
+		    if (CountCriminals(targetBuilding) != 0)
+		    {
+			data.m_flags |= Vehicle.Flags.Emergency2;
+		    }
+		    else
+		    {
+			data.m_flags &= ~Vehicle.Flags.Emergency2;
+		    }
+		}
+		Singleton<BuildingManager>.instance.m_buildings.m_buffer[targetBuilding].AddGuestVehicle(vehicleID, ref data);
+	    }
+	    else
+	    {
+		data.m_flags &= ~Vehicle.Flags.Emergency2;
+		if (data.m_transferSize < __instance.m_criminalCapacity && !ShouldReturnToSource(vehicleID, ref data))
+		{
+		    TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		    offer.Priority = 7;
+		    offer.Vehicle = vehicleID;
+		    if (data.m_sourceBuilding != 0)
+		    {
+			offer.Position = data.GetLastFramePosition() * 0.25f + Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].m_position * 0.75f;
+		    }
+		    else
+		    {
+			offer.Position = data.GetLastFramePosition();
+		    }
+		    offer.Amount = 1;
+		    offer.Active = true;
+		    Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)data.m_transferType, offer);
+		    data.m_flags |= Vehicle.Flags.WaitingTarget;
+		}
+		else
+		{
+		    data.m_flags |= Vehicle.Flags.GoingBack;
+		}
+	    }
+	    if (!StartPathFind(__instance, vehicleID, ref data))
+	    {
+                if(targetBuilding == 0) // going back home and no path found
+                {
+                    data.Unspawn(vehicleID);
+                }
+                else // trying to go to another building but no path exist go back to source
+                {
+                    data.m_flags |= Vehicle.Flags.GoingBack;
+                }
+		
+	    }
+	}
 
         [HarmonyPatch(typeof(PoliceCarAI), "GetLocalizedStatus")]
         [HarmonyPrefix]
@@ -18,7 +87,6 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    {
                 BuildingManager instance = Singleton<BuildingManager>.instance;
                 BuildingInfo police_source = instance.m_buildings.m_buffer[data.m_sourceBuilding].Info;
-                BuildingInfo police_target = instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
 		if ((data.m_flags & Vehicle.Flags.GoingBack) != 0)
 		{
                     target = InstanceID.Empty;
@@ -175,6 +243,46 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    }
 	}
 
+        private static int CountCriminals(ushort building)
+	{
+	    BuildingManager instance = Singleton<BuildingManager>.instance;
+	    CitizenManager instance2 = Singleton<CitizenManager>.instance;
+	    uint num = instance.m_buildings.m_buffer[building].m_citizenUnits;
+	    int num2 = 0;
+	    int num3 = 0;
+	    while (num != 0)
+	    {
+		uint nextUnit = instance2.m_units.m_buffer[num].m_nextUnit;
+		for (int i = 0; i < 5; i++)
+		{
+		    uint citizen = instance2.m_units.m_buffer[num].GetCitizen(i);
+		    if (citizen != 0 && instance2.m_citizens.m_buffer[citizen].Criminal && !instance2.m_citizens.m_buffer[citizen].Sick && !instance2.m_citizens.m_buffer[citizen].Dead && instance2.m_citizens.m_buffer[citizen].GetBuildingByLocation() == building)
+		    {
+			num3++;
+		    }
+		}
+		num = nextUnit;
+		if (++num2 > 524288)
+		{
+		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+		    break;
+		}
+	    }
+	    return num3;
+	}
+
+        private static bool ShouldReturnToSource(ushort vehicleID, ref Vehicle data)
+	{
+	    if (data.m_sourceBuilding != 0)
+	    {
+		BuildingManager instance = Singleton<BuildingManager>.instance;
+		if ((instance.m_buildings.m_buffer[data.m_sourceBuilding].m_flags & Building.Flags.Active) == 0 && instance.m_buildings.m_buffer[data.m_sourceBuilding].m_fireIntensity == 0)
+		{
+		    return true;
+		}
+	    }
+	    return false;
+	}
 
     }
 }
