@@ -9,7 +9,7 @@ namespace PrisonHelicopter {
 
     public class PrisonHelicopterMod : LoadingExtensionBase, IUserMod {
 
-        public static int PriosnersPercentage;
+        public static int PriosnersPercentage = 90;
         string IUserMod.Name => "Prison Helicopter Mod";
         string IUserMod.Description => "Allow the police helicopter depot to spawn prison helicopters to transport prisoners to jail";
 
@@ -26,7 +26,7 @@ namespace PrisonHelicopter {
             if (IsInGame())
             {
                 string[] PercentNumList = Enum.GetValues(typeof(PercentNum)).Cast<int>().Select(x => x.ToString()).ToArray();
-                int index = Array.FindIndex(PercentNumList, item => { return item == "90"; });
+                int index = Array.FindIndex(PercentNumList, item => { return item == PriosnersPercentage.ToString(); });
                 uiHelper.AddDropdown("Wait for this percentage capacity before calling a transport", PercentNumList, index, b => { PriosnersPercentage = Int16.Parse(PercentNumList[b]); ModSettings.Save(); });
             }
 

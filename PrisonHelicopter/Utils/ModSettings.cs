@@ -55,7 +55,7 @@ namespace PrisonHelicopter.Utils {
                 using (StreamReader reader = new StreamReader(fileName))
                 {
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
-                    if (!(xmlSerializer.Deserialize(reader) is ModSettings settingsFile))
+                    if (xmlSerializer.Deserialize(reader) is not ModSettings settingsFile)
                     {
                         LogHelper.Error("couldn't deserialize settings file");
                     }
