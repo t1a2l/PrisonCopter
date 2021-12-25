@@ -265,7 +265,6 @@ namespace PrisonHelicopter.AI {
 	    HandleWorkPlaces(buildingID, ref buildingData, m_workPlaceCount0, m_workPlaceCount1, m_workPlaceCount2, m_workPlaceCount3, ref behaviour, aliveWorkerCount, totalWorkerCount);
 	    visitPlaceCount += JailCapacity;
 	    GetVisitBehaviour(buildingID, ref buildingData, ref behaviour, ref aliveVisitorCount, ref totalVisitorCount);
-            m_jailOccupancy = totalVisitorCount;
 	    behaviour.m_crimeAccumulation = 0;
 	}
 
@@ -395,6 +394,7 @@ namespace PrisonHelicopter.AI {
 		CalculateGuestVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)126, ref count3, ref cargo3, ref capacity3, ref outside3); // guest prison helicopters
                 cargo4 = Mathf.Max(0, Mathf.Min(JailCapacity - num8, cargo4));
                 instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo4;
+                m_jailOccupancy = num7;
 	    }
             else if (m_info.m_class.m_level < ItemClass.Level.Level4 && (buildingData.m_flags & Building.Flags.Downgrading) == 0) // big police station
             {
@@ -404,12 +404,14 @@ namespace PrisonHelicopter.AI {
 		instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo2;
                 CalculateGuestVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)126, ref count3, ref cargo3, ref capacity3, ref outside3); // guest prison helicopters
                 CalculateGuestVehicles(buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count4, ref cargo4, ref capacity4, ref outside4); // guest prison vans from prison
+                m_jailOccupancy = num8;
             }
 	    else // small police station
 	    {
 		CalculateOwnVehicles(buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside); // own police cars
                 CalculateGuestVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)125, ref count2, ref cargo2, ref capacity2, ref outside2); // guest prison vans from police station
                 CalculateGuestVehicles(buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count4, ref cargo4, ref capacity4, ref outside4); // guest prison vans from prison 
+                m_jailOccupancy = num8;
             }
 	    int num10 = (finalProductionRate * PoliceCarCount + 99) / 100;
             int num11 = (finalProductionRate * PoliceVanCount + 99) / 100;

@@ -688,7 +688,7 @@ namespace PrisonHelicopter.AI {
                                 if (info.GetAI() is NewPoliceStationAI newPoliceStationAI
                                     && info.m_class.m_service == ItemClass.Service.PoliceDepartment
                                     && info.m_class.m_level >= ItemClass.Level.Level4
-                                    && newPoliceStationAI.m_jailOccupancy < newPoliceStationAI.JailCapacity - 10) {
+                                    && newPoliceStationAI.m_jailOccupancy < newPoliceStationAI.JailCapacity - 20) {
                                     Vector3 position = instance.m_buildings.m_buffer[num12].m_position;
                                     float num14 = Vector3.SqrMagnitude(position - pos);
                                     if (num14 < num10) {
