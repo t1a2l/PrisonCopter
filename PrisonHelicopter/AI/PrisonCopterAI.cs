@@ -2,6 +2,7 @@ using ColossalFramework;
 using UnityEngine;
 using ColossalFramework.Math;
 using System;
+using System.Reflection;
 
 namespace PrisonHelicopter.AI {
 
@@ -80,8 +81,7 @@ namespace PrisonHelicopter.AI {
 
         public override void CreateVehicle(ushort vehicleID, ref Vehicle data)
 	{
-            (this as VehicleAI).CreateVehicle(vehicleID, ref data);
-	    data.m_flags |= Vehicle.Flags.WaitingTarget;
+            base.CreateVehicle(vehicleID, ref data);
             Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, 0, vehicleID, 0, 0, 0, m_policeCount + m_criminalCapacity, 0);   
         }
 
@@ -93,16 +93,8 @@ namespace PrisonHelicopter.AI {
 
         public override void LoadVehicle(ushort vehicleID, ref Vehicle data)
         {
-            (this as HelicopterAI).LoadVehicle(vehicleID, ref data);
             EnsureCitizenUnits(vehicleID, ref data, m_policeCount + m_criminalCapacity);
-	    if (data.m_sourceBuilding != 0)
-	    {
-		    Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].AddOwnVehicle(vehicleID, ref data);
-	    }
-	    if (data.m_targetBuilding != 0)
-	    {
-		    Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].AddGuestVehicle(vehicleID, ref data);
-	    }
+	    base.LoadVehicle(vehicleID, ref data);
         }
 
         public override void SetTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
@@ -179,7 +171,8 @@ namespace PrisonHelicopter.AI {
 	    }
 	    else
 	    {
-		(this as VehicleAI).StartTransfer(vehicleID, ref data, material, offer);
+                var VehicleAIStartTransfer = typeof(VehicleAI).GetMethod("StartTransfer", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(TransferManager.TransferOffer) }, null);
+                VehicleAIStartTransfer.Invoke(null, new object[] { vehicleID, data, material, offer });
 	    }
 	}
 
