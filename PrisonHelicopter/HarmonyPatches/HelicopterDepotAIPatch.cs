@@ -156,12 +156,12 @@ namespace PrisonHelicopter.HarmonyPatches {
 
         [HarmonyPatch(typeof(HelicopterDepotAI), "ProduceGoods")]
         [HarmonyPrefix]
-        public static void ProduceGoods(HelicopterDepotAI __instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
+        public static bool ProduceGoods(HelicopterDepotAI __instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
 	{
 	    BaseProduceGoods(__instance, buildingID, ref buildingData, ref frameData, productionRate, finalProductionRate, ref behaviour, aliveWorkerCount, totalWorkerCount, workPlaceCount, aliveVisitorCount, totalVisitorCount, visitPlaceCount);
 	    if (finalProductionRate == 0)
 	    {
-		return;
+		return false;
 	    }
 	    int num = finalProductionRate * __instance.m_noiseAccumulation / 100;
 	    if (num != 0)
@@ -180,7 +180,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    }
 	    if (transferReason == TransferManager.TransferReason.None)
 	    {
-		return;
+		return false;
 	    }
 	    int num2 = (finalProductionRate * __instance.m_helicopterCount + 99) / 100;
 	    int num3 = 0;
@@ -192,7 +192,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    while (num6 != 0)
 	    {
 		TransferManager.TransferReason transferType = (TransferManager.TransferReason)instance.m_vehicles.m_buffer[num6].m_transferType;
-                if(transferType == transferReason || transferType == TransferManager.TransferReason.CriminalMove || (transferType == transferReason2 && transferReason2 != TransferManager.TransferReason.None))
+                if(transferType == transferReason || (transferType == transferReason2 && transferReason2 != TransferManager.TransferReason.None))
 		{
 		    VehicleInfo info = instance.m_vehicles.m_buffer[num6].Info;
 		    info.m_vehicleAI.GetSize(num6, ref instance.m_vehicles.m_buffer[num6], out var _, out var _);
@@ -248,6 +248,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 		    Singleton<TransferManager>.instance.AddIncomingOffer(transferReason2, offer2);
 		}
 	    }
+            return false;
 	}
 
         [HarmonyPatch(typeof(BuildingAI), "SetEmptying")]
