@@ -1,5 +1,6 @@
 using ColossalFramework;
 using UnityEngine;
+using ColossalFramework.Math;
 using System;
 
 namespace PrisonHelicopter.AI {
@@ -77,6 +78,13 @@ namespace PrisonHelicopter.AI {
 	    }
 	}
 
+        public override void CreateVehicle(ushort vehicleID, ref Vehicle data)
+	{
+            (this as VehicleAI).CreateVehicle(vehicleID, ref data);
+	    data.m_flags |= Vehicle.Flags.WaitingTarget;
+            Singleton<CitizenManager>.instance.CreateUnits(out data.m_citizenUnits, ref Singleton<SimulationManager>.instance.m_randomizer, 0, vehicleID, 0, 0, 0, m_policeCount + m_criminalCapacity, 0);   
+        }
+
         public override void ReleaseVehicle(ushort vehicleID, ref Vehicle data)
         {
             UnloadCriminals(ref data);
@@ -85,8 +93,16 @@ namespace PrisonHelicopter.AI {
 
         public override void LoadVehicle(ushort vehicleID, ref Vehicle data)
         {
+            (this as HelicopterAI).LoadVehicle(vehicleID, ref data);
             EnsureCitizenUnits(vehicleID, ref data, m_policeCount + m_criminalCapacity);
-            base.LoadVehicle(vehicleID, ref data);
+	    if (data.m_sourceBuilding != 0)
+	    {
+		    Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].AddOwnVehicle(vehicleID, ref data);
+	    }
+	    if (data.m_targetBuilding != 0)
+	    {
+		    Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].AddGuestVehicle(vehicleID, ref data);
+	    }
         }
 
         public override void SetTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
@@ -167,9 +183,15 @@ namespace PrisonHelicopter.AI {
 	    }
 	}
 
+        public override void GetSize(ushort vehicleID, ref Vehicle data, out int size, out int max)
+	{
+	    size = data.m_transferSize; // how many people needs to be transfered
+            max = m_criminalCapacity; // how many places inside the vehicle
+	}
+
         public override void SimulationStep(ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics)
         {
-            (this as HelicopterAI).SimulationStep(vehicleID, ref vehicleData, ref frameData, leaderID, ref leaderData, lodPhysics);
+            base.SimulationStep(vehicleID, ref vehicleData, ref frameData, leaderID, ref leaderData, lodPhysics);
             if ((vehicleData.m_flags & Vehicle.Flags.Stopped) != 0 && CanLeave(vehicleID, ref vehicleData))
             {
                 vehicleData.m_flags &= ~Vehicle.Flags.Stopped;
@@ -212,18 +234,6 @@ namespace PrisonHelicopter.AI {
 	    }
 	}
 
-        private bool ArriveAtSource(ushort vehicleID, ref Vehicle data)
-	{
-	    if (data.m_sourceBuilding == 0)
-	    {
-		    Singleton<VehicleManager>.instance.ReleaseVehicle(vehicleID);
-		    return true;
-	    }
-	    data.m_transferSize = 0;
-	    RemoveSource(vehicleID, ref data);
-	    return true;
-	}
-
         private bool ArriveAtTarget(ushort vehicleID, ref Vehicle data)
 	{
 	    if (data.m_targetBuilding == 0)
@@ -258,6 +268,18 @@ namespace PrisonHelicopter.AI {
             return false;
 	}
 
+        private bool ArriveAtSource(ushort vehicleID, ref Vehicle data)
+	{
+	    if (data.m_sourceBuilding == 0)
+	    {
+		Singleton<VehicleManager>.instance.ReleaseVehicle(vehicleID);
+		return true;
+	    }
+	    data.m_transferSize = 0;
+	    RemoveSource(vehicleID, ref data);
+	    return true;
+	}
+
         public override bool ArriveAtDestination(ushort vehicleID, ref Vehicle vehicleData)
 	{
 	    if ((vehicleData.m_flags & Vehicle.Flags.WaitingTarget) != 0)
@@ -269,6 +291,63 @@ namespace PrisonHelicopter.AI {
 		return ArriveAtSource(vehicleID, ref vehicleData);
 	    }
 	    return ArriveAtTarget(vehicleID, ref vehicleData);
+	}
+
+        public override void UpdateBuildingTargetPositions(ushort vehicleID, ref Vehicle vehicleData, Vector3 refPos, ushort leaderID, ref Vehicle leaderData, ref int index, float minSqrDistance)
+	{
+	    if ((leaderData.m_flags & Vehicle.Flags.WaitingTarget) != (Vehicle.Flags)0)
+	    {
+		return;
+	    }
+	    if ((leaderData.m_flags & Vehicle.Flags.GoingBack) != (Vehicle.Flags)0)
+	    {
+		if (leaderData.m_sourceBuilding != 0)
+		{
+		    BuildingManager instance = Singleton<BuildingManager>.instance;
+		    BuildingInfo info = instance.m_buildings.m_buffer[(int)leaderData.m_sourceBuilding].Info;
+		    Randomizer randomizer = new((int)vehicleID);
+                    info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[(int)leaderData.m_sourceBuilding], ref randomizer, m_info, out _, out Vector3 targetPos);
+                    vehicleData.SetTargetPos(index++, CalculateTargetPoint(refPos, targetPos, minSqrDistance, 0f));
+		    return;
+		}
+	    }
+	    else if (leaderData.m_targetBuilding != 0)
+	    {
+		BuildingManager instance2 = Singleton<BuildingManager>.instance;
+		BuildingInfo info2 = instance2.m_buildings.m_buffer[(int)leaderData.m_targetBuilding].Info;
+		Randomizer randomizer2 = new((int)vehicleID);
+                info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[(int)leaderData.m_targetBuilding], ref randomizer2, m_info, out _, out Vector3 targetPos2);
+                vehicleData.SetTargetPos(index++, CalculateTargetPoint(refPos, targetPos2, minSqrDistance, 0));
+		return;
+	    }
+	}
+
+        protected override bool StartPathFind(ushort vehicleID, ref Vehicle vehicleData)
+	{
+	    if ((vehicleData.m_flags & Vehicle.Flags.WaitingTarget) != 0)
+	    {
+		return true;
+	    }
+	    if ((vehicleData.m_flags & Vehicle.Flags.GoingBack) != 0)
+	    {
+		if (vehicleData.m_sourceBuilding != 0)
+		{
+		    BuildingManager instance = Singleton<BuildingManager>.instance;
+		    BuildingInfo info = instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding].Info;
+		    Randomizer randomizer = new(vehicleID);
+		    info.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_sourceBuilding, ref instance.m_buildings.m_buffer[vehicleData.m_sourceBuilding], ref randomizer, m_info, out var _, out var target);
+		    return StartPathFind(vehicleID, ref vehicleData, vehicleData.m_targetPos3, target);
+		}
+	    }
+	    else if (vehicleData.m_targetBuilding != 0)
+	    {
+		BuildingManager instance2 = Singleton<BuildingManager>.instance;
+		BuildingInfo info2 = instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding].Info;
+		Randomizer randomizer2 = new(vehicleID);
+		info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out var _, out var target2);
+		return StartPathFind(vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2);
+	    }
+	    return false;
 	}
 
         public override bool CanLeave(ushort vehicleID, ref Vehicle vehicleData)
