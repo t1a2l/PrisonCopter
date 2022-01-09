@@ -346,6 +346,7 @@ namespace PrisonHelicopter.AI {
         public override bool CanLeave(ushort vehicleID, ref Vehicle vehicleData)
 	{
 	    CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint numCitizenUnits = instance.m_units.m_size;
 	    bool flag = true;
 	    bool flag2 = false;
 	    uint num = vehicleData.m_citizenUnits;
@@ -376,7 +377,7 @@ namespace PrisonHelicopter.AI {
 		    }
 		}
 		num = nextUnit;
-		if (++num2 > 524288)
+		if (++num2 > numCitizenUnits)
 		{
 		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
 		    break;
@@ -403,7 +404,7 @@ namespace PrisonHelicopter.AI {
 			}
 		    }
 		    num = nextUnit2;
-		    if (++num2 > 524288)
+		    if (++num2 > numCitizenUnits)
 		    {
 			CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
 			break;
@@ -416,6 +417,7 @@ namespace PrisonHelicopter.AI {
         private void UnloadCriminals(ref Vehicle data)
 	{
 	    CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint numCitizenUnits = instance.m_units.m_size;
 	    uint num = data.m_citizenUnits;
 	    int num2 = 0;
 	    int num3 = 0;
@@ -448,7 +450,7 @@ namespace PrisonHelicopter.AI {
 		    }
 		}
 		num = nextUnit;
-		if (++num2 > 524288)
+		if (++num2 > numCitizenUnits)
 		{
 		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
 		    break;
@@ -489,6 +491,7 @@ namespace PrisonHelicopter.AI {
 	    }
 	    BuildingManager instance = Singleton<BuildingManager>.instance;
 	    CitizenManager instance2 = Singleton<CitizenManager>.instance;
+            uint numCitizenUnits = instance2.m_units.m_size;
 	    uint num = instance.m_buildings.m_buffer[building].m_citizenUnits;
 	    int num2 = 0;
 	    while (num != 0)
@@ -519,7 +522,7 @@ namespace PrisonHelicopter.AI {
 		    }
 		}
 		num = nextUnit;
-		if (++num2 > 524288)
+		if (++num2 > numCitizenUnits)
 		{
 		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
 		    break;
@@ -530,6 +533,7 @@ namespace PrisonHelicopter.AI {
         public uint GetArrestedCitizen(ref Vehicle data)
 	{
 	    CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint numCitizenUnits = instance.m_units.m_size;
 	    uint num = data.m_citizenUnits;
 	    int num2 = 0;
 	    while (num != 0)
@@ -544,7 +548,7 @@ namespace PrisonHelicopter.AI {
 		    }
 		}
 		num = nextUnit;
-		if (++num2 > 524288)
+		if (++num2 > numCitizenUnits)
 		{
 		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
 		    break;
@@ -555,6 +559,7 @@ namespace PrisonHelicopter.AI {
 
         private static ushort FindClosestPrison(Vector3 pos) {
             BuildingManager instance = Singleton<BuildingManager>.instance;
+            uint numBuildings = instance.m_buildings.m_size;
             int num = Mathf.Max((int)(pos.x / 64f + 135f), 0);
             int num2 = Mathf.Max((int)(pos.z / 64f + 135f), 0);
             int num3 = Mathf.Min((int)(pos.x / 64f + 135f), 269);
@@ -593,7 +598,7 @@ namespace PrisonHelicopter.AI {
                                 }
                             }
                             num12 = instance.m_buildings.m_buffer[num12].m_nextGridBuilding;
-                            if (++num13 >= 49152) {
+                            if (++num13 >= numBuildings) {
                                 CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
                                 break;
                             }

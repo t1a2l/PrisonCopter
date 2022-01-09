@@ -163,6 +163,8 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    {
 		return false;
 	    }
+            VehicleManager vehicleManager = Singleton<VehicleManager>.instance;
+            uint numVehicles = vehicleManager.m_vehicles.m_size;
 	    int num = finalProductionRate * __instance.m_noiseAccumulation / 100;
 	    if (num != 0)
 	    {
@@ -207,13 +209,13 @@ namespace PrisonHelicopter.HarmonyPatches {
 		    }
 		}
 		num6 = instance.m_vehicles.m_buffer[num6].m_nextOwnVehicle;
-		if (++num7 > 16384)
+		if (++num7 > numVehicles)
 		{
 		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
 		    break;
 		}
 	    }
-	    if (__instance.m_helicopterCount < 16384 && num3 - num4 > num2 && num5 != 0)
+	    if (__instance.m_helicopterCount < numVehicles && num3 - num4 > num2 && num5 != 0)
 	    {
 		    VehicleInfo info2 = instance.m_vehicles.m_buffer[num5].Info;
 		    info2.m_vehicleAI.SetTarget(num5, ref instance.m_vehicles.m_buffer[num5], buildingID);
@@ -264,6 +266,7 @@ namespace PrisonHelicopter.HarmonyPatches {
         private static ushort FindClosestPrison(Vector3 pos)
         {
             BuildingManager instance = Singleton<BuildingManager>.instance;
+            uint numBuildings = instance.m_buildings.m_size;
             int num = Mathf.Max((int)(pos.x / 64f + 135f), 0);
             int num2 = Mathf.Max((int)(pos.z / 64f + 135f), 0);
             int num3 = Mathf.Min((int)(pos.x / 64f + 135f), 269);
@@ -308,7 +311,7 @@ namespace PrisonHelicopter.HarmonyPatches {
                                 }
                             }
                             num12 = instance.m_buildings.m_buffer[num12].m_nextGridBuilding;
-                            if (++num13 >= 49152)
+                            if (++num13 >= numBuildings)
                             {
                                 CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
                                 break;

@@ -102,6 +102,7 @@ namespace PrisonHelicopter.HarmonyPatches {
         public static bool UnloadCriminals(PoliceCarAI __instance, ushort vehicleID, ref Vehicle data)
 	{
 	    CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint numCitizenUnits = instance.m_units.m_size;
 	    uint num = data.m_citizenUnits;
 	    int num2 = 0;
 	    int num3 = 0;
@@ -139,7 +140,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 		    }
 		}
 		num = nextUnit;
-		if (++num2 > 524288)
+		if (++num2 > numCitizenUnits)
 		{
 		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
 		    break;

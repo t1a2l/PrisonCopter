@@ -278,6 +278,8 @@ namespace PrisonHelicopter.AI {
 	{
 	    base.ProduceGoods(buildingID, ref buildingData, ref frameData, productionRate, finalProductionRate, ref behaviour, aliveWorkerCount, totalWorkerCount, workPlaceCount, aliveVisitorCount, totalVisitorCount, visitPlaceCount);
 	    DistrictManager instance = Singleton<DistrictManager>.instance;
+            CitizenManager citizenManager = Singleton<CitizenManager>.instance;
+            uint numCitizenUnits = citizenManager.m_units.m_size;
 	    byte district = instance.GetDistrict(buildingData.m_position);
 	    DistrictPolicies.Services servicePolicies = instance.m_districts.m_buffer[district].m_servicePolicies;
 	    if ((servicePolicies & DistrictPolicies.Services.RecreationalUse) != 0)
@@ -360,7 +362,7 @@ namespace PrisonHelicopter.AI {
 		    }
 		}
 		num6 = nextUnit;
-		if (++num9 > 524288)
+		if (++num9 > numCitizenUnits)
 		{
 		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
 		    break;
@@ -545,6 +547,7 @@ namespace PrisonHelicopter.AI {
         public override string GetLocalizedStats(ushort buildingID, ref Building data)
 	{
 	    CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint numCitizenUnits = instance.m_units.m_size;
 	    uint num = data.m_citizenUnits;
 	    int num2 = 0;
 	    int num3 = 0;
@@ -563,7 +566,7 @@ namespace PrisonHelicopter.AI {
 		    }
 		}
 		num = nextUnit;
-		if (++num2 > 524288)
+		if (++num2 > numCitizenUnits)
 		{
 		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
 		    break;
