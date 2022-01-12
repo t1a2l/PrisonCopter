@@ -36,12 +36,9 @@ namespace PrisonHelicopter.HarmonyPatches {
                 {
                      data.Unspawn(vehicleID);
                 }
+                return false;
             }
-            else
-            {
-                data.Unspawn(vehicleID);
-            }
-            return false;
+            return true;
 	}
 
     }
