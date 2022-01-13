@@ -24,8 +24,8 @@ namespace PrisonHelicopter.HarmonyPatches {
 
 
         [HarmonyPatch(typeof(HelicopterDepotAI), "StartTransfer")]
-        [HarmonyPrefix]
-        public static bool StartTransfer(HelicopterDepotAI __instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
+        [HarmonyPostfix]
+        public static void StartTransfer(HelicopterDepotAI __instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
         {
             if (material == (TransferManager.TransferReason)126)
             {
@@ -35,7 +35,7 @@ namespace PrisonHelicopter.HarmonyPatches {
                 // -- don't spawn a prison helicopter
                 if(FindClosestPrison(data.m_position) == 0 || (data.m_flags & Building.Flags.Downgrading) != 0 || (data.m_flags & Building.Flags.Incoming) != 0)
                 {
-                    return false;
+                    return;
                 }
                 // spawn only level 4 helicopters (prison helicopters)
                 VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, __instance.m_info.m_class.m_service, __instance.m_info.m_class.m_subService, ItemClass.Level.Level4, VehicleInfo.VehicleType.Helicopter);
@@ -48,9 +48,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 			randomVehicleInfo.m_vehicleAI.StartTransfer(vehicle, ref vehicles.m_buffer[vehicle], material, offer);
 		    }
 		}
-                return false;
             }
-            return true;
         }
 
         [HarmonyPatch(typeof(HelicopterDepotAI), "GetLocalizedStats")]
