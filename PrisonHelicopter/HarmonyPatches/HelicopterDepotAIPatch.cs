@@ -37,8 +37,9 @@ namespace PrisonHelicopter.HarmonyPatches {
                 {
                     return false;
                 }
-                VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, __instance.m_info.m_class.m_service, __instance.m_info.m_class.m_subService, __instance.m_info.m_class.m_level, VehicleInfo.VehicleType.Helicopter);
-		if ((object)randomVehicleInfo != null)
+                // spawn only level 4 helicopters (prison helicopters)
+                VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, __instance.m_info.m_class.m_service, __instance.m_info.m_class.m_subService, ItemClass.Level.Level4, VehicleInfo.VehicleType.Helicopter);
+		if (randomVehicleInfo != null)
 		{
 		    Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
 		    if (Singleton<VehicleManager>.instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, randomVehicleInfo, data.m_position, material, transferToSource: true, transferToTarget: false))
