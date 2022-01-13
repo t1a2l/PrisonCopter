@@ -171,8 +171,7 @@ namespace PrisonHelicopter.AI {
 	    }
 	    else
 	    {
-                var VehicleAIStartTransfer = typeof(VehicleAI).GetMethod("StartTransfer", BindingFlags.Public | BindingFlags.Instance, null, new Type[] { typeof(ushort), typeof(Vehicle).MakeByRefType(), typeof(TransferManager.TransferOffer) }, null);
-                VehicleAIStartTransfer.Invoke(null, new object[] { vehicleID, data, material, offer });
+                base.StartTransfer(vehicleID, ref data, material, offer);
 	    }
 	}
 
