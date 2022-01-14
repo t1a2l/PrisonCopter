@@ -8,7 +8,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 
     public delegate void LoadVehicleHelicopterAIDelegate(HelicopterAI instance, ushort vehicleID, ref Vehicle data);
 
-    public delegate void ReleaseVehicleVehicleAIDelegate(HelicopterAI instance, ushort vehicleID, ref Vehicle data);
+    public delegate void ReleaseVehicleVehicleAIDelegate(VehicleAI instance, ushort vehicleID, ref Vehicle data);
 
     public class PoliceCopterAIConnection {
         internal PoliceCopterAIConnection(SimulationStepHelicopterAIDelegate simulationStepHelicopterAI,
@@ -48,7 +48,7 @@ namespace PrisonHelicopter.HarmonyPatches {
                     false);
                 ReleaseVehicleVehicleAIDelegate releaseVehicleVehicleAI =
                     AccessTools.MethodDelegate<ReleaseVehicleVehicleAIDelegate>(
-                    TranspilerUtil.DeclaredMethod<ReleaseVehicleVehicleTarget>(typeof(HelicopterAI), "ReleaseVehicle"),
+                    TranspilerUtil.DeclaredMethod<ReleaseVehicleVehicleTarget>(typeof(VehicleAI), "ReleaseVehicle"),
                     null,
                     false);
                 return new PoliceCopterAIConnection(simulationStepHelicopterAI, loadVehicleHelicopterAI, releaseVehicleVehicleAI);
