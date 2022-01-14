@@ -92,10 +92,49 @@ namespace PrisonHelicopter.AI {
         }
 
         public override void LoadVehicle(ushort vehicleID, ref Vehicle data)
-        {
-            EnsureCitizenUnits(vehicleID, ref data, m_policeCount + m_criminalCapacity);
+	{
 	    base.LoadVehicle(vehicleID, ref data);
-        }
+	    if (data.m_sourceBuilding != 0)
+	    {
+		Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding].AddOwnVehicle(vehicleID, ref data);
+	    }
+	    if (data.m_targetBuilding != 0)
+	    {
+		Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].AddGuestVehicle(vehicleID, ref data);
+	    }
+	}
+
+        public override void SetSource(ushort vehicleID, ref Vehicle data, ushort sourceBuilding)
+	{
+	    RemoveSource(vehicleID, ref data);
+	    data.m_sourceBuilding = sourceBuilding;
+	    if (sourceBuilding != 0)
+	    {
+		BuildingManager instance = Singleton<BuildingManager>.instance;
+		BuildingInfo info = instance.m_buildings.m_buffer[sourceBuilding].Info;
+		data.Unspawn(vehicleID);
+		Randomizer randomizer = new Randomizer(vehicleID);
+		info.m_buildingAI.CalculateSpawnPosition(sourceBuilding, ref instance.m_buildings.m_buffer[sourceBuilding], ref randomizer, m_info, out var position, out var target);
+		Quaternion rotation = Quaternion.identity;
+		Vector3 forward = target - position;
+		if (forward.sqrMagnitude > 0.01f)
+		{
+			rotation = Quaternion.LookRotation(forward);
+		}
+		data.m_frame0 = new Vehicle.Frame(position, rotation);
+		data.m_frame1 = data.m_frame0;
+		data.m_frame2 = data.m_frame0;
+		data.m_frame3 = data.m_frame0;
+		data.m_targetPos0 = position;
+		data.m_targetPos0.w = 0f;
+		data.m_targetPos1 = target;
+		data.m_targetPos1.w = 0f;
+		data.m_targetPos2 = data.m_targetPos1;
+		data.m_targetPos3 = data.m_targetPos1;
+		FrameDataUpdated(vehicleID, ref data, ref data.m_frame0);
+		Singleton<BuildingManager>.instance.m_buildings.m_buffer[sourceBuilding].AddOwnVehicle(vehicleID, ref data);
+	    }
+	}
 
         public override void SetTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
 	{
