@@ -88,6 +88,9 @@ namespace PrisonHelicopter.AI {
         public override void ReleaseVehicle(ushort vehicleID, ref Vehicle data)
         {
             UnloadCriminals(ref data);
+            RemoveOffers(vehicleID, ref data);
+	    RemoveSource(vehicleID, ref data);
+	    RemoveTarget(vehicleID, ref data);
 	    base.ReleaseVehicle(vehicleID, ref data);
         }
 
@@ -245,6 +248,16 @@ namespace PrisonHelicopter.AI {
 		}
 	    }
 	    return false;
+	}
+
+        private void RemoveOffers(ushort vehicleID, ref Vehicle data)
+	{
+	    if ((data.m_flags & Vehicle.Flags.WaitingTarget) != 0)
+	    {
+		TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		offer.Vehicle = vehicleID;
+		Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)data.m_transferType, offer);
+	    }
 	}
 
         private void RemoveSource(ushort vehicleID, ref Vehicle data)

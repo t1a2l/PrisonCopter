@@ -8,15 +8,22 @@ namespace PrisonHelicopter.HarmonyPatches {
 
     public delegate void LoadVehicleHelicopterAIDelegate(HelicopterAI instance, ushort vehicleID, ref Vehicle data);
 
+    public delegate void ReleaseVehicleVehicleAIDelegate(HelicopterAI instance, ushort vehicleID, ref Vehicle data);
+
     public class PoliceCopterAIConnection {
-        internal PoliceCopterAIConnection(SimulationStepHelicopterAIDelegate simulationStepHelicopterAI, LoadVehicleHelicopterAIDelegate loadVehicleHelicopterAI) {
+        internal PoliceCopterAIConnection(SimulationStepHelicopterAIDelegate simulationStepHelicopterAI,
+                                          LoadVehicleHelicopterAIDelegate loadVehicleHelicopterAI,
+                                          ReleaseVehicleVehicleAIDelegate releaseVehicleVehicleAI) {
             SimulationStepHelicopterAI = simulationStepHelicopterAI ?? throw new ArgumentNullException(nameof(simulationStepHelicopterAI));
             LoadVehicleHelicopterAI = loadVehicleHelicopterAI ?? throw new ArgumentNullException(nameof(loadVehicleHelicopterAI));
+            ReleaseVehicleVehicleAI = releaseVehicleVehicleAI ?? throw new ArgumentNullException(nameof(releaseVehicleVehicleAI));
         }
 
         public SimulationStepHelicopterAIDelegate SimulationStepHelicopterAI { get; }
 
         public LoadVehicleHelicopterAIDelegate LoadVehicleHelicopterAI { get; }
+
+        public ReleaseVehicleVehicleAIDelegate ReleaseVehicleVehicleAI { get; }
     }
 
     public static class PoliceCopterAIHook {
@@ -24,6 +31,8 @@ namespace PrisonHelicopter.HarmonyPatches {
         private delegate void SimulationStepTarget(ushort vehicleID, ref Vehicle vehicleData, ref Vehicle.Frame frameData, ushort leaderID, ref Vehicle leaderData, int lodPhysics);
 
         private delegate void LoadVehicleTarget(ushort vehicleID, ref Vehicle data);
+
+        private delegate void ReleaseVehicleVehicleTarget(ushort vehicleID, ref Vehicle data);
 
         internal static PoliceCopterAIConnection GetConnection() {
             try {
@@ -37,7 +46,12 @@ namespace PrisonHelicopter.HarmonyPatches {
                     TranspilerUtil.DeclaredMethod<LoadVehicleTarget>(typeof(HelicopterAI), "LoadVehicle"),
                     null,
                     false);
-                return new PoliceCopterAIConnection(simulationStepHelicopterAI, loadVehicleHelicopterAI);
+                ReleaseVehicleVehicleAIDelegate releaseVehicleVehicleAI =
+                    AccessTools.MethodDelegate<ReleaseVehicleVehicleAIDelegate>(
+                    TranspilerUtil.DeclaredMethod<ReleaseVehicleVehicleTarget>(typeof(HelicopterAI), "ReleaseVehicle"),
+                    null,
+                    false);
+                return new PoliceCopterAIConnection(simulationStepHelicopterAI, loadVehicleHelicopterAI, releaseVehicleVehicleAI);
             }
             catch (Exception e) {
                 LogHelper.Error(e.Message);
@@ -54,9 +68,12 @@ namespace PrisonHelicopter.HarmonyPatches {
 
         private static LoadVehicleHelicopterAIDelegate LoadVehicleHelicopterAI;
 
+        private static ReleaseVehicleVehicleAIDelegate ReleaseVehicleVehicleAI;
+
         public static void Prepare() {
             SimulationStepHelicopterAI = GameConnectionManager.Instance.PoliceCopterAIConnection.SimulationStepHelicopterAI;
             LoadVehicleHelicopterAI = GameConnectionManager.Instance.PoliceCopterAIConnection.LoadVehicleHelicopterAI;
+            ReleaseVehicleVehicleAI = GameConnectionManager.Instance.PoliceCopterAIConnection.ReleaseVehicleVehicleAI;
         }
 
 
@@ -79,6 +96,17 @@ namespace PrisonHelicopter.HarmonyPatches {
         {
             if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4) {
                 LoadVehicleHelicopterAI(__instance, vehicleID, ref data);
+                return false;
+            }
+            return true;
+        }
+
+        [HarmonyPatch(typeof(PoliceCopterAI), "ReleaseVehicle")]
+        [HarmonyPrefix]
+        public static bool ReleaseVehicle(PoliceCopterAI __instance, ushort vehicleID, ref Vehicle data)
+        {
+            if (__instance.m_info.m_class.m_level >= ItemClass.Level.Level4) {
+                ReleaseVehicleVehicleAI(__instance, vehicleID, ref data);
                 return false;
             }
             return true;
