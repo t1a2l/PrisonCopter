@@ -8,6 +8,7 @@ namespace PrisonHelicopter.HarmonyPatches
     using ColossalFramework;
     using PrisonHelicopter;
     using UnityEngine;
+    using Utils;
 
     [HarmonyPatch(typeof(CityServiceWorldInfoPanel))]
     internal static class UpdateBindingsPatch
@@ -31,7 +32,7 @@ namespace PrisonHelicopter.HarmonyPatches
         {
 
             if (_sprite == null) {
-                _sprite = UIUtil.CreateSprite(__instance.component,
+                _sprite = UiUtil.CreateSprite(__instance.component,
                                                   (_, _) => {
                                                       SetEmptying(
                                                           __instance,
@@ -40,7 +41,7 @@ namespace PrisonHelicopter.HarmonyPatches
             }
 
             if (_label == null) {
-                _label = UIUtil.CreateLabel(
+                _label = UiUtil.CreateLabel(
                     "",
                     __instance.component,
                     new Vector3(125, 300));

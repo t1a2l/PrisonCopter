@@ -6,7 +6,7 @@ namespace PrisonHelicopter.Utils {
     {
         private const int ButtonSize = 16;
 
-        public static UISprite CreateAllowSprite(UIComponent parentComponent, MouseEventHandler handler, Vector3 offset)
+        public static UISprite CreateSprite(UIComponent parentComponent, MouseEventHandler handler, Vector3 offset)
         {
             return CreateSprite("AllowPrisonHelicoptersButton", null, offset,
                 parentComponent, handler);
