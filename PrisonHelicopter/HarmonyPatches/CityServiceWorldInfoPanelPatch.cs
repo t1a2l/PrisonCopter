@@ -31,7 +31,7 @@ namespace PrisonHelicopter.HarmonyPatches
         {
 
             if (_sprite == null) {
-                _sprite = UIUtil.CreateSprite(__instance.component.Find<UILabel>("PartButtons"),
+                _sprite = UIUtil.CreateSprite(__instance.component,
                                                   (_, _) => {
                                                       SetEmptying(
                                                           __instance,
@@ -42,7 +42,7 @@ namespace PrisonHelicopter.HarmonyPatches
             if (_label == null) {
                 _label = UIUtil.CreateLabel(
                     "",
-                    __instance.component.Find<UILabel>("PartButtons"),
+                    __instance.component,
                     new Vector3(125, 300));
                 _label.textColor = new Color32(185, 221, 254, 255);
                 _label.textScale = 0.8125f;
@@ -74,7 +74,7 @@ namespace PrisonHelicopter.HarmonyPatches
                 _label.isVisible = true;
                 _sprite.isVisible = true;
                 UpdateSprite(__instance);
-                label.text = "Allow Prison Helicopters to land and a Police Vans fleet";
+                label.text = "Allow Prison Helicopters & Police Vans";
                 label.tooltip = "Disable this if you prefer that prison helicopters would not land and no police vans fleet to pick up criminals from other stations";
             }
             else
