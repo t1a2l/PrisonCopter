@@ -88,7 +88,7 @@ namespace PrisonHelicopter.HarmonyPatches
         }
 
         private static void UpdateSprite(CityServiceWorldInfoPanel __instance) {
-            _sprite.spriteName = GetEmptying(__instance) ? "check-checked" : "check-unchecked";
+            _sprite.spriteName = GetEmptying(__instance) ? "check-unchecked" : "check-checked";
         }
 
         private static bool GetEmptying(CityServiceWorldInfoPanel panel) {
