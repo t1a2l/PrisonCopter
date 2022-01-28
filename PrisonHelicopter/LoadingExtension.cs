@@ -4,9 +4,11 @@ using System;
 
 namespace PrisonHelicopter
 {
+    using HarmonyPatches;
+
     public class LoadingExtension : LoadingExtensionBase
     {
-        
+
         public override void OnCreated(ILoading loading)
         {
             base.OnCreated(loading);
@@ -22,20 +24,11 @@ namespace PrisonHelicopter
 
         }
 
-        public override void OnLevelLoaded(LoadMode mode)
-        {
-            base.OnLevelLoaded(mode);
-            if (mode != LoadMode.NewGame && mode != LoadMode.LoadGame)
-            {
-                return;
-            }
-        }
-
-
         public override void OnReleased()
         {
             base.OnReleased();
             ItemClasses.Unregister();
+            UpdateBindingsPatch.Reset();
             if (!HarmonyHelper.IsHarmonyInstalled)
             {
                 return;
