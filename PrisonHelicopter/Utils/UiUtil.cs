@@ -6,6 +6,21 @@ namespace PrisonHelicopter.Utils {
     {
         private const int ButtonSize = 16;
 
+        public static UIFont GetUIFont(string name)
+        {
+            UIFont[] fonts = Resources.FindObjectsOfTypeAll<UIFont>();
+
+            foreach (UIFont font in fonts)
+            {
+                if (font.name.CompareTo(name) == 0)
+                {
+                    return font;
+                }
+            }
+
+            return null;
+        }
+
         public static UISprite CreateSprite(UIComponent parentComponent, MouseEventHandler handler, Vector3 offset)
         {
             return CreateSprite("AllowPrisonHelicoptersButton", null, offset,
@@ -43,6 +58,38 @@ namespace PrisonHelicopter.Utils {
             label.AlignTo(parentComponent, UIAlignAnchor.TopRight);
             label.relativePosition = offset;
             return label;
+        }
+
+        public static UICheckBox CreateCheckBox(UIComponent parent, string name, string text, bool state)
+        {
+            UICheckBox checkBox = parent.AddUIComponent<UICheckBox>();
+            checkBox.name = name;
+
+            checkBox.height = 16f;
+            checkBox.width = parent.width - 10f;
+
+            UISprite uncheckedSprite = checkBox.AddUIComponent<UISprite>();
+            uncheckedSprite.spriteName = "check-unchecked";
+            uncheckedSprite.size = new Vector2(16f, 16f);
+            uncheckedSprite.relativePosition = Vector3.zero;
+
+            UISprite checkedSprite = checkBox.AddUIComponent<UISprite>();
+            checkedSprite.spriteName = "check-checked";
+            checkedSprite.size = new Vector2(16f, 16f);
+            checkedSprite.relativePosition = Vector3.zero;
+            checkBox.checkedBoxObject = checkedSprite;
+
+            checkBox.label = checkBox.AddUIComponent<UILabel>();
+            checkBox.label.text = text;
+            checkBox.label.font = GetUIFont("OpenSans-Regular");
+            checkBox.label.autoSize = false;
+            checkBox.label.height = 20f;
+            checkBox.label.verticalAlignment = UIVerticalAlignment.Middle;
+            checkBox.label.relativePosition = new Vector3(20f, 0f);
+
+            checkBox.isChecked = state;
+
+            return checkBox;
         }
     }
 }

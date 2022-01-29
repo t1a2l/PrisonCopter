@@ -28,7 +28,6 @@ namespace PrisonHelicopter
         {
             base.OnReleased();
             ItemClasses.Unregister();
-            UpdateBindingsPatch.Reset();
             if (!HarmonyHelper.IsHarmonyInstalled)
             {
                 return;
