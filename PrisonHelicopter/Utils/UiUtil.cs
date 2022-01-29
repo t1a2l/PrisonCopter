@@ -21,6 +21,14 @@ namespace PrisonHelicopter.Utils {
             return null;
         }
 
+        public static UIPanel CreatePanel(UIComponent parent, string name)
+        {
+            UIPanel panel = parent.AddUIComponent<UIPanel>();
+            panel.name = name;
+
+            return panel;
+        }
+
         public static UISprite CreateSprite(UIComponent parentComponent, MouseEventHandler handler, Vector3 offset)
         {
             return CreateSprite("AllowPrisonHelicoptersButton", null, offset,

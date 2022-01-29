@@ -18,8 +18,8 @@ namespace PrisonHelicopter.HarmonyPatches
         internal static void Postfix1(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID, UIPanel ___m_intercityTrainsPanel)
         {
             UIButton budget_btn = __instance.component.Find("Budget").GetComponent<UIButton>();
-            _prisonHelicopterCheckBox = UiUtil.CreateCheckBox(__instance.component, "", "", GetEmptying(__instance));
-            _prisonHelicopterCheckBox.width = 110f;
+            _prisonHelicopterCheckBox = UiUtil.CreateCheckBox(__instance.component, "prisonhelicopterAllow", "prisonhelicopterAllow", !GetEmptying(__instance));
+            _prisonHelicopterCheckBox.width = 210f;
             _prisonHelicopterCheckBox.label.textColor = new Color32(185, 221, 254, 255);
             _prisonHelicopterCheckBox.label.textScale = 0.8125f;
             _prisonHelicopterCheckBox.AlignTo(budget_btn, UIAlignAnchor.TopLeft);
@@ -29,6 +29,7 @@ namespace PrisonHelicopter.HarmonyPatches
                 SetEmptying(__instance, value);
                 ModSettings.Save();
             };
+            _prisonHelicopterCheckBox.isVisible = false;
 
             var building1 = ___m_InstanceID.Building;
             var instance = BuildingManager.instance;

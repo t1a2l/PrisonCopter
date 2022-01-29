@@ -1,9 +1,8 @@
 using ColossalFramework;
 using HarmonyLib;
 using System;
-using System.Reflection;
 
-namespace PrisonHelicopter.PrisonHelicopter.HarmonyPatches {
+namespace PrisonHelicopter.HarmonyPatches {
 
     [HarmonyPatch(typeof(PrisonerAI))]
     public static class PrisonerAIPatch {
