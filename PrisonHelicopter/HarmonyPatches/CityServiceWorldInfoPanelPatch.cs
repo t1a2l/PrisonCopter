@@ -2,11 +2,11 @@ using ColossalFramework;
 using ColossalFramework.UI;
 using HarmonyLib;
 using UnityEngine;
+using PrisonHelicopter.AI;
+using PrisonHelicopter.Utils;
 
-namespace PrisonHelicopter.PrisonHelicopter.HarmonyPatches
+namespace PrisonHelicopter.HarmonyPatches
 {
-    using AI;
-    using Utils;
 
 
     [HarmonyPatch(typeof(CityServiceWorldInfoPanel))]

@@ -1,7 +1,7 @@
 using ColossalFramework.UI;
 using UnityEngine;
 
-namespace PrisonHelicopter.PrisonHelicopter.Utils {
+namespace PrisonHelicopter.Utils {
 
     public static class UiUtil
     {
