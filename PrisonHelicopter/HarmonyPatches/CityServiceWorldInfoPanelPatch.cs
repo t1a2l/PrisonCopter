@@ -8,7 +8,6 @@ using PrisonHelicopter.Utils;
 namespace PrisonHelicopter.HarmonyPatches
 {
 
-
     [HarmonyPatch(typeof(CityServiceWorldInfoPanel))]
     internal static class CityServiceWorldInfoPanelPatch
     {
@@ -24,13 +23,8 @@ namespace PrisonHelicopter.HarmonyPatches
         [HarmonyPostfix]
         internal static void Postfix1(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID)
         {
-
             if (_checkBox == null) {
-                _checkBox = UiUtil.CreateCheckBox(
-                    __instance.component.Find<UIPanel>("MainBottom"),
-                    "AllowMovingPrisonersCheckBox",
-                    "",
-                    false);
+                _checkBox = UiUtil.CreateCheckBox(__instance.component.Find<UIPanel>("MainBottom"), "AllowMovingPrisonersCheckBox", "", false);
                 _checkBox.label.textColor = new Color32(185, 221, 254, 255);
                 _checkBox.label.textScale = 0.8125f;
                 _checkBox.AlignTo(__instance.component, UIAlignAnchor.BottomLeft);
@@ -38,35 +32,38 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.label.width = 300;
             }
 
-            var building1 = ___m_InstanceID.Building;
+            var building_id = ___m_InstanceID.Building;
             var instance = BuildingManager.instance;
-            var building2 = instance.m_buildings.m_buffer[building1];
-            var info = building2.Info;
+            var building = instance.m_buildings.m_buffer[building_id];
+            var info = building.Info;
             var buildingAi = info.m_buildingAI;
             var newPoliceStationAI = buildingAi as PrisonCopterPoliceStationAI;
             var helicopterDepotAI = buildingAi as HelicopterDepotAI;
             var policeHelicopterDepot = info.m_class.m_service == ItemClass.Service.PoliceDepartment && helicopterDepotAI;
             var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && newPoliceStationAI;
+
             if(policeHelicopterDepot)
             {
                  _checkBox.isVisible = true;
-                 UpdateCheckedState(building1);
+                 UpdateCheckedState(building_id);
                 _checkBox.text = "Allow Prison Helicopters";
                 _checkBox.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
             }
             else if(policeStation)
             {
                 _checkBox.isVisible = true;
-                UpdateCheckedState(building1);
+                UpdateCheckedState(building_id);
                 _checkBox.text = "Allow Prison Helicopters & Police Vans";
                 _checkBox.tooltip = "Disable this if you prefer that prison helicopters would not land and no police vans fleet to pick up criminals from other stations";
             }
-            else {
+            else
+            {
                 _checkBox.isVisible = false;
             }
         }
 
-        private static void UpdateCheckedState(ushort building) {
+        private static void UpdateCheckedState(ushort building)
+        {
             var allowMovingPrisoners = GetAllowMovingPrisoners(building);
             if (allowMovingPrisoners == _checkBox.isChecked && building == _cachedBuilding) {
                 return;
@@ -77,28 +74,34 @@ namespace PrisonHelicopter.HarmonyPatches
             _checkBox.eventCheckChanged += HandleCheckBox;
         }
 
-        private static void HandleCheckBox(UIComponent _, bool value) {
+        private static void HandleCheckBox(UIComponent _, bool value)
+        {
             SetAllowMovingPrisoners(_cachedBuilding, value);
         }
 
-        private static bool GetAllowMovingPrisoners(ushort building) {
-            return Singleton<BuildingManager>.exists &&
-                   building != 0 &&
-                   (Singleton<BuildingManager>.instance.m_buildings
-                                              .m_buffer[building]
-                                              .m_flags & Building.Flags.Downgrading) ==
-                   Building.Flags.None;
+        private static bool GetAllowMovingPrisoners(ushort building)
+        {
+            if(Singleton<BuildingManager>.exists && building != 0)
+            {
+                var building_to_check = Singleton<BuildingManager>.instance.m_buildings.m_buffer[building];
+                if((building_to_check.m_flags & Building.Flags.Downgrading) == 0) return true;
+            }
+            return false;
         }
 
-        private static void SetAllowMovingPrisoners(ushort building, bool value) {
-            if (!Singleton<SimulationManager>.exists || building == 0)
-                return;
+        private static void SetAllowMovingPrisoners(ushort building, bool value)
+        {
+            if (!Singleton<SimulationManager>.exists || building == 0) return;
             Singleton<SimulationManager>.instance.AddAction(() => ToggleEmptying(building, !value));
         }
 
-        private static void ToggleEmptying(ushort building, bool value) {
+        private static void ToggleEmptying(ushort building, bool value)
+        {
             if (Singleton<BuildingManager>.exists)
-                Singleton<BuildingManager>.instance.m_buildings.m_buffer[building].Info.m_buildingAI.SetEmptying(building, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[building], value);
+            {
+                var building_to_set = Singleton<BuildingManager>.instance.m_buildings.m_buffer[building];
+                building_to_set.Info.m_buildingAI.SetEmptying(building, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[building], value);
+            }
         }
     }
 }
