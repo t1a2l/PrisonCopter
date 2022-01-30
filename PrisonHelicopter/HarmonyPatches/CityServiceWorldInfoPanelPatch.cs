@@ -1,94 +1,104 @@
+using ColossalFramework;
 using ColossalFramework.UI;
 using HarmonyLib;
-using PrisonHelicopter.AI;
-using System.Reflection;
-using ColossalFramework;
 using UnityEngine;
+using PrisonHelicopter.AI;
 using PrisonHelicopter.Utils;
 
 namespace PrisonHelicopter.HarmonyPatches
 {
+
+
     [HarmonyPatch(typeof(CityServiceWorldInfoPanel))]
     internal static class CityServiceWorldInfoPanelPatch
     {
-        private static UICheckBox _prisonHelicopterCheckBox;
+        private static UICheckBox _checkBox;
+        private static ushort _cachedBuilding;
 
         public static void Reset() {
-            _prisonHelicopterCheckBox = null;
+            _checkBox = null;
+            _cachedBuilding = 0;
         }
 
         [HarmonyPatch(typeof(CityServiceWorldInfoPanel), "UpdateBindings")]
         [HarmonyPostfix]
-        internal static void UpdateBindings(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID, UIPanel ___m_intercityTrainsPanel)
+        internal static void Postfix1(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID)
         {
-            if(_prisonHelicopterCheckBox == null)
-            {
-                UIButton budget_button = __instance.component.Find("Budget").GetComponent<UIButton>();
-                UIPanel park_buttons_panel = __instance.component.Find("ParkButtons").GetComponent<UIPanel>();
-                _prisonHelicopterCheckBox = UiUtil.CreateCheckBox(park_buttons_panel, "PrisonHelicopterAllow", "", !GetEmptying(__instance));
-                _prisonHelicopterCheckBox.width = 110f;
-                _prisonHelicopterCheckBox.label.textColor = new Color32(185, 221, 254, 255);
-                _prisonHelicopterCheckBox.label.width = 550f;
-                _prisonHelicopterCheckBox.label.textScale = 0.8125f;
-                _prisonHelicopterCheckBox.AlignTo(budget_button, UIAlignAnchor.BottomRight);
-                _prisonHelicopterCheckBox.relativePosition = new Vector3(___m_intercityTrainsPanel.width - _prisonHelicopterCheckBox.width, 6f);
-                _prisonHelicopterCheckBox.eventCheckChanged += (component, value) =>
-                {
-                    SetEmptying(__instance, value);
-                };
+
+            if (_checkBox == null) {
+                _checkBox = UiUtil.CreateCheckBox(
+                    __instance.component.Find<UIPanel>("MainBottom"),
+                    "AllowMovingPrisonersCheckBox",
+                    "",
+                    false);
+                _checkBox.label.textColor = new Color32(185, 221, 254, 255);
+                _checkBox.label.textScale = 0.8125f;
+                _checkBox.AlignTo(__instance.component, UIAlignAnchor.BottomLeft);
+                _checkBox.relativePosition = new Vector3(125, 290);
+                _checkBox.label.width = 300;
             }
-            
+
             var building1 = ___m_InstanceID.Building;
             var instance = BuildingManager.instance;
             var building2 = instance.m_buildings.m_buffer[building1];
             var info = building2.Info;
             var buildingAi = info.m_buildingAI;
-            var newPoliceStationAI = buildingAi as NewPoliceStationAI;
+            var newPoliceStationAI = buildingAi as PrisonCopterPoliceStationAI;
             var helicopterDepotAI = buildingAi as HelicopterDepotAI;
             var policeHelicopterDepot = info.m_class.m_service == ItemClass.Service.PoliceDepartment && helicopterDepotAI;
-            var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment && info.m_class.m_level < ItemClass.Level.Level4 && newPoliceStationAI;
-
+            var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && newPoliceStationAI;
             if(policeHelicopterDepot)
             {
-                _prisonHelicopterCheckBox.isVisible = true;
-                _prisonHelicopterCheckBox.label.text = "Allow Prison Helicopters";
-                _prisonHelicopterCheckBox.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
+                 _checkBox.isVisible = true;
+                 UpdateCheckedState(building1);
+                _checkBox.text = "Allow Prison Helicopters";
+                _checkBox.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
             }
             else if(policeStation)
             {
-                _prisonHelicopterCheckBox.isVisible = true;
-                _prisonHelicopterCheckBox.label.text = "Allow Prison Helicopters & Police Vans";
-                _prisonHelicopterCheckBox.tooltip = "Disable this if you prefer that prison helicopters would not land and no police vans fleet to pick up criminals from other stations";
+                _checkBox.isVisible = true;
+                UpdateCheckedState(building1);
+                _checkBox.text = "Allow Prison Helicopters & Police Vans";
+                _checkBox.tooltip = "Disable this if you prefer that prison helicopters would not land and no police vans fleet to pick up criminals from other stations";
             }
-            else
-            {
-                _prisonHelicopterCheckBox.isVisible = false;
+            else {
+                _checkBox.isVisible = false;
             }
         }
 
-        private static bool GetEmptying(CityServiceWorldInfoPanel panel)
-        {
-            var building_id = GetInstanceID(panel).Building;
-            var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[building_id];
-            if((building.m_flags & Building.Flags.Downgrading) != 0) return true;
-            return false;
+        private static void UpdateCheckedState(ushort building) {
+            var allowMovingPrisoners = GetAllowMovingPrisoners(building);
+            if (allowMovingPrisoners == _checkBox.isChecked && building == _cachedBuilding) {
+                return;
+            }
+            _cachedBuilding = building;
+            _checkBox.eventCheckChanged -= HandleCheckBox;
+            _checkBox.isChecked = allowMovingPrisoners;
+            _checkBox.eventCheckChanged += HandleCheckBox;
         }
 
-        private static void SetEmptying(CityServiceWorldInfoPanel panel, bool value)
-        {
-            var building_id = GetInstanceID(panel).Building;
-            var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[building_id];
-            building.Info.m_buildingAI.SetEmptying(building_id, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[building_id], value);
+        private static void HandleCheckBox(UIComponent _, bool value) {
+            SetAllowMovingPrisoners(_cachedBuilding, value);
         }
 
-        private static InstanceID GetInstanceID(CityServiceWorldInfoPanel panel)
-        {
-            return (InstanceID)GetInstanceIDField().GetValue(panel);
+        private static bool GetAllowMovingPrisoners(ushort building) {
+            return Singleton<BuildingManager>.exists &&
+                   building != 0 &&
+                   (Singleton<BuildingManager>.instance.m_buildings
+                                              .m_buffer[building]
+                                              .m_flags & Building.Flags.Downgrading) ==
+                   Building.Flags.None;
         }
 
-        private static FieldInfo GetInstanceIDField()
-        {
-            return typeof(WorldInfoPanel).GetField("m_InstanceID", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static void SetAllowMovingPrisoners(ushort building, bool value) {
+            if (!Singleton<SimulationManager>.exists || building == 0)
+                return;
+            Singleton<SimulationManager>.instance.AddAction(() => ToggleEmptying(building, !value));
+        }
+
+        private static void ToggleEmptying(ushort building, bool value) {
+            if (Singleton<BuildingManager>.exists)
+                Singleton<BuildingManager>.instance.m_buildings.m_buffer[building].Info.m_buildingAI.SetEmptying(building, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[building], value);
         }
     }
 }

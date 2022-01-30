@@ -5,7 +5,7 @@ using ColossalFramework.DataBinding;
 
 namespace PrisonHelicopter.AI {
 
-    class NewPoliceStationAI : PlayerBuildingAI {
+    class PrisonCopterPoliceStationAI : PlayerBuildingAI {
 
         [CustomizableProperty("Uneducated Workers", "Workers", 0)]
 	public int m_workPlaceCount0 = 4;
@@ -390,7 +390,7 @@ namespace PrisonHelicopter.AI {
 	    int cargo4 = 0;
 	    int capacity4 = 0;
 	    int outside4 = 0;
-	    if (m_info.m_class.m_level >= ItemClass.Level.Level4) // prison 
+	    if (m_info.m_class.m_level >= ItemClass.Level.Level4) // prison
 	    {
                 CalculateOwnVehicles(buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count4, ref cargo4, ref capacity4, ref outside4); // own prison vans
 		CalculateGuestVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)126, ref count3, ref cargo3, ref capacity3, ref outside3); // guest prison helicopters
@@ -412,7 +412,7 @@ namespace PrisonHelicopter.AI {
 	    {
 		CalculateOwnVehicles(buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside); // own police cars
                 CalculateGuestVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)125, ref count2, ref cargo2, ref capacity2, ref outside2); // guest prison vans from police station
-                CalculateGuestVehicles(buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count4, ref cargo4, ref capacity4, ref outside4); // guest prison vans from prison 
+                CalculateGuestVehicles(buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count4, ref cargo4, ref capacity4, ref outside4); // guest prison vans from prison
                 m_jailOccupancy = num8;
             }
 	    int num10 = (finalProductionRate * PoliceCarCount + 99) / 100;
@@ -541,7 +541,7 @@ namespace PrisonHelicopter.AI {
                 string text4 = LocaleFormatter.FormatGeneric("AIINFO_WATER_CONSUMPTION", GetWaterConsumption() * 16) + Environment.NewLine + LocaleFormatter.FormatGeneric("AIINFO_ELECTRICITY_CONSUMPTION", GetElectricityConsumption() * 16);
 	        return TooltipHelper.Append(base.GetLocalizedTooltip(), TooltipHelper.Format(LocaleFormatter.Info1, text4, LocaleFormatter.Info2, LocaleFormatter.FormatGeneric("AIINFO_POLICECAR_COUNT", m_policeCarCount)));
             }
-	    
+
 	}
 
         public override string GetLocalizedStats(ushort buildingID, ref Building data)
@@ -604,7 +604,7 @@ namespace PrisonHelicopter.AI {
 		CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
                 text = LocaleFormatter.FormatGeneric("AIINFO_POLICESTATION_CRIMINALS", num3, JailCapacity) + Environment.NewLine;
 		return text + LocaleFormatter.FormatGeneric("AIINFO_POLICE_CARS", count, num4);
-	    }	
+	    }
 	}
 
         public override bool RequireRoadAccess()
@@ -614,7 +614,7 @@ namespace PrisonHelicopter.AI {
 
         public override void SetEmptying(ushort buildingID, ref Building data, bool emptying) // decide if big or small police station
         {
-            if(data.Info.GetAI() is NewPoliceStationAI && data.Info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
+            if(data.Info.GetAI() is PrisonCopterPoliceStationAI && data.Info.m_class.m_service == ItemClass.Service.PoliceDepartment) {
                data.m_flags = data.m_flags.SetFlags(Building.Flags.Downgrading, emptying);
             }
         }

@@ -229,7 +229,7 @@ namespace PrisonHelicopter.HarmonyPatches {
                             if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0)
                             {
                                 BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
-                                if (info.GetAI() is NewPoliceStationAI newPoliceStationAI
+                                if (info.GetAI() is PrisonCopterPoliceStationAI newPoliceStationAI
                                     && info.m_class.m_service == ItemClass.Service.PoliceDepartment
                                     && info.m_class.m_level >= ItemClass.Level.Level4
                                     && newPoliceStationAI.m_jailOccupancy < newPoliceStationAI.JailCapacity - 10)
@@ -268,6 +268,6 @@ namespace PrisonHelicopter.HarmonyPatches {
             }
             return num9;
         }
-    
+
     }
 }

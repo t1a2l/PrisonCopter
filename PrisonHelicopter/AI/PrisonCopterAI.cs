@@ -156,7 +156,7 @@ namespace PrisonHelicopter.AI {
             {
                 building.m_flags.SetFlags(Building.Flags.Incoming, false);
             }
-	    if (targetBuilding != 0 && building_info.GetAI() is NewPoliceStationAI)
+	    if (targetBuilding != 0 && building_info.GetAI() is PrisonCopterPoliceStationAI)
 	    {
                 if((building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0 && data.m_transferSize == 0) || (building_info.m_class.m_level >= ItemClass.Level.Level4 && data.m_transferSize > 0))
                 {
@@ -291,7 +291,7 @@ namespace PrisonHelicopter.AI {
             if(building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity) {
                 var targetBuilding = FindClosestPrison(building.m_position);
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
-                if(targetBuilding == 0 || (building.Info.GetAI() is NewPoliceStationAI policeStationAI && policeStationAI.m_jailOccupancy == 0)) { // don't take criminals if no space at prison or no crimianls in police station
+                if(targetBuilding == 0 || (building.Info.GetAI() is PrisonCopterPoliceStationAI policeStationAI && policeStationAI.m_jailOccupancy == 0)) { // don't take criminals if no space at prison or no crimianls in police station
                     SetTarget(vehicleID, ref data, 0);
                 } else {
                     ArrestCriminals(vehicleID, ref data, data.m_targetBuilding);
@@ -636,7 +636,7 @@ namespace PrisonHelicopter.AI {
                             if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0)
                             {
                                 BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
-                                if (info.GetAI() is NewPoliceStationAI newPoliceStationAI
+                                if (info.GetAI() is PrisonCopterPoliceStationAI newPoliceStationAI
                                     && info.m_class.m_service == ItemClass.Service.PoliceDepartment
                                     && info.m_class.m_level >= ItemClass.Level.Level4
                                     && newPoliceStationAI.m_jailOccupancy < newPoliceStationAI.JailCapacity - 20) {
