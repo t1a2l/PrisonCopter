@@ -10,7 +10,7 @@ namespace PrisonHelicopter.HarmonyPatches
 
 
     [HarmonyPatch(typeof(CityServiceWorldInfoPanel))]
-    internal static class UpdateBindingsPatch
+    internal static class CityServiceWorldInfoPanelPatch
     {
         private static UICheckBox _checkBox;
         private static ushort _cachedBuilding;

@@ -27,7 +27,7 @@ namespace PrisonHelicopter
         {
             base.OnReleased();
             ItemClasses.Unregister();
-            UpdateBindingsPatch.Reset();
+            CityServiceWorldInfoPanelPatch.Reset();
             if (!HarmonyHelper.IsHarmonyInstalled)
             {
                 return;
