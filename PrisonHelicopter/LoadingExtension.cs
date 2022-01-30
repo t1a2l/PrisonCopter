@@ -1,6 +1,5 @@
 using CitiesHarmony.API;
 using ICities;
-using System;
 
 namespace PrisonHelicopter
 {
@@ -28,6 +27,7 @@ namespace PrisonHelicopter
         {
             base.OnReleased();
             ItemClasses.Unregister();
+            CityServiceWorldInfoPanelPatch.Reset();
             if (!HarmonyHelper.IsHarmonyInstalled)
             {
                 return;
