@@ -1,9 +1,11 @@
 using CitiesHarmony.API;
 using ICities;
+using System;
 
 namespace PrisonHelicopter
 {
     using HarmonyPatches;
+    using PrisonHelicopter.HarmonyPatches;
 
     public class LoadingExtension : LoadingExtensionBase
     {
@@ -27,7 +29,7 @@ namespace PrisonHelicopter
         {
             base.OnReleased();
             ItemClasses.Unregister();
-            CityServiceWorldInfoPanelPatch.Reset();
+            UpdateBindingsPatch.Reset();
             if (!HarmonyHelper.IsHarmonyInstalled)
             {
                 return;
