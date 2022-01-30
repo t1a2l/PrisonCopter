@@ -15,7 +15,8 @@ namespace PrisonHelicopter.HarmonyPatches
                 if(temp[0] == "PrisonHelicopter.AI.PrisonCopterPoliceStationAI.PrisonCopterPoliceStationAI")
                 {
                     __result = "PrisonHelicopter.AI.PrisonCopterPoliceStationAI, PrisonHelicopter, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
-                } else if(temp[0] == "PrisonHelicopter.AI.NewPoliceStationAI")
+                }
+                else if(temp[0] == "PrisonHelicopter.AI.NewPoliceStationAI")
                 {
                     __result = "PrisonHelicopter.AI.PrisonCopterPoliceStationAI, PrisonHelicopter, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
                 }
