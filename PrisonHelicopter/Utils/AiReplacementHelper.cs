@@ -8,7 +8,7 @@ namespace PrisonHelicopter.Utils {
 
         public static void ApplyNewAIToBuilding(BuildingInfo b) {
             try {
-                ChangeBuildingAI(b, typeof(NewPoliceStationAI));
+                ChangeBuildingAI(b, typeof(PrisonCopterPoliceStationAI));
                 return;
             }
             catch (Exception e) {

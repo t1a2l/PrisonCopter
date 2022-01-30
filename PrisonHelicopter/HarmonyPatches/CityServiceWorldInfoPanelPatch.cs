@@ -43,7 +43,7 @@ namespace PrisonHelicopter.HarmonyPatches
             var building2 = instance.m_buildings.m_buffer[building1];
             var info = building2.Info;
             var buildingAi = info.m_buildingAI;
-            var newPoliceStationAI = buildingAi as NewPoliceStationAI;
+            var newPoliceStationAI = buildingAi as PrisonCopterPoliceStationAI;
             var helicopterDepotAI = buildingAi as HelicopterDepotAI;
             var policeHelicopterDepot = info.m_class.m_service == ItemClass.Service.PoliceDepartment && helicopterDepotAI;
             var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && newPoliceStationAI;
