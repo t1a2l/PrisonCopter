@@ -447,7 +447,7 @@ namespace PrisonHelicopter.AI {
 	    }
             if (m_info.m_class.m_level < ItemClass.Level.Level4 && (buildingData.m_flags & Building.Flags.Downgrading) == 0) // big police station
 	    {
-                if (count2 < num11 && capacity2 + num7 <= JailCapacity - 20)
+                if (count2 < num11 && capacity2 + num8 <= JailCapacity - 20)
                 {
                     TransferManager.TransferOffer offer2 = default; // police station offer prison vans
 		    offer2.Priority = 2 - count2;
