@@ -48,8 +48,7 @@
       <Private>false</Private>
     </Reference>
     <Reference Include="ColossalManaged">
-      <HintPath>..\..\References\ColossalManaged.dll</HintPath>
-      <Private>false</Private>
+      <HintPath>..\..\Program Files (x86)\Steam\steamapps\common\Cities_Skylines\Cities_Data\Managed\ColossalManaged.dll</HintPath>
     </Reference>
     <Reference Include="ICities">
       <HintPath>..\..\References\ICities.dll</HintPath>

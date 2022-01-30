@@ -122,7 +122,7 @@ namespace PrisonHelicopter.AI {
 		Vector3 forward = target - position;
 		if (forward.sqrMagnitude > 0.01f)
 		{
-			rotation = Quaternion.LookRotation(forward);
+		    rotation = Quaternion.LookRotation(forward);
 		}
 		data.m_frame0 = new Vehicle.Frame(position, rotation);
 		data.m_frame1 = data.m_frame0;
@@ -163,7 +163,9 @@ namespace PrisonHelicopter.AI {
                     data.m_flags &= ~Vehicle.Flags.Landing;
                     data.m_flags |= Vehicle.Flags.Emergency2;
                     building.AddGuestVehicle(vehicleID, ref data);
-                } else {
+                }
+                else
+                {
                     return;
                 }
 	    }
@@ -288,12 +290,16 @@ namespace PrisonHelicopter.AI {
             BuildingManager instance = Singleton<BuildingManager>.instance;
             Building building = instance.m_buildings.m_buffer[data.m_targetBuilding];
             data.m_flags |= Vehicle.Flags.Stopped;
-            if(building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity) {
+            if(building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity)
+            {
                 var targetBuilding = FindClosestPrison(building.m_position);
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
-                if(targetBuilding == 0 || (building.Info.GetAI() is PrisonCopterPoliceStationAI policeStationAI && policeStationAI.m_jailOccupancy == 0)) { // don't take criminals if no space at prison or no crimianls in police station
+                if(targetBuilding == 0 || (building.Info.GetAI() is PrisonCopterPoliceStationAI policeStationAI && policeStationAI.m_jailOccupancy == 0))
+                { // don't take criminals if no space at prison or no crimianls in police station
                     SetTarget(vehicleID, ref data, 0);
-                } else {
+                }
+                else
+                {
                     ArrestCriminals(vehicleID, ref data, data.m_targetBuilding);
                     building.m_flags.SetFlags(Building.Flags.Incoming, false);
                     SetTarget(vehicleID, ref data, targetBuilding);
@@ -622,41 +628,50 @@ namespace PrisonHelicopter.AI {
             ushort num9 = 0;
             float num10 = 1E+12f;
             float num11 = 0f;
-            while (num != num5 || num2 != num6 || num3 != num7 || num4 != num8) {
-                for (int i = num2; i <= num4; i++) {
-                    for (int j = num; j <= num3; j++) {
-                        if (j >= num5 && i >= num6 && j <= num7 && i <= num8) {
+            while (num != num5 || num2 != num6 || num3 != num7 || num4 != num8)
+            {
+                for (int i = num2; i <= num4; i++)
+                {
+                    for (int j = num; j <= num3; j++)
+                    {
+                        if (j >= num5 && i >= num6 && j <= num7 && i <= num8)
+                        {
                             j = num7;
                             continue;
                         }
 
                         ushort num12 = instance.m_buildingGrid[i * 270 + j];
                         int num13 = 0;
-                        while (num12 != 0) {
+                        while (num12 != 0)
+                        {
                             if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0)
                             {
                                 BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
-                                if (info.GetAI() is PrisonCopterPoliceStationAI newPoliceStationAI
+                                if (info.GetAI() is PrisonCopterPoliceStationAI prisonCopterPoliceStationAI
                                     && info.m_class.m_service == ItemClass.Service.PoliceDepartment
                                     && info.m_class.m_level >= ItemClass.Level.Level4
-                                    && newPoliceStationAI.m_jailOccupancy < newPoliceStationAI.JailCapacity - 20) {
+                                    && prisonCopterPoliceStationAI.m_jailOccupancy < prisonCopterPoliceStationAI.JailCapacity - 20)
+                                {
                                     Vector3 position = instance.m_buildings.m_buffer[num12].m_position;
                                     float num14 = Vector3.SqrMagnitude(position - pos);
-                                    if (num14 < num10) {
+                                    if (num14 < num10)
+                                    {
                                         num9 = num12;
                                         num10 = num14;
                                     }
                                 }
                             }
                             num12 = instance.m_buildings.m_buffer[num12].m_nextGridBuilding;
-                            if (++num13 >= numBuildings) {
+                            if (++num13 >= numBuildings)
+                            {
                                 CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
                                 break;
                             }
                         }
                     }
                 }
-                if (num9 != 0 && num10 <= num11 * num11) {
+                if (num9 != 0 && num10 <= num11 * num11)
+                {
                     return num9;
                 }
                 num11 += 64f;

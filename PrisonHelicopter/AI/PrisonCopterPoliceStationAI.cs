@@ -193,9 +193,12 @@ namespace PrisonHelicopter.AI {
 	    base.BuildingDeactivated(buildingID, ref data);
 	}
 
-        public override void StartTransfer(ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer) {
-            if (material == TransferManager.TransferReason.Crime || material == (TransferManager.TransferReason)125 || material == TransferManager.TransferReason.CriminalMove) {
+        public override void StartTransfer(ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
+        {
+            if (material == TransferManager.TransferReason.Crime || material == (TransferManager.TransferReason)125 || material == TransferManager.TransferReason.CriminalMove)
+            {
                 ushort bnum = buildingID;
+                VehicleInfo vehicleInfo = null;
                 BuildingManager instance = Singleton<BuildingManager>.instance;
                 BuildingInfo police_building_info = instance.m_buildings.m_buffer[bnum].Info;
                 var vehicle_level = m_info.m_class.m_level;
@@ -204,15 +207,26 @@ namespace PrisonHelicopter.AI {
                 {
                     vehicle_level = ItemClass.Level.Level4;
                 }
-                VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, vehicle_level, VehicleInfo.VehicleType.Car);
-                if (randomVehicleInfo != null) {
+                if(material == TransferManager.TransferReason.Crime || material == TransferManager.TransferReason.CriminalMove)
+                {
+                    vehicleInfo = GetSelectedVehicle(buildingID);
+                }
+                if (vehicleInfo == null)
+		{
+		    vehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, vehicle_level, VehicleInfo.VehicleType.Car);
+		}
+                if (vehicleInfo != null)
+                {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
-                    if (Singleton<VehicleManager>.instance.CreateVehicle(out ushort num, ref Singleton<SimulationManager>.instance.m_randomizer, randomVehicleInfo, data.m_position, material, true, false)) {
-                        randomVehicleInfo.m_vehicleAI.SetSource(num, ref vehicles.m_buffer[(int)num], bnum);
-                        randomVehicleInfo.m_vehicleAI.StartTransfer(num, ref vehicles.m_buffer[(int)num], material, offer);
+                    if (Singleton<VehicleManager>.instance.CreateVehicle(out ushort num, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, data.m_position, material, true, false))
+                    {
+                        vehicleInfo.m_vehicleAI.SetSource(num, ref vehicles.m_buffer[(int)num], bnum);
+                        vehicleInfo.m_vehicleAI.StartTransfer(num, ref vehicles.m_buffer[(int)num], material, offer);
                     }
                 }
-            } else {
+            }
+            else
+            {
                 base.StartTransfer(buildingID, ref data, material, offer);
             }
         }
@@ -515,6 +529,11 @@ namespace PrisonHelicopter.AI {
         public override bool EnableNotUsedGuide()
 	{
 	    return true;
+	}
+
+        public override VehicleInfo.VehicleType GetVehicleType()
+	{
+		return VehicleInfo.VehicleType.Car;
 	}
 
         public override void GetPollutionAccumulation(out int ground, out int noise)

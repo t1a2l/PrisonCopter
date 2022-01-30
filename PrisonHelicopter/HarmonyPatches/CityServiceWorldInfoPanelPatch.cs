@@ -23,7 +23,8 @@ namespace PrisonHelicopter.HarmonyPatches
         [HarmonyPostfix]
         internal static void Postfix1(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID)
         {
-            if (_checkBox == null) {
+            if (_checkBox == null)
+            {
                 _checkBox = UiUtil.CreateCheckBox(__instance.component.Find<UIPanel>("MainBottom"), "AllowMovingPrisonersCheckBox", "", false);
                 _checkBox.label.textColor = new Color32(185, 221, 254, 255);
                 _checkBox.label.textScale = 0.8125f;
@@ -37,15 +38,15 @@ namespace PrisonHelicopter.HarmonyPatches
             var building = instance.m_buildings.m_buffer[building_id];
             var info = building.Info;
             var buildingAi = info.m_buildingAI;
-            var newPoliceStationAI = buildingAi as PrisonCopterPoliceStationAI;
+            var prisonCopterPoliceStationAI = buildingAi as PrisonCopterPoliceStationAI;
             var helicopterDepotAI = buildingAi as HelicopterDepotAI;
             var policeHelicopterDepot = info.m_class.m_service == ItemClass.Service.PoliceDepartment && helicopterDepotAI;
-            var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && newPoliceStationAI;
+            var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && prisonCopterPoliceStationAI;
 
             if(policeHelicopterDepot)
             {
-                 _checkBox.isVisible = true;
-                 UpdateCheckedState(building_id);
+                _checkBox.isVisible = true;
+                UpdateCheckedState(building_id);
                 _checkBox.text = "Allow Prison Helicopters";
                 _checkBox.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
             }
@@ -65,7 +66,8 @@ namespace PrisonHelicopter.HarmonyPatches
         private static void UpdateCheckedState(ushort building)
         {
             var allowMovingPrisoners = GetAllowMovingPrisoners(building);
-            if (allowMovingPrisoners == _checkBox.isChecked && building == _cachedBuilding) {
+            if (allowMovingPrisoners == _checkBox.isChecked && building == _cachedBuilding)
+            {
                 return;
             }
             _cachedBuilding = building;
