@@ -19,21 +19,22 @@ namespace PrisonHelicopter.HarmonyPatches
 
         [HarmonyPatch(typeof(CityServiceWorldInfoPanel), "UpdateBindings")]
         [HarmonyPostfix]
-        internal static void UpdateBindings(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID)
+        internal static void UpdateBindings(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID, UIPanel ___m_intercityTrainsPanel)
         {
             if(_prisonHelicopterCheckBox == null)
             {
+                UIButton budget_button = __instance.component.Find("Budget").GetComponent<UIButton>();
                 UIPanel park_buttons_panel = __instance.component.Find("ParkButtons").GetComponent<UIPanel>();
                 _prisonHelicopterCheckBox = UiUtil.CreateCheckBox(park_buttons_panel, "PrisonHelicopterAllow", "", !GetEmptying(__instance));
                 _prisonHelicopterCheckBox.width = 110f;
                 _prisonHelicopterCheckBox.label.textColor = new Color32(185, 221, 254, 255);
                 _prisonHelicopterCheckBox.label.width = 550f;
                 _prisonHelicopterCheckBox.label.textScale = 0.8125f;
-                _prisonHelicopterCheckBox.relativePosition = new Vector3(-5f, 6f);
+                _prisonHelicopterCheckBox.AlignTo(budget_button, UIAlignAnchor.BottomRight);
+                _prisonHelicopterCheckBox.relativePosition = new Vector3(___m_intercityTrainsPanel.width - _prisonHelicopterCheckBox.width, 6f);
                 _prisonHelicopterCheckBox.eventCheckChanged += (component, value) =>
                 {
                     SetEmptying(__instance, value);
-                    ModSettings.Save();
                 };
             }
             
