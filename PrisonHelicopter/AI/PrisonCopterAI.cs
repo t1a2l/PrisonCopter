@@ -2,7 +2,6 @@ using ColossalFramework;
 using UnityEngine;
 using ColossalFramework.Math;
 using System;
-using System.Reflection;
 
 namespace PrisonHelicopter.AI {
 
