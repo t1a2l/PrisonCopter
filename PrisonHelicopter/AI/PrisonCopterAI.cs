@@ -154,11 +154,6 @@ namespace PrisonHelicopter.AI {
                 data.m_flags |= Vehicle.Flags.Emergency2;
                 building.AddGuestVehicle(vehicleID, ref data); // add guest vehicle to this big polcie station
 	    }
-            else if(ShouldReturnToSource(ref data)) // should go home
-            {
-                data.m_flags &= ~Vehicle.Flags.Landing;
-		data.m_flags |= Vehicle.Flags.GoingBack;
-            }
             else if(GetArrestedCitizen(ref data) != 0) // prison helicopter with prisoners onboard find a prison
             {
 		data.m_flags &= ~Vehicle.Flags.Emergency2;
@@ -168,9 +163,14 @@ namespace PrisonHelicopter.AI {
 		offer.Position = data.GetLastFramePosition();
 		offer.Amount = 1;
 		offer.Active = true;
-		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)127, offer);
+		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)130, offer);
 		data.m_flags |= Vehicle.Flags.WaitingTarget;
 	    }
+            else if(ShouldReturnToSource(ref data)) // should go home
+            {
+                data.m_flags &= ~Vehicle.Flags.Landing;
+		data.m_flags |= Vehicle.Flags.GoingBack;
+            }
             else // prison helicopter with no prisoners onboard find another big police station 
             {
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
@@ -180,7 +180,7 @@ namespace PrisonHelicopter.AI {
 		offer.Position = data.GetLastFramePosition();
 		offer.Amount = 1;
 		offer.Active = true;
-		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)126, offer);
+		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)129, offer);
 		data.m_flags |= Vehicle.Flags.WaitingTarget;
             }
 	    if (!StartPathFind(vehicleID, ref data))
@@ -322,11 +322,11 @@ namespace PrisonHelicopter.AI {
 
         public override void UpdateBuildingTargetPositions(ushort vehicleID, ref Vehicle vehicleData, Vector3 refPos, ushort leaderID, ref Vehicle leaderData, ref int index, float minSqrDistance)
 	{
-	    if ((leaderData.m_flags & Vehicle.Flags.WaitingTarget) != (Vehicle.Flags)0)
+	    if ((leaderData.m_flags & Vehicle.Flags.WaitingTarget) != 0)
 	    {
 		return;
 	    }
-	    if ((leaderData.m_flags & Vehicle.Flags.GoingBack) != (Vehicle.Flags)0)
+	    if ((leaderData.m_flags & Vehicle.Flags.GoingBack) != 0)
 	    {
 		if (leaderData.m_sourceBuilding != 0)
 		{
