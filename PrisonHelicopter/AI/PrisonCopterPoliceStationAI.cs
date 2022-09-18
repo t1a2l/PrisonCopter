@@ -176,7 +176,8 @@ namespace PrisonHelicopter.AI {
 	    if (m_info.m_class.m_level >= ItemClass.Level.Level4) // prison
 	    {
                 Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.CriminalMove, offer); // send prison vans from prison
-	    }
+                Singleton<TransferManager>.instance.RemoveOutgoingOffer((TransferManager.TransferReason)127, offer); // get prison helicopters to send prisoner to prison
+            }
             else if (m_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0) // police station with prison vans
             {
                 Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer); // send police cars from police station
@@ -407,7 +408,7 @@ namespace PrisonHelicopter.AI {
 	    if (m_info.m_class.m_level >= ItemClass.Level.Level4) // prison
 	    {
                 CalculateOwnVehicles(buildingID, ref buildingData, TransferManager.TransferReason.CriminalMove, ref count4, ref cargo4, ref capacity4, ref outside4); // own prison vans
-		CalculateGuestVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)126, ref count3, ref cargo3, ref capacity3, ref outside3); // guest prison helicopters
+		CalculateGuestVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)127, ref count3, ref cargo3, ref capacity3, ref outside3); // guest prison helicopters
                 cargo4 = Mathf.Max(0, Mathf.Min(JailCapacity - num8, cargo4));
                 instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo4;
                 m_jailOccupancy = num7;
@@ -443,6 +444,16 @@ namespace PrisonHelicopter.AI {
 		    offer4.Active = true;
 		    Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer4);
 		}
+                if(capacity3 + num7 <= JailCapacity - 20)
+                {
+                    TransferManager.TransferOffer offer5 = default; // ask for guest prison helicopter carrying prisoners
+		    offer5.Priority = (num7 - capacity3) * 8 / Mathf.Max(1, JailCapacity);
+		    offer5.Building = buildingID;
+		    offer5.Position = buildingData.m_position;
+		    offer5.Amount = 1;
+		    offer5.Active = false;
+                    Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)127, offer5); 
+                }
 		return;
 	    }
             if (m_info.m_class.m_level < ItemClass.Level.Level4 && (buildingData.m_flags & Building.Flags.Downgrading) == 0) // big police station
