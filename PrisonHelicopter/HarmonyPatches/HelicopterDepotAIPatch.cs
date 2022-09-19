@@ -26,7 +26,7 @@ namespace PrisonHelicopter.HarmonyPatches {
         [HarmonyPostfix]
         public static void StartTransfer(HelicopterDepotAI __instance, ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
         {
-            if (material == (TransferManager.TransferReason)129)
+            if (material == (TransferManager.TransferReason)121)
             {
                 // if a small police station or 
                 // the target building has alreadya vehicle on the way --
@@ -69,7 +69,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 	        int outside = 0;
                 int outside1 = 0;
                 CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-                CalculateOwnVehicles(__instance, buildingID, ref data, (TransferManager.TransferReason)129, ref count1, ref cargo1, ref capacity1, ref outside1);
+                CalculateOwnVehicles(__instance, buildingID, ref data, (TransferManager.TransferReason)121, ref count1, ref cargo1, ref capacity1, ref outside1);
                 text += "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
                 text += Environment.NewLine;
                 text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
@@ -88,7 +88,7 @@ namespace PrisonHelicopter.HarmonyPatches {
             ItemClass.Service service = __instance.m_info.m_class.m_service;
             if (service == ItemClass.Service.PoliceDepartment && (data.m_flags & Building.Flags.Downgrading) == 0)
 	    {
-		Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)129, offer);
+		Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)121, offer);
 	    }
 	}
 
@@ -123,7 +123,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 	        while (num6 != 0)
 	        {
 		    TransferManager.TransferReason transferType = (TransferManager.TransferReason)instance.m_vehicles.m_buffer[num6].m_transferType;
-                    if(transferType == TransferManager.TransferReason.Crime || (transferType == (TransferManager.TransferReason)129))
+                    if(transferType == TransferManager.TransferReason.Crime || (transferType == (TransferManager.TransferReason)121))
 		    {
 		        VehicleInfo info = instance.m_vehicles.m_buffer[num6].Info;
 		        info.m_vehicleAI.GetSize(num6, ref instance.m_vehicles.m_buffer[num6], out var _, out var _);
@@ -176,7 +176,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 		        offer2.Position = buildingData.m_position;
 		        offer2.Amount = Mathf.Min(2, num8);
 		        offer2.Active = true;
-		        Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)129, offer2);
+		        Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)121, offer2);
 		    }
 	        }
                 return false;

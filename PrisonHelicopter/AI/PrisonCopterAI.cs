@@ -163,7 +163,7 @@ namespace PrisonHelicopter.AI {
 		offer.Position = data.GetLastFramePosition();
 		offer.Amount = 1;
 		offer.Active = true;
-		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)130, offer);
+		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)122, offer);
 		data.m_flags |= Vehicle.Flags.WaitingTarget;
 	    }
             else if(ShouldReturnToSource(ref data)) // should go home
@@ -180,7 +180,7 @@ namespace PrisonHelicopter.AI {
 		offer.Position = data.GetLastFramePosition();
 		offer.Amount = 1;
 		offer.Active = true;
-		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)129, offer);
+		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)121, offer);
 		data.m_flags |= Vehicle.Flags.WaitingTarget;
             }
 	    if (!StartPathFind(vehicleID, ref data))
