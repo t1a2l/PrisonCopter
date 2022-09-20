@@ -159,6 +159,7 @@ namespace PrisonHelicopter.AI {
 	    }
             else if(GetArrestedCitizen(ref data) != 0) // prison helicopter with prisoners onboard find a prison
             {
+                data.m_transferType = 122;
 		data.m_flags &= ~Vehicle.Flags.Emergency2;
 		TransferManager.TransferOffer offer = default;
 		offer.Priority = 7;
@@ -176,6 +177,7 @@ namespace PrisonHelicopter.AI {
             }
             else // prison helicopter with no prisoners onboard find another big police station 
             {
+                data.m_transferType = 121;
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
 		TransferManager.TransferOffer offer = default;
 		offer.Priority = 7;
