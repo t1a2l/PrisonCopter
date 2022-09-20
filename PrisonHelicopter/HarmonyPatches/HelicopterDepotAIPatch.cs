@@ -28,10 +28,10 @@ namespace PrisonHelicopter.HarmonyPatches {
         {
             if (material == (TransferManager.TransferReason)121)
             {
-                // if a small police station or 
-                // the target building has alreadya vehicle on the way --
-                // -- don't spawn a prison helicopter
-                if((data.m_flags & Building.Flags.Downgrading) != 0 || (data.m_flags & Building.Flags.Incoming) != 0)
+                BuildingManager instance = Singleton<BuildingManager>.instance;
+                Building target_building = instance.m_buildings.m_buffer[offer.Building];
+                // if helicopter depot has no prison helis enabled or offer building has already heli on the way, dont spawn helis
+                if((data.m_flags & Building.Flags.Downgrading) != 0 || (target_building.m_flags & Building.Flags.Incoming) != 0)
                 {
                     return;
                 }

@@ -147,12 +147,15 @@ namespace PrisonHelicopter.AI {
             BuildingManager instance = Singleton<BuildingManager>.instance;
             ref Building building = ref instance.m_buildings.m_buffer[targetBuilding];
             BuildingInfo building_info = building.Info;
-	    if (targetBuilding != 0 && building_info.GetAI() is PrisonCopterPoliceStationAI) // big police station 
+	    if (targetBuilding != 0 && building_info.GetAI() is PrisonCopterPoliceStationAI) // big police station or prison
 	    {
-                building.m_flags.SetFlags(Building.Flags.Incoming, true); // set the big police station as being picked up from
+                if(building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0 && data.m_transferSize == 0)
+                {
+                    building.m_flags.SetFlags(Building.Flags.Incoming, true); // set the big police station as being picked up from
+                }
                 data.m_flags &= ~Vehicle.Flags.Landing;
                 data.m_flags |= Vehicle.Flags.Emergency2;
-                building.AddGuestVehicle(vehicleID, ref data); // add guest vehicle to this big polcie station
+                building.AddGuestVehicle(vehicleID, ref data); // add guest vehicle to this big polcie station or to prison
 	    }
             else if(GetArrestedCitizen(ref data) != 0) // prison helicopter with prisoners onboard find a prison
             {

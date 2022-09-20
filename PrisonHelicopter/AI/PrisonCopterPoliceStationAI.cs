@@ -176,7 +176,7 @@ namespace PrisonHelicopter.AI {
 	    if (m_info.m_class.m_level >= ItemClass.Level.Level4) // prison
 	    {
                 Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.CriminalMove, offer); // send prison vans from prison
-                Singleton<TransferManager>.instance.RemoveOutgoingOffer((TransferManager.TransferReason)122, offer); // get prison helicopters to send prisoner to prison
+                Singleton<TransferManager>.instance.RemoveOutgoingOffer((TransferManager.TransferReason)122, offer); // ask for prison helicopters to send prisoner to prison
             }
             else if (m_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0) // police station with prison vans
             {
@@ -444,10 +444,10 @@ namespace PrisonHelicopter.AI {
 		    offer4.Active = true;
 		    Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer4);
 		}
-                if(num7 - capacity3 > 0 && capacity3 + num7 <= JailCapacity - 20)
+                if(capacity3 + num7 <= JailCapacity - 20)
                 {
                     TransferManager.TransferOffer offer3 = default; // ask for guest prison helicopter carrying prisoners
-		    offer3.Priority = (num7 - capacity3) * 8 / Mathf.Max(1, JailCapacity);
+		    offer3.Priority = (JailCapacity - capacity3) * 8 / Mathf.Max(1, JailCapacity);
 		    offer3.Building = buildingID;
 		    offer3.Position = buildingData.m_position;
 		    offer3.Amount = 1;
