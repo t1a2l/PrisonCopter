@@ -67,10 +67,7 @@ namespace PrisonHelicopter.HarmonyPatches {
                 int cargo1 = 0;
 	        int capacity = 0;
                 int capacity1 = 0;
-	        int outside = 0;
-                int outside1 = 0;
-                CalculateOwnVehicles(__instance, buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-                CalculateOwnVehicles(__instance, buildingID, ref data, (TransferManager.TransferReason)121, ref count1, ref cargo1, ref capacity1, ref outside1);
+                CalculateVehicles(buildingID,  ref data, ref count, ref count1, ref cargo, ref cargo1, ref capacity, ref capacity1);
                 text += "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
                 text += Environment.NewLine;
                 text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
@@ -194,6 +191,43 @@ namespace PrisonHelicopter.HarmonyPatches {
                data.m_flags = data.m_flags.SetFlags(Building.Flags.Downgrading, emptying);
             }
         }
+
+        private static void CalculateVehicles(ushort buildingID, ref Building data, ref int ownPoliceCopterCount, ref int ownPrisonCopterCount, ref int ownPoliceCopterCargo, ref int ownPrisonCopterCargo, ref int ownPoliceCopterCapacity, ref int ownPrisonCopterCapacity)
+	{
+	    VehicleManager instance = Singleton<VehicleManager>.instance;
+	    ushort num = data.m_ownVehicles;
+            int num2 = 0;
+	    while (num != 0)
+	    {
+		switch (instance.m_vehicles.m_buffer[num].m_transferType)
+		{
+		    case 1:
+		    {
+                        VehicleInfo police_copter_info = instance.m_vehicles.m_buffer[num].Info;
+			police_copter_info.m_vehicleAI.GetSize(num, ref instance.m_vehicles.m_buffer[num], out var police_copter_size, out var police_copter_max);
+			ownPoliceCopterCargo += Mathf.Min(police_copter_size, police_copter_max);
+			ownPoliceCopterCapacity += police_copter_max;
+			ownPoliceCopterCount++;
+			break;
+		    }
+		    case 121:
+                    case 122:
+			VehicleInfo prison_copter_info = instance.m_vehicles.m_buffer[num].Info;
+			prison_copter_info.m_vehicleAI.GetSize(num, ref instance.m_vehicles.m_buffer[num], out var prison_copter_size, out var prison_copter_max);
+			ownPrisonCopterCargo += Mathf.Min(prison_copter_size, prison_copter_max);
+			ownPrisonCopterCapacity += prison_copter_max;
+			ownPrisonCopterCount++;
+			break;
+                }
+		num = instance.m_vehicles.m_buffer[num].m_nextOwnVehicle;
+		if (++num2 > 16384)
+		{
+		    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+		    break;
+		}
+		        
+            }
+	}
 
     }
 }
