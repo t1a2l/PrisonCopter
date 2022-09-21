@@ -29,9 +29,9 @@ namespace PrisonHelicopter.HarmonyPatches {
             if (material == (TransferManager.TransferReason)121)
             {
                 BuildingManager instance = Singleton<BuildingManager>.instance;
-                Building target_building = instance.m_buildings.m_buffer[offer.Building];
+                ref Building target_building = ref instance.m_buildings.m_buffer[offer.Building];
                 // if helicopter depot has no prison helis enabled or offer building has already heli on the way, dont spawn helis
-                if((data.m_flags & Building.Flags.Downgrading) != 0 || (target_building.m_flags & Building.Flags.Incoming) != 0)
+                if((data.m_flags & Building.Flags.Downgrading) != 0 || (target_building.m_flags & Building.Flags.Upgrading) != 0)
                 {
                     return;
                 }
@@ -42,7 +42,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 		    Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
 		    if (Singleton<VehicleManager>.instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, randomVehicleInfo, data.m_position, material, transferToSource: true, transferToTarget: false))
 		    {
-                        target_building.m_flags.SetFlags(Building.Flags.Incoming, true); // set target building as served
+                        target_building.m_flags |= Building.Flags.Upgrading; // set target building as served
 			randomVehicleInfo.m_vehicleAI.SetSource(vehicle, ref vehicles.m_buffer[vehicle], buildingID);
 			randomVehicleInfo.m_vehicleAI.StartTransfer(vehicle, ref vehicles.m_buffer[vehicle], material, offer);
 		    }

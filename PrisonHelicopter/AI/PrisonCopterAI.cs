@@ -151,7 +151,7 @@ namespace PrisonHelicopter.AI {
 	    {
                 if(building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0 && data.m_transferSize == 0)
                 {
-                    building.m_flags.SetFlags(Building.Flags.Incoming, true); // set the big police station as being picked up from
+                    building.m_flags |= Building.Flags.Upgrading; // set the big police station as being picked up from
                 }
                 data.m_flags &= ~Vehicle.Flags.Landing;
                 data.m_flags |= Vehicle.Flags.Emergency2;
@@ -278,13 +278,13 @@ namespace PrisonHelicopter.AI {
                 return true;
 	    }
             BuildingManager instance = Singleton<BuildingManager>.instance;
-            Building building = instance.m_buildings.m_buffer[data.m_targetBuilding];
+            ref Building building = ref instance.m_buildings.m_buffer[data.m_targetBuilding];
             data.m_flags |= Vehicle.Flags.Stopped;
             if(building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity) // big police station 
             {
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
                 ArrestCriminals(vehicleID, ref data, data.m_targetBuilding);
-                building.m_flags.SetFlags(Building.Flags.Incoming, false); // set the big police station as being avalible to being picked up from again
+                building.m_flags &= ~Building.Flags.Upgrading;  // set the big police station as being avalible to being picked up from again
                 SetTarget(vehicleID, ref data, 0); // find a prison to transfer to
             }
             else if(building.Info.m_class.m_level >= ItemClass.Level.Level4) // prison
