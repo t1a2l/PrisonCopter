@@ -86,6 +86,12 @@ namespace PrisonHelicopter.AI {
 
         public override void ReleaseVehicle(ushort vehicleID, ref Vehicle data)
         {
+            BuildingManager instance = Singleton<BuildingManager>.instance;
+            ref Building building = ref instance.m_buildings.m_buffer[data.m_targetBuilding];
+            if(building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity) // big police station 
+            {
+                building.m_flags &= ~Building.Flags.Upgrading;  // set the big police station as being avalible to being picked up from again
+            }
             UnloadCriminals(ref data);
             RemoveOffers(vehicleID, ref data);
 	    RemoveSource(vehicleID, ref data);
