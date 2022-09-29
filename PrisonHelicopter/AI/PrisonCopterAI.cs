@@ -155,7 +155,7 @@ namespace PrisonHelicopter.AI {
             BuildingInfo building_info = building.Info;
 	    if (targetBuilding != 0 && building_info.GetAI() is PrisonCopterPoliceStationAI) // big police station or prison
 	    {
-                if(building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0 && data.m_transferSize == 0)
+                if(building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) != 0 && data.m_transferSize == 0)
                 {
                     building.m_flags |= Building.Flags.Upgrading; // set the big police station as being picked up from
                 }

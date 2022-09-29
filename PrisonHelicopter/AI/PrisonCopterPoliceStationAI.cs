@@ -2,6 +2,7 @@ using System;
 using ColossalFramework;
 using UnityEngine;
 using ColossalFramework.DataBinding;
+using PrisonHelicopter.Utils;
 
 namespace PrisonHelicopter.AI {
 
@@ -178,7 +179,7 @@ namespace PrisonHelicopter.AI {
                 Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.CriminalMove, offer); // send prison vans from prison
                 Singleton<TransferManager>.instance.RemoveOutgoingOffer((TransferManager.TransferReason)122, offer); // ask for prison helicopters to send prisoner to prison
             }
-            else if (m_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) == 0) // police station with prison vans
+            else if (m_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) != 0) // police station with prison vans
             {
                 Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer); // send police cars from police station
                 Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)120, offer); // send prison vans from police station
@@ -204,7 +205,7 @@ namespace PrisonHelicopter.AI {
                 BuildingInfo police_building_info = instance.m_buildings.m_buffer[bnum].Info;
                 var vehicle_level = m_info.m_class.m_level;
                 if(material == TransferManager.TransferReason.CriminalMove && police_building_info.m_class.m_level >= ItemClass.Level.Level4 // prison vans from prison
-                    || material == (TransferManager.TransferReason)120 && police_building_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) == 0) // prison vans from big police station
+                    || material == (TransferManager.TransferReason)120 && police_building_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) != 0) // prison vans from big police station
                 {
                     vehicle_level = ItemClass.Level.Level4;
                 }
@@ -413,7 +414,7 @@ namespace PrisonHelicopter.AI {
                 instance.m_districts.m_buffer[district].m_productionData.m_tempCriminalAmount += (uint)cargo4;
                 m_jailOccupancy = num7;
 	    }
-            else if (m_info.m_class.m_level < ItemClass.Level.Level4 && (buildingData.m_flags & Building.Flags.Downgrading) == 0) // big police station
+            else if (m_info.m_class.m_level < ItemClass.Level.Level4 && (buildingData.m_flags & Building.Flags.Downgrading) != 0) // big police station
             {
                 CalculateOwnVehicles(buildingID, ref buildingData, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside); // own police cars
                 CalculateOwnVehicles(buildingID, ref buildingData, (TransferManager.TransferReason)120, ref count2, ref cargo2, ref capacity2, ref outside2); // own prison vans
@@ -456,7 +457,7 @@ namespace PrisonHelicopter.AI {
                 }
 		return;
 	    }
-            if (m_info.m_class.m_level < ItemClass.Level.Level4 && (buildingData.m_flags & Building.Flags.Downgrading) == 0) // big police station
+            if (m_info.m_class.m_level < ItemClass.Level.Level4 && (buildingData.m_flags & Building.Flags.Downgrading) != 0) // big police station
 	    {
                 if (count2 < num11 && capacity2 + num8 <= JailCapacity - 20)
                 {
@@ -481,7 +482,7 @@ namespace PrisonHelicopter.AI {
 	    }
 	    if (num8 >= (JailCapacity * PrisonHelicopterMod.PriosnersPercentage / 100)) // check if prisoner count is above or equal percentage option
 	    {
-                if ((buildingData.m_flags & Building.Flags.Downgrading) == 0) // big police station
+                if ((buildingData.m_flags & Building.Flags.Downgrading) != 0) // big police station
                 {
                     if(num8 - capacity3 > 0)
                     {
@@ -505,7 +506,7 @@ namespace PrisonHelicopter.AI {
                         Singleton<TransferManager>.instance.AddOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer4);
                     }
                 }
-                else if ((buildingData.m_flags & Building.Flags.Downgrading) != 0) // small police station
+                else if ((buildingData.m_flags & Building.Flags.Downgrading) == 0) // small police station
                 {
                     if(num8 - capacity4 > 0)
                     {
@@ -560,11 +561,12 @@ namespace PrisonHelicopter.AI {
 		string text = LocaleFormatter.FormatGeneric("AIINFO_WATER_CONSUMPTION", GetWaterConsumption() * 16) + Environment.NewLine + LocaleFormatter.FormatGeneric("AIINFO_ELECTRICITY_CONSUMPTION", GetElectricityConsumption() * 16);
 		return TooltipHelper.Append(base.GetLocalizedTooltip(), TooltipHelper.Format(LocaleFormatter.Info1, text, LocaleFormatter.Info2, LocaleFormatter.FormatGeneric("AIINFO_PRISONCAR_COUNT", m_policeCarCount)));
 	    }
-            else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (Building.Flags.Downgrading) == 0) // big police station
+            else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (Building.Flags.Downgrading) != 0) // big police station
             {
                 string text2 = LocaleFormatter.FormatGeneric("AIINFO_WATER_CONSUMPTION", GetWaterConsumption() * 16) + Environment.NewLine + LocaleFormatter.FormatGeneric("AIINFO_ELECTRICITY_CONSUMPTION", GetElectricityConsumption() * 16);
-                string text3 = Environment.NewLine + LocaleFormatter.FormatGeneric("AIINFO_PRISONCAR_COUNT", m_policeVanCount);
-                return TooltipHelper.Append(base.GetLocalizedTooltip(), TooltipHelper.Format(LocaleFormatter.Info1, text2, LocaleFormatter.Info2, LocaleFormatter.FormatGeneric("AIINFO_POLICECAR_COUNT", m_policeCarCount), text3));
+                string text3 = LocaleFormatter.FormatGeneric("AIINFO_POLICECAR_COUNT", m_policeCarCount);
+                text3 += LocaleFormatter.FormatGeneric("AIINFO_PRISONCAR_COUNT", m_policeVanCount);
+                return TooltipHelper.Append(base.GetLocalizedTooltip(), TooltipHelper.Format(LocaleFormatter.Info1, text2, LocaleFormatter.Info2, text3));
             }
             else // small police station
             {
@@ -621,7 +623,7 @@ namespace PrisonHelicopter.AI {
                 text = LocaleFormatter.FormatGeneric("AIINFO_PRISON_CRIMINALS", num3, JailCapacity) + Environment.NewLine;
                 return text + LocaleFormatter.FormatGeneric("AIINFO_PRISON_CARS", count, num4);
 	    }
-            else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) == 0) // big police station
+            else if(m_info.m_class.m_level < ItemClass.Level.Level4 && (data.m_flags & Building.Flags.Downgrading) != 0) // big police station
             {
                 CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
                 CalculateOwnVehicles(buildingID, ref data, (TransferManager.TransferReason)120, ref count1, ref cargo1, ref capacity1, ref outside1);

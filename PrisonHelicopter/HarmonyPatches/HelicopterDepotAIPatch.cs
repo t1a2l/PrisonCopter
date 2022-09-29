@@ -31,7 +31,7 @@ namespace PrisonHelicopter.HarmonyPatches {
                 BuildingManager instance = Singleton<BuildingManager>.instance;
                 ref Building target_building = ref instance.m_buildings.m_buffer[offer.Building];
                 // if helicopter depot has no prison helis enabled or offer building has already heli on the way, dont spawn helis
-                if((data.m_flags & Building.Flags.Downgrading) != 0 || (target_building.m_flags & Building.Flags.Upgrading) != 0)
+                if((data.m_flags & Building.Flags.Downgrading) == 0 || (target_building.m_flags & Building.Flags.Upgrading) != 0)
                 {
                     return;
                 }
@@ -54,7 +54,7 @@ namespace PrisonHelicopter.HarmonyPatches {
         [HarmonyPrefix]
         public static bool GetLocalizedStats(HelicopterDepotAI __instance, ushort buildingID, ref Building data, ref string __result)
 	{
-            if (__instance.m_info.m_class.m_service == ItemClass.Service.PoliceDepartment && (data.m_flags & Building.Flags.Downgrading) == 0)
+            if (__instance.m_info.m_class.m_service == ItemClass.Service.PoliceDepartment && (data.m_flags & Building.Flags.Downgrading) != 0)
             {
                 int budget = Singleton<EconomyManager>.instance.GetBudget(__instance.m_info.m_class);
 	        int productionRate = PlayerBuildingAI.GetProductionRate(100, budget);
@@ -84,7 +84,7 @@ namespace PrisonHelicopter.HarmonyPatches {
 	    TransferManager.TransferOffer offer = default;
 	    offer.Building = buildingID;
             ItemClass.Service service = __instance.m_info.m_class.m_service;
-            if (service == ItemClass.Service.PoliceDepartment && (data.m_flags & Building.Flags.Downgrading) == 0)
+            if (service == ItemClass.Service.PoliceDepartment && (data.m_flags & Building.Flags.Downgrading) != 0)
 	    {
 		Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)121, offer);
 	    }
@@ -95,7 +95,7 @@ namespace PrisonHelicopter.HarmonyPatches {
         public static bool ProduceGoods(HelicopterDepotAI __instance, ushort buildingID, ref Building buildingData, ref Building.Frame frameData, int productionRate, int finalProductionRate, ref Citizen.BehaviourData behaviour, int aliveWorkerCount, int totalWorkerCount, int workPlaceCount, int aliveVisitorCount, int totalVisitorCount, int visitPlaceCount)
 	{
             ItemClass.Service service = __instance.m_info.m_class.m_service;
-            if (service == ItemClass.Service.PoliceDepartment && (buildingData.m_flags & Building.Flags.Downgrading) == 0)
+            if (service == ItemClass.Service.PoliceDepartment && (buildingData.m_flags & Building.Flags.Downgrading) != 0)
             {
 	        BaseProduceGoods(__instance, buildingID, ref buildingData, ref frameData, productionRate, finalProductionRate, ref behaviour, aliveWorkerCount, totalWorkerCount, workPlaceCount, aliveVisitorCount, totalVisitorCount, visitPlaceCount);
 	        if (finalProductionRate == 0)

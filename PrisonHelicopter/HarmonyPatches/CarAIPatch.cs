@@ -23,7 +23,7 @@ namespace PrisonHelicopter.HarmonyPatches {
                 var is_big_police_station = false;
                 if(data.Info.GetClassLevel() >= ItemClass.Level.Level4) is_prison_van = true;
                 if(police_building.Info.m_class.m_level >= ItemClass.Level.Level4) is_prison = true;
-                if(police_building.Info.m_class.m_level < ItemClass.Level.Level4 && (police_building.m_flags & Building.Flags.Downgrading) == 0) is_big_police_station = true;
+                if(police_building.Info.m_class.m_level < ItemClass.Level.Level4 && (police_building.m_flags & Building.Flags.Downgrading) != 0) is_big_police_station = true;
                 if(is_prison_van && (data.m_flags & Vehicle.Flags.GoingBack) == 0 && (is_prison || is_big_police_station))
                 {
                     data.m_flags |= Vehicle.Flags.GoingBack;    
