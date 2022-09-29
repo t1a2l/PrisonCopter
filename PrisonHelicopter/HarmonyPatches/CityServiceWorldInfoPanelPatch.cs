@@ -11,7 +11,7 @@ namespace PrisonHelicopter.HarmonyPatches
     [HarmonyPatch(typeof(CityServiceWorldInfoPanel))]
     internal static class CityServiceWorldInfoPanelPatch
     {
-        private static UICheckBox _checkBox;
+        public static UICheckBox _checkBox;
         private static ushort _cachedBuilding;
 
         public static void Reset() {
@@ -41,21 +41,23 @@ namespace PrisonHelicopter.HarmonyPatches
             var prisonCopterPoliceStationAI = buildingAi as PrisonCopterPoliceStationAI;
             var helicopterDepotAI = buildingAi as HelicopterDepotAI;
             var policeHelicopterDepot = info.m_class.m_service == ItemClass.Service.PoliceDepartment && helicopterDepotAI;
-            var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment &&  info.m_class.m_level < ItemClass.Level.Level4 && prisonCopterPoliceStationAI;
+            var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment && info.m_class.m_level < ItemClass.Level.Level4 && prisonCopterPoliceStationAI;
 
             if(policeHelicopterDepot)
             {
                 _checkBox.isVisible = true;
                 UpdateCheckedState(building_id);
                 _checkBox.text = "Allow Prison Helicopters";
-                _checkBox.tooltip = "Disable this if you prefer to use this helicopter depot only for police helicopters";
+                _checkBox.tooltip = "Enable this to allow prison helicopters to also spawn";
+                _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
             }
             else if(policeStation)
             {
                 _checkBox.isVisible = true;
                 UpdateCheckedState(building_id);
                 _checkBox.text = "Allow Prison Helicopters & Police Vans";
-                _checkBox.tooltip = "Disable this if you prefer that prison helicopters would not land and no police vans fleet to pick up criminals from other stations";
+                _checkBox.tooltip = "Enable this if you want prison helicopters to land and have a police vans fleet to pick up criminals from other stations";
+                _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
             }
             else
             {
@@ -65,37 +67,29 @@ namespace PrisonHelicopter.HarmonyPatches
 
         private static void UpdateCheckedState(ushort building)
         {
-            var allowMovingPrisoners = GetAllowMovingPrisoners(building);
-            if (allowMovingPrisoners == _checkBox.isChecked && building == _cachedBuilding)
+            if (building == _cachedBuilding)
             {
                 return;
             }
             _cachedBuilding = building;
-            _checkBox.eventCheckChanged -= HandleCheckBox;
-            _checkBox.isChecked = allowMovingPrisoners;
-            _checkBox.eventCheckChanged += HandleCheckBox;
+            _checkBox.isChecked = IsMovingPrisonersAllowed(building);
         }
 
-        private static void HandleCheckBox(UIComponent _, bool value)
-        {
-            SetAllowMovingPrisoners(_cachedBuilding, value);
-        }
-
-        private static bool GetAllowMovingPrisoners(ushort building)
+        private static bool IsMovingPrisonersAllowed(ushort building)
         {
             if(Singleton<BuildingManager>.exists && building != 0)
             {
-                var building_to_check = Singleton<BuildingManager>.instance.m_buildings.m_buffer[building];
-                if((building_to_check.m_flags & Building.Flags.Downgrading) == 0) return true;
+                Building building_to_check = Singleton<BuildingManager>.instance.m_buildings.m_buffer[building];
+                if((building_to_check.m_flags & Building.Flags.Downgrading) != 0) return true;
             }
             return false;
         }
 
-        private static void SetAllowMovingPrisoners(ushort building, bool value)
+        private static void SetAllowMovingPrisoners(UIComponent _, bool value)
         {
-            if (!Singleton<SimulationManager>.exists || building == 0) return;
-            Singleton<SimulationManager>.instance.AddAction(() => ToggleEmptying(building, !value));
-        }
+            if (!Singleton<SimulationManager>.exists || _cachedBuilding == 0) return;
+            Singleton<SimulationManager>.instance.AddAction(() => ToggleEmptying(_cachedBuilding, value));
+        }       
 
         private static void ToggleEmptying(ushort building, bool value)
         {

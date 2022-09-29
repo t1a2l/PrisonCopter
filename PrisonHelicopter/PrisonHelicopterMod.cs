@@ -4,10 +4,14 @@ using ICities;
 using System;
 using ColossalFramework.UI;
 using System.Linq;
+using ColossalFramework;
+using PrisonHelicopter.AI;
 
-namespace PrisonHelicopter {
+namespace PrisonHelicopter
+{
 
-    public class PrisonHelicopterMod : LoadingExtensionBase, IUserMod {
+    public class PrisonHelicopterMod : LoadingExtensionBase, IUserMod
+    {
 
         public static int PriosnersPercentage = 90;
         string IUserMod.Name => "Prison Helicopter Mod";
@@ -47,17 +51,40 @@ namespace PrisonHelicopter {
         {
             try {
                 var loadedBuildingInfoCount = PrefabCollection<BuildingInfo>.LoadedCount();
-                for (uint i = 0; i < loadedBuildingInfoCount; i++) {
-                    var bi = PrefabCollection<BuildingInfo>.GetLoaded(i);
+                for (uint buildingId = 0; buildingId < loadedBuildingInfoCount; buildingId++) {
+                    var bi = PrefabCollection<BuildingInfo>.GetLoaded(buildingId);
                     if (bi is null) continue;
-                    if (bi.GetAI() is PoliceStationAI) {
+                    if (bi.GetAI() is PoliceStationAI policeStationAI) {
                         AiReplacementHelper.ApplyNewAIToBuilding(bi);
+                        ref Building building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId];
                     }
                 }
+
+                if(Util.oldDataVersion)
+                {
+                    var buildings = Singleton<BuildingManager>.instance.m_buildings;
+                    for (int i = 0; i < buildings.m_size; i++) {
+                        ref Building building = ref buildings.m_buffer[i];
+                        if((building.m_flags & Building.Flags.Created) != 0)
+                        { 
+                            if((building.Info.GetAI() is PrisonCopterPoliceStationAI && building.Info.m_class.m_level < ItemClass.Level.Level4) ||
+                            (building.Info.GetAI() is HelicopterDepotAI && building.Info.m_class.m_service == ItemClass.Service.PoliceDepartment))
+                            {
+                                if((building.m_flags & Building.Flags.Downgrading) == 0) {
+                                    building.m_flags |= Building.Flags.Downgrading;
+                                }
+                                else if((building.m_flags & Building.Flags.Downgrading) != 0) {
+                                    building.m_flags &= ~Building.Flags.Downgrading;
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 LogHelper.Information("Reloaded Mod");
             }
             catch (Exception e) {
-                LogHelper.Information(e.ToString());
+                LogHelper.Error(e.ToString());
             }
         }
 
