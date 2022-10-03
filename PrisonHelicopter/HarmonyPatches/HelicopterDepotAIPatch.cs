@@ -30,8 +30,8 @@ namespace PrisonHelicopter.HarmonyPatches {
             {
                 BuildingManager instance = Singleton<BuildingManager>.instance;
                 ref Building target_building = ref instance.m_buildings.m_buffer[offer.Building];
-                // if helicopter depot has no prison helis enabled or offer building has already heli on the way, dont spawn helis
-                if((data.m_flags & Building.Flags.Downgrading) == 0 || (target_building.m_flags & Building.Flags.Upgrading) != 0)
+                // if no prison was found or helicopter depot has no prison helis enabled or offer building has already heli on the way, dont spawn prison helis
+                if(!FindPrison(data.m_position) || (data.m_flags & Building.Flags.Downgrading) == 0 || (target_building.m_flags & Building.Flags.Upgrading) != 0)
                 {
                     return;
                 }
@@ -228,6 +228,73 @@ namespace PrisonHelicopter.HarmonyPatches {
 		        
             }
 	}
+
+        private static bool FindPrison(Vector3 pos)
+        {
+            BuildingManager instance = Singleton<BuildingManager>.instance;
+            uint numBuildings = instance.m_buildings.m_size;
+            int num = Mathf.Max((int)(pos.x / 64f + 135f), 0);
+            int num2 = Mathf.Max((int)(pos.z / 64f + 135f), 0);
+            int num3 = Mathf.Min((int)(pos.x / 64f + 135f), 269);
+            int num4 = Mathf.Min((int)(pos.z / 64f + 135f), 269);
+            int num5 = num + 1;
+            int num6 = num2 + 1;
+            int num7 = num3 - 1;
+            int num8 = num4 - 1;
+            ushort num9 = 0;
+            float num10 = 1E+12f;
+            float num11 = 0f;
+            while (num != num5 || num2 != num6 || num3 != num7 || num4 != num8)
+            {
+                for (int i = num2; i <= num4; i++)
+                {
+                    for (int j = num; j <= num3; j++)
+                    {
+                        if (j >= num5 && i >= num6 && j <= num7 && i <= num8)
+                        {
+                            j = num7;
+                            continue;
+                        }
+                        ushort num12 = instance.m_buildingGrid[i * 270 + j];
+                        int num13 = 0;
+                        while (num12 != 0)
+                        {
+                            if ((instance.m_buildings.m_buffer[num12].m_flags & (Building.Flags.Created | Building.Flags.Deleted | Building.Flags.Untouchable | Building.Flags.Collapsed)) == Building.Flags.Created && instance.m_buildings.m_buffer[num12].m_fireIntensity == 0 && instance.m_buildings.m_buffer[num12].GetLastFrameData().m_fireDamage == 0)
+                            {
+                                BuildingInfo info = instance.m_buildings.m_buffer[num12].Info;
+                                if (info.GetAI() is PrisonCopterPoliceStationAI prisonCopterPoliceStationAI
+                                    && info.m_class.m_service == ItemClass.Service.PoliceDepartment
+                                    && info.m_class.m_level >= ItemClass.Level.Level4
+                                    && prisonCopterPoliceStationAI.m_jailOccupancy < prisonCopterPoliceStationAI.JailCapacity - 10)
+                                {
+                                    return true;
+                                }
+                            }
+                            num12 = instance.m_buildings.m_buffer[num12].m_nextGridBuilding;
+                            if (++num13 >= numBuildings)
+                            {
+                                CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (num9 != 0 && num10 <= num11 * num11)
+                {
+                    return false;
+                }
+                num11 += 64f;
+                num5 = num;
+                num6 = num2;
+                num7 = num3;
+                num8 = num4;
+                num = Mathf.Max(num - 1, 0);
+                num2 = Mathf.Max(num2 - 1, 0);
+                num3 = Mathf.Min(num3 + 1, 269);
+                num4 = Mathf.Min(num4 + 1, 269);
+            }
+            return false;
+        }
 
     }
 }
