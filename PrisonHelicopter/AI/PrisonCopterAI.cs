@@ -153,7 +153,8 @@ namespace PrisonHelicopter.AI {
             BuildingManager instance = Singleton<BuildingManager>.instance;
             ref Building building = ref instance.m_buildings.m_buffer[targetBuilding];
             BuildingInfo building_info = building.Info;
-	    if (targetBuilding != 0 && building_info.GetAI() is PrisonCopterPoliceStationAI) // big police station or prison
+            // big police station or prison check the building is not already being picked up from
+	    if (targetBuilding != 0 && building_info.GetAI() is PrisonCopterPoliceStationAI && (building.m_flags & Building.Flags.Upgrading) == 0) 
 	    {
                 if(building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) != 0 && data.m_transferSize == 0)
                 {
@@ -380,7 +381,8 @@ namespace PrisonHelicopter.AI {
 	    else if (vehicleData.m_targetBuilding != 0)
 	    {
 		BuildingManager instance2 = Singleton<BuildingManager>.instance;
-		BuildingInfo info2 = instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding].Info;
+                Building building = instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding];
+		BuildingInfo info2 = building.Info;
 		Randomizer randomizer2 = new(vehicleID);
 		info2.m_buildingAI.CalculateUnspawnPosition(vehicleData.m_targetBuilding, ref instance2.m_buildings.m_buffer[vehicleData.m_targetBuilding], ref randomizer2, m_info, out var _, out var target2);
 		return StartPathFind(vehicleID, ref vehicleData, vehicleData.m_targetPos3, target2);
