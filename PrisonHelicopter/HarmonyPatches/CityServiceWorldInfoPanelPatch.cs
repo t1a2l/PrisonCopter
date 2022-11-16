@@ -29,7 +29,7 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.label.textColor = new Color32(185, 221, 254, 255);
                 _checkBox.label.textScale = 0.8125f;
                 _checkBox.AlignTo(__instance.component, UIAlignAnchor.BottomLeft);
-                _checkBox.relativePosition = new Vector3(125, 290);
+                _checkBox.relativePosition = new Vector3(190, 290);
                 _checkBox.label.width = 300;
             }
 
