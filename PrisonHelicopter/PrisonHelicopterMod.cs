@@ -50,16 +50,6 @@ namespace PrisonHelicopter
         public override void OnLevelLoaded(LoadMode mode)
         {
             try {
-                var loadedBuildingInfoCount = PrefabCollection<BuildingInfo>.LoadedCount();
-                for (uint buildingId = 0; buildingId < loadedBuildingInfoCount; buildingId++) {
-                    var bi = PrefabCollection<BuildingInfo>.GetLoaded(buildingId);
-                    if (bi is null) continue;
-                    if (bi.GetAI() is PoliceStationAI policeStationAI) {
-                        AiReplacementHelper.ApplyNewAIToBuilding(bi);
-                        ref Building building = ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId];
-                    }
-                }
-
                 if(Util.oldDataVersion)
                 {
                     var buildings = Singleton<BuildingManager>.instance.m_buildings;

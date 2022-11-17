@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace PrisonHelicopter.HarmonyPatches
 {
     [HarmonyPatch(typeof(VehicleInfo))]
-    internal static class InitializePrefabPatch
+    internal static class InitializePrefabVehiclePatch
     { 
         [HarmonyPatch(typeof(VehicleInfo), "InitializePrefab")]
         [HarmonyPrefix]
