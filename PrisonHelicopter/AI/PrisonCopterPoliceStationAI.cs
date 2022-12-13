@@ -2,7 +2,6 @@ using System;
 using ColossalFramework;
 using UnityEngine;
 using ColossalFramework.DataBinding;
-using PrisonHelicopter.Utils;
 
 namespace PrisonHelicopter.AI {
 
@@ -51,23 +50,19 @@ namespace PrisonHelicopter.AI {
         public int JailCapacity => UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Police, m_jailCapacity);
 	public int PoliceDepartmentAccumulation => UniqueFacultyAI.IncreaseByBonus(UniqueFacultyAI.FacultyBonus.Police, m_policeDepartmentAccumulation);
 
-        public override void GetImmaterialResourceRadius(ushort buildingID, ref Building data, out ImmaterialResourceManager.Resource resource1, out float radius1, out ImmaterialResourceManager.Resource resource2, out float radius2)
+        public override ImmaterialResourceManager.ResourceData[] GetImmaterialResourceRadius(ushort buildingID, ref Building data)
 	{
-	    if (m_noiseAccumulation != 0)
+	    return new ImmaterialResourceManager.ResourceData[1]
 	    {
-		resource1 = ImmaterialResourceManager.Resource.NoisePollution;
-		radius1 = m_noiseRadius;
-	    }
-	    else
-	    {
-		resource1 = ImmaterialResourceManager.Resource.None;
-		radius1 = 0f;
-	    }
-	    resource2 = ImmaterialResourceManager.Resource.None;
-	    radius2 = 0f;
+		new ImmaterialResourceManager.ResourceData
+		{
+		    m_resource = ImmaterialResourceManager.Resource.NoisePollution,
+		    m_radius = ((m_noiseAccumulation == 0) ? 0f : m_noiseRadius)
+		}
+	    };
 	}
 
-        public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode)
+        public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
 	{
 	    switch (infoMode)
 	    {
@@ -84,7 +79,7 @@ namespace PrisonHelicopter.AI {
 		}
 		break;
 	    }
-	    return base.GetColor(buildingID, ref data, infoMode);
+	    return base.GetColor(buildingID, ref data, infoMode, subInfoMode);
 	}
 
         public override int GetResourceRate(ushort buildingID, ref Building data, ImmaterialResourceManager.Resource resource)
