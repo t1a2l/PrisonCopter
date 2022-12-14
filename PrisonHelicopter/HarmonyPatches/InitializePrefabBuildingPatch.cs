@@ -14,7 +14,7 @@ namespace PrisonHelicopter.HarmonyPatches
         {
             try
             {
-                if (__instance.m_class.m_service == ItemClass.Service.PoliceDepartment && __instance.m_class.m_level != ItemClass.Level.Level3)
+                if (__instance.m_class.m_service == ItemClass.Service.PoliceDepartment && __instance.m_class.m_subService != ItemClass.SubService.PoliceDepartmentBank && __instance.m_class.m_level != ItemClass.Level.Level3)
                 {
                     var oldAI = __instance.GetComponent<PrefabAI>();
                     Object.DestroyImmediate(oldAI);
