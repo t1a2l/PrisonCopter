@@ -42,7 +42,6 @@ namespace PrisonHelicopter.HarmonyPatches {
 		    Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
 		    if (Singleton<VehicleManager>.instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, randomVehicleInfo, data.m_position, material, transferToSource: true, transferToTarget: false))
 		    {
-                        target_building.m_flags |= Building.Flags.Upgrading; // set target building as served
 			randomVehicleInfo.m_vehicleAI.SetSource(vehicle, ref vehicles.m_buffer[vehicle], buildingID);
 			randomVehicleInfo.m_vehicleAI.StartTransfer(vehicle, ref vehicles.m_buffer[vehicle], material, offer);
 		    }
