@@ -314,7 +314,7 @@ namespace PrisonHelicopter.AI
 
         public override string GetLocalizedStats(ushort buildingID, ref Building data)
         {
-            int budget = Singleton<EconomyManager>.instance.GetBudget(m_info.m_class);
+            int budget = Singleton<EconomyManager>.instance.GetBudget(ItemClass.Service.PoliceDepartment, ItemClass.SubService.None, Singleton<SimulationManager>.instance.m_isNightTime);
             int productionRate = GetProductionRate(100, budget);
             int num = (productionRate * m_policeHelicopterCount + 99) / 100;
             int num1 = (productionRate * m_prisonHelicopterCount + 99) / 100;
@@ -327,10 +327,13 @@ namespace PrisonHelicopter.AI
             int outside = 0;
             int outside1 = 0;
             CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-            ExtedndedVehicleManager.CalculateOwnVehicles(buildingID, ref data, ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup, ref count1, ref cargo1, ref capacity1, ref outside1);
             string text = "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
-            text += Environment.NewLine;
-            text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
+            if((data.m_flags & Building.Flags.Downgrading) != 0)
+            {
+                ExtedndedVehicleManager.CalculateOwnVehicles(buildingID, ref data, ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup, ref count1, ref cargo1, ref capacity1, ref outside1);
+                text += Environment.NewLine;
+                text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
+            }
             return text;
         }
 
