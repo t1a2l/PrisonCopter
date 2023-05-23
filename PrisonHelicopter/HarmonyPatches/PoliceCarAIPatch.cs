@@ -1,7 +1,6 @@
 using ColossalFramework;
 using HarmonyLib;
 using System;
-using System.Reflection;
 using UnityEngine;
 
 namespace PrisonHelicopter.HarmonyPatches {

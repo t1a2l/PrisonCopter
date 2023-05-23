@@ -16,14 +16,20 @@ namespace PrisonHelicopter.HarmonyPatches
         {
             try
             {
-                if (__instance?.m_class?.name != ItemClasses.prisonHelicopterVehicle.name)
+                if (__instance.m_class.m_service == ItemClass.Service.PoliceDepartment && __instance.m_class.name == ItemClasses.prisonHelicopterVehicle.name && __instance.m_vehicleType == VehicleInfo.VehicleType.Helicopter)
                 {
-                    return true;
+                    var oldAI = __instance.GetComponent<PrefabAI>();
+                    UnityEngine.Object.DestroyImmediate(oldAI);
+                    var newAI = (PrefabAI)__instance.gameObject.AddComponent<PrisonCopterAI>();
+                    PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
                 }
-                var oldAi = __instance.GetComponent<PrefabAI>();
-                Object.DestroyImmediate(oldAi);
-                var newAI = (PrefabAI)__instance.gameObject.AddComponent<PrisonCopterAI>();
-                PrefabUtil.TryCopyAttributes(oldAi, newAI, false);
+                if (__instance.m_class.m_service == ItemClass.Service.PoliceDepartment && __instance.m_vehicleType == VehicleInfo.VehicleType.Car)
+                {
+                    var oldAI = __instance.GetComponent<PrefabAI>();
+                    UnityEngine.Object.DestroyImmediate(oldAI);
+                    var newAI = (PrefabAI)__instance.gameObject.AddComponent<ExtendedPoliceCarAI>();
+                    PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
+                }
             }
             catch (Exception e)
             {
