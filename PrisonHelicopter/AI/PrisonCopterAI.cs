@@ -2,10 +2,11 @@ using ColossalFramework;
 using UnityEngine;
 using ColossalFramework.Math;
 using System;
+using MoreTransferReasons;
 
 namespace PrisonHelicopter.AI {
 
-    public class PrisonCopterAI : PoliceCopterAI {
+    public class PrisonCopterAI : PoliceCopterAI, IExtendedVehicleAI {
 
         public int m_policeCount = 2;
 
@@ -166,15 +167,14 @@ namespace PrisonHelicopter.AI {
 	    }
             else if(GetArrestedCitizen(ref data) != 0) // prison helicopter with prisoners onboard find a prison
             {
-                data.m_transferType = 122;
+                data.m_transferType = (byte)ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalMove;
 		data.m_flags &= ~Vehicle.Flags.Emergency2;
-		TransferManager.TransferOffer offer = default;
-		offer.Priority = 7;
+		ExtendedTransferManager.Offer offer = default;
 		offer.Vehicle = vehicleID;
 		offer.Position = data.GetLastFramePosition();
 		offer.Amount = 1;
 		offer.Active = true;
-		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)122, offer);
+		Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalMove, offer);
 		data.m_flags |= Vehicle.Flags.WaitingTarget;
 	    }
             else if(ShouldReturnToSource(ref data)) // should go home
@@ -184,15 +184,14 @@ namespace PrisonHelicopter.AI {
             }
             else // prison helicopter with no prisoners onboard find another big police station 
             {
-                data.m_transferType = 121;
+                data.m_transferType = (byte)ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup;
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
-		TransferManager.TransferOffer offer = default;
-		offer.Priority = 7;
+		ExtendedTransferManager.Offer offer = default;
 		offer.Vehicle = vehicleID;
 		offer.Position = data.GetLastFramePosition();
 		offer.Amount = 1;
 		offer.Active = true;
-		Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)121, offer);
+                Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup, offer);
 		data.m_flags |= Vehicle.Flags.WaitingTarget;
             }
 	    if (!StartPathFind(vehicleID, ref data))
@@ -201,20 +200,16 @@ namespace PrisonHelicopter.AI {
 	    }
 	}
 
-        public override void StartTransfer(ushort vehicleID, ref Vehicle data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
-	{
-	    if (material == (TransferManager.TransferReason)data.m_transferType)
-	    {
-		if ((data.m_flags & Vehicle.Flags.WaitingTarget) != 0)
-		{
-                    SetTarget(vehicleID, ref data, offer.Building);  
-		}
-	    }
-	    else
-	    {
-                base.StartTransfer(vehicleID, ref data, material, offer);
-	    }
-	}
+        void IExtendedVehicleAI.ExtendedStartTransfer(ushort vehicleID, ref Vehicle data, ExtendedTransferManager.TransferReason material, ExtendedTransferManager.Offer offer)
+        {
+            if (material == (ExtendedTransferManager.TransferReason)data.m_transferType)
+            {
+                if ((data.m_flags & Vehicle.Flags.WaitingTarget) != 0)
+                {
+                    SetTarget(vehicleID, ref data, offer.Building);
+                }
+            }
+        }
 
         public override void GetSize(ushort vehicleID, ref Vehicle data, out int size, out int max)
 	{
@@ -253,9 +248,9 @@ namespace PrisonHelicopter.AI {
 	{
 	    if ((data.m_flags & Vehicle.Flags.WaitingTarget) != 0)
 	    {
-		TransferManager.TransferOffer offer = default(TransferManager.TransferOffer);
+		ExtendedTransferManager.Offer offer = default;
 		offer.Vehicle = vehicleID;
-		Singleton<TransferManager>.instance.RemoveIncomingOffer((TransferManager.TransferReason)data.m_transferType, offer);
+		Singleton<ExtendedTransferManager>.instance.RemoveIncomingOffer((ExtendedTransferManager.TransferReason)data.m_transferType, offer);
 	    }
 	}
 
@@ -298,6 +293,7 @@ namespace PrisonHelicopter.AI {
             {
                 int amountDelta = data.m_transferSize;
 	        BuildingInfo info = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding].Info;
+
 	        info.m_buildingAI.ModifyMaterialBuffer(data.m_targetBuilding, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_targetBuilding], (TransferManager.TransferReason)data.m_transferType, ref amountDelta);
 	        data.m_transferSize = (ushort)Mathf.Clamp(data.m_transferSize - amountDelta, 0, data.m_transferSize);
                 UnloadCriminals(ref data);

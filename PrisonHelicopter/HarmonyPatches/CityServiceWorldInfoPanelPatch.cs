@@ -21,7 +21,7 @@ namespace PrisonHelicopter.HarmonyPatches
 
         [HarmonyPatch(typeof(CityServiceWorldInfoPanel), "UpdateBindings")]
         [HarmonyPostfix]
-        internal static void Postfix1(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID)
+        internal static void UpdateBindings(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID)
         {
             if (_checkBox == null)
             {
@@ -39,8 +39,8 @@ namespace PrisonHelicopter.HarmonyPatches
             var info = building.Info;
             var buildingAi = info.m_buildingAI;
             var prisonCopterPoliceStationAI = buildingAi as PrisonCopterPoliceStationAI;
-            var helicopterDepotAI = buildingAi as HelicopterDepotAI;
-            var policeHelicopterDepot = info.m_class.m_service == ItemClass.Service.PoliceDepartment && helicopterDepotAI;
+            var policeHelicopterDepotAI = buildingAi as PoliceHelicopterDepotAI;
+            var policeHelicopterDepot = info.m_class.m_service == ItemClass.Service.PoliceDepartment && policeHelicopterDepotAI;
             var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment && info.m_class.m_level < ItemClass.Level.Level4 && prisonCopterPoliceStationAI;
 
             if(policeHelicopterDepot)
