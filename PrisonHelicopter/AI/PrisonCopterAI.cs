@@ -163,7 +163,7 @@ namespace PrisonHelicopter.AI {
                 }
                 data.m_flags &= ~Vehicle.Flags.Landing;
                 data.m_flags |= Vehicle.Flags.Emergency2;
-                building.AddGuestVehicle(vehicleID, ref data); // add guest vehicle to this big polcie station or to prison
+                building.AddGuestVehicle(vehicleID, ref data); // add guest vehicle to this big police station or to prison
 	    }
             else if(GetArrestedCitizen(ref data) != 0) // prison helicopter with prisoners onboard find a prison
             {

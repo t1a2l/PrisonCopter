@@ -215,10 +215,10 @@ namespace PrisonHelicopter.AI
                 if (vehicleInfo != null)
                 {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
-                    if (ExtedndedVehicleManager.CreateVehicle(out ushort num, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, data.m_position, material, true, false) && vehicleInfo.m_vehicleAI is PrisonCopterAI prisonCopterAI)
+                    if (ExtedndedVehicleManager.CreateVehicle(out ushort num, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, data.m_position, material, true, false) && vehicleInfo.m_vehicleAI is ExtendedPoliceCarAI extendedPoliceCarAI)
                     {
                         vehicleInfo.m_vehicleAI.SetSource(num, ref vehicles.m_buffer[(int)num], bnum);
-                        ((IExtendedVehicleAI)prisonCopterAI).ExtendedStartTransfer(num, ref vehicles.m_buffer[(int)num], material, offer);
+                        ((IExtendedVehicleAI)extendedPoliceCarAI).ExtendedStartTransfer(num, ref vehicles.m_buffer[(int)num], material, offer);
                     }
                 }
             }
