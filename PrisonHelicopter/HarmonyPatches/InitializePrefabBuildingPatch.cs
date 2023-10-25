@@ -17,9 +17,9 @@ namespace PrisonHelicopter.HarmonyPatches
                 if (__instance.m_class.m_service == ItemClass.Service.PoliceDepartment && __instance.m_class.m_subService != ItemClass.SubService.PoliceDepartmentBank && __instance.m_class.m_level != ItemClass.Level.Level3)
                 {
                     var oldAI = __instance.GetComponent<PrefabAI>();
-                    if (oldAI is PrisonCopterPoliceStationAI prisonCopter)
+                    if (oldAI is PoliceStationAI policeStation)
                     {
-                        var count = prisonCopter.m_policeCarCount;
+                        var count = policeStation.m_policeCarCount;
                         Object.DestroyImmediate(oldAI);
                         var newAI = (PrefabAI)__instance.gameObject.AddComponent<PrisonCopterPoliceStationAI>();
 
