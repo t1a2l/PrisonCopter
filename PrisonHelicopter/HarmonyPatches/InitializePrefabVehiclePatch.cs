@@ -3,7 +3,6 @@ using HarmonyLib;
 using PrisonHelicopter.AI;
 using PrisonHelicopter.Utils;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace PrisonHelicopter.HarmonyPatches
 {
@@ -16,6 +15,7 @@ namespace PrisonHelicopter.HarmonyPatches
         {
             try
             {
+                
                 if (__instance.m_class.m_service == ItemClass.Service.PoliceDepartment && __instance.m_class.name == ItemClasses.prisonHelicopterVehicle.name && __instance.m_vehicleType == VehicleInfo.VehicleType.Helicopter)
                 {
                     var oldAI = __instance.GetComponent<PrefabAI>();
@@ -23,7 +23,8 @@ namespace PrisonHelicopter.HarmonyPatches
                     var newAI = (PrefabAI)__instance.gameObject.AddComponent<PrisonCopterAI>();
                     PrefabUtil.TryCopyAttributes(oldAI, newAI, false);
                 }
-                if (__instance.m_class.m_service == ItemClass.Service.PoliceDepartment && __instance.m_vehicleType == VehicleInfo.VehicleType.Car)
+                var component = __instance.GetComponent<PrefabAI>();
+                if (component != null && component is PoliceCarAI && __instance.m_class.m_service == ItemClass.Service.PoliceDepartment && __instance.m_vehicleType == VehicleInfo.VehicleType.Car)
                 {
                     var oldAI = __instance.GetComponent<PrefabAI>();
                     UnityEngine.Object.DestroyImmediate(oldAI);
