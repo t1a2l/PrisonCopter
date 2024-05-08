@@ -35,14 +35,14 @@ namespace PrisonHelicopter.AI
 
         public override ImmaterialResourceManager.ResourceData[] GetImmaterialResourceRadius(ushort buildingID, ref Building data)
         {
-            return new ImmaterialResourceManager.ResourceData[1]
-            {
+            return
+            [
                 new ImmaterialResourceManager.ResourceData
                 {
                     m_resource = ImmaterialResourceManager.Resource.NoisePollution,
                     m_radius = ((m_noiseAccumulation == 0) ? 0f : m_noiseRadius)
                 }
-            };
+            ];
         }
 
         public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
@@ -192,7 +192,7 @@ namespace PrisonHelicopter.AI
             ExtendedTransferManager.Offer extended_offer = default;
             offer.Building = buildingID;
             Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer);
-            Singleton<ExtendedTransferManager>.instance.RemoveIncomingOffer(ExtendedTransferManager.TransferReason.PoliceVanCriminalMove, extended_offer);
+            Singleton<ExtendedTransferManager>.instance.RemoveIncomingOffer(ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup, extended_offer);
             base.BuildingDeactivated(buildingID, ref data);
         }
 
@@ -276,7 +276,7 @@ namespace PrisonHelicopter.AI
                     offer.Active = true;
                     Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.Crime, offer);
                 }
-                if (flag)
+                if (flag && (buildingData.m_flags & Building.Flags.Downgrading) != 0)
                 {
                     ExtendedTransferManager.Offer offer2 = default;
                     offer2.Building = buildingID;

@@ -56,14 +56,14 @@ namespace PrisonHelicopter.AI
 
         public override ImmaterialResourceManager.ResourceData[] GetImmaterialResourceRadius(ushort buildingID, ref Building data)
         {
-            return new ImmaterialResourceManager.ResourceData[1]
-            {
+            return
+            [
                 new ImmaterialResourceManager.ResourceData
                 {
                     m_resource = ImmaterialResourceManager.Resource.NoisePollution,
                     m_radius = ((m_noiseAccumulation == 0) ? 0f : m_noiseRadius)
                 }
-            };
+            ];
         }
 
         public override Color GetColor(ushort buildingID, ref Building data, InfoManager.InfoMode infoMode, InfoManager.SubInfoMode subInfoMode)
