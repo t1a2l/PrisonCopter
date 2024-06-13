@@ -28,6 +28,7 @@ namespace PrisonHelicopter.HarmonyPatches
                         {
                             policeStationAI.m_policeCarCount = count;
                             policeStationAI.m_policeVanCount = count / 2;
+                            policeStationAI.m_noiseAccumulation = policeStation.m_noiseAccumulation;
                         }
                     }
 

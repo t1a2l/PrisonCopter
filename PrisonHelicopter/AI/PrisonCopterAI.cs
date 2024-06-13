@@ -148,7 +148,6 @@ namespace PrisonHelicopter.AI {
         public override void SetTarget(ushort vehicleID, ref Vehicle data, ushort targetBuilding)
 	{
 	    RemoveTarget(vehicleID, ref data);
-	    data.m_targetBuilding = targetBuilding;
 	    data.m_flags &= ~Vehicle.Flags.WaitingTarget;
 	    data.m_waitCounter = 0;
             BuildingManager instance = Singleton<BuildingManager>.instance;
@@ -163,6 +162,7 @@ namespace PrisonHelicopter.AI {
                 }
                 data.m_flags &= ~Vehicle.Flags.Landing;
                 data.m_flags |= Vehicle.Flags.Emergency2;
+                data.m_targetBuilding = targetBuilding;
                 building.AddGuestVehicle(vehicleID, ref data); // add guest vehicle to this big police station or to prison
 	    }
             else if(GetArrestedCitizen(ref data) != 0) // prison helicopter with prisoners onboard find a prison
