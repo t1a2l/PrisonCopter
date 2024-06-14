@@ -57,17 +57,19 @@ namespace PrisonHelicopter.HarmonyPatches
                 if(info.name.Contains("Headquarters"))
                 {
                     ___m_BuildingDesc.text = "The police headquarters can dispatch a large number of patrol cars to crime scenes around the city.";
+                    _checkBox.relativePosition = new Vector3(180, 295);
                 }
                 else
                 {
                     ___m_BuildingDesc.text = "The police station can dispatch patrol cars to take care of criminal activity.";
+                    _checkBox.relativePosition = new Vector3(180, 275);
                 }
                 _checkBox.isVisible = true;
                 UpdateCheckedState(building_id);
                 _checkBox.text = "Allow Prison Helicopters & Police Vans";
                 _checkBox.tooltip = "Enable this if you want prison helicopters to land and have a police vans fleet to pick up criminals from other stations";
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
-                _checkBox.relativePosition = new Vector3(180, 295);
+                
             }
             else
             {
