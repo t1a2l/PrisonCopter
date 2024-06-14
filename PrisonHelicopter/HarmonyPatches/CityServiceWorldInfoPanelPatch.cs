@@ -21,7 +21,7 @@ namespace PrisonHelicopter.HarmonyPatches
 
         [HarmonyPatch(typeof(CityServiceWorldInfoPanel), "UpdateBindings")]
         [HarmonyPostfix]
-        internal static void UpdateBindings(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID)
+        internal static void UpdateBindings(CityServiceWorldInfoPanel __instance, InstanceID ___m_InstanceID, ref UILabel ___m_BuildingDesc)
         {
             if (_checkBox == null)
             {
@@ -29,14 +29,7 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.label.textColor = new Color32(185, 221, 254, 255);
                 _checkBox.label.textScale = 0.8125f;
                 _checkBox.AlignTo(__instance.component, UIAlignAnchor.BottomLeft);
-                if(Util.IsModActive(2882769913) || Util.IsModActive("Vehicle Selector"))
-                {
-                    _checkBox.relativePosition = new Vector3(180, 295);
-                }
-                else
-                {
-                    _checkBox.relativePosition = new Vector3(120, 295);
-                }
+                _checkBox.relativePosition = new Vector3(180, 275);
                 _checkBox.label.width = 300;
             }
 
@@ -57,14 +50,24 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.text = "Allow Prison Helicopters";
                 _checkBox.tooltip = "Enable this to allow prison helicopters to also spawn";
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
+                _checkBox.relativePosition = new Vector3(180, 275);
             }
             else if(policeStation)
             {
+                if(info.name.Contains("Headquarters"))
+                {
+                    ___m_BuildingDesc.text = "The police headquarters can dispatch a large number of patrol cars to crime scenes around the city.";
+                }
+                else
+                {
+                    ___m_BuildingDesc.text = "The police station can dispatch patrol cars to take care of criminal activity.";
+                }
                 _checkBox.isVisible = true;
                 UpdateCheckedState(building_id);
                 _checkBox.text = "Allow Prison Helicopters & Police Vans";
                 _checkBox.tooltip = "Enable this if you want prison helicopters to land and have a police vans fleet to pick up criminals from other stations";
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
+                _checkBox.relativePosition = new Vector3(180, 295);
             }
             else
             {
