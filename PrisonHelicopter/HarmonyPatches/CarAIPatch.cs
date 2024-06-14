@@ -3,11 +3,11 @@ using HarmonyLib;
 using System;
 using System.Reflection;
 
-namespace PrisonHelicopter.HarmonyPatches {
-
+namespace PrisonHelicopter.HarmonyPatches
+{
     [HarmonyPatch(typeof(CarAI))]
-    public static class CarAIPatch {
-
+    public static class CarAIPatch
+    {
         private delegate bool StartPathFindPoliceCarAIDelegate(PoliceCarAI __instance, ushort vehicleID, ref Vehicle vehicleData);
         private static readonly StartPathFindPoliceCarAIDelegate StartPathFindPoliceCarAI = AccessTools.MethodDelegate<StartPathFindPoliceCarAIDelegate>(typeof(PoliceCarAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(ushort), typeof(Vehicle).MakeByRefType() }, new ParameterModifier[] { }), null, false);
 

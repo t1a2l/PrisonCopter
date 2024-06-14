@@ -7,10 +7,12 @@ using Object = UnityEngine.Object;
 
 namespace PrisonHelicopter.HarmonyPatches
 {
-    [HarmonyPatch(typeof(BuildingInfo), "InitializePrefab")]
+    [HarmonyPatch(typeof(BuildingInfo))]
     public static class InitializePrefabBuildingPatch
-    { 
-        public static void Prefix(BuildingInfo __instance)
+    {
+        [HarmonyPatch(typeof(BuildingInfo), "InitializePrefab")]
+        [HarmonyPrefix]
+        public static void InitializePrefabPrefix(BuildingInfo __instance)
         {
             try
             {
