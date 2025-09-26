@@ -9,13 +9,13 @@ namespace PrisonHelicopter.HarmonyPatches
         [HarmonyPrefix]
         public static bool GetFrameReason(TransferManager __instance, int frameIndex, ref TransferManager.TransferReason __result)
         {
-            if(frameIndex == 0 || frameIndex == 2 || frameIndex == 4)
+            if(frameIndex == 146 || frameIndex == 148 || frameIndex == 150)
             {
-                if(frameIndex == 0)
+                if(frameIndex == 146)
                 {
                     __result = PrisonHelicopterMod.PoliceVanCriminalMove;
                 }
-                else if(frameIndex == 2)
+                else if(frameIndex == 148)
                 {
                     __result = PrisonHelicopterMod.PrisonHelicopterCriminalPickup;
                 }
