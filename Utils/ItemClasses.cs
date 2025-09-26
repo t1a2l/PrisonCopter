@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-namespace PrisonHelicopter
+namespace PrisonHelicopter.Utils
 {
     public static class ItemClasses
     {
@@ -10,19 +10,19 @@ namespace PrisonHelicopter
 
         public static void Register()
         {
-            var dictionary = ((Dictionary<string, ItemClass>)typeof(ItemClassCollection).GetField("m_classDict", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null));
-            if (!dictionary.ContainsKey(ItemClasses.prisonHelicopterVehicle.name))
+            var dictionary = (Dictionary<string, ItemClass>)typeof(ItemClassCollection).GetField("m_classDict", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            if (!dictionary.ContainsKey(prisonHelicopterVehicle.name))
             {
-                dictionary.Add(ItemClasses.prisonHelicopterVehicle.name, ItemClasses.prisonHelicopterVehicle);
+                dictionary.Add(prisonHelicopterVehicle.name, prisonHelicopterVehicle);
             }
         }
 
         public static void Unregister()
         {
-            var dictionary = ((Dictionary<string, ItemClass>)typeof(ItemClassCollection).GetField("m_classDict", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null));
-            dictionary.Remove(ItemClasses.prisonHelicopterVehicle.name);
+            var dictionary = (Dictionary<string, ItemClass>)typeof(ItemClassCollection).GetField("m_classDict", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            dictionary.Remove(prisonHelicopterVehicle.name);
         }
-        
+
         private static ItemClass CreatePrisonHelicopterItemClass(string name)
         {
             var createInstance = ScriptableObject.CreateInstance<ItemClass>();

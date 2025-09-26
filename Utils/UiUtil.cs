@@ -1,14 +1,13 @@
 using ColossalFramework.UI;
 using UnityEngine;
 
-namespace PrisonHelicopter.Utils {
+namespace PrisonHelicopter.Utils
+{
 
     public static class UiUtil
     {
-        public static UICheckBox CreateCheckBox(UIComponent parent,
-                                                string name,
-                                                string text,
-                                                bool state) {
+        public static UICheckBox CreateCheckBox(UIComponent parent, string name, string text, bool state)
+        {
             UICheckBox checkBox = parent.AddUIComponent<UICheckBox>();
             checkBox.name = name;
 

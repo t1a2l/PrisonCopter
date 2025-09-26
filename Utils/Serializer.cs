@@ -1,8 +1,7 @@
-using System;
 using System.IO;
 using ICities;
 
-namespace PrisonHelicopter
+namespace PrisonHelicopter.Utils
 {
     /// <summary>
     /// Handles savegame data saving and loading.
@@ -23,20 +22,18 @@ namespace PrisonHelicopter
         {
             base.OnSaveData();
 
-            using (MemoryStream stream = new MemoryStream())
-            {
-                // Serialise savegame settings.
-                using (BinaryWriter writer = new BinaryWriter(stream))
-                {
-                    // Write version.
-                    writer.Write(DataVersion);
+            using MemoryStream stream = new();
 
-                    // Write to savegame.
-                    serializableDataManager.SaveData(dataID, stream.ToArray());
+            // Serialise savegame settings.
+            using BinaryWriter writer = new(stream);
 
-                    LogHelper.Information("wrote ", stream.Length);
-                }
-            }
+            // Write version.
+            writer.Write(DataVersion);
+
+            // Write to savegame.
+            serializableDataManager.SaveData(dataID, stream.ToArray());
+
+            LogHelper.Information("wrote ", stream.Length);
         }
 
         /// <summary>
@@ -54,28 +51,25 @@ namespace PrisonHelicopter
             if (data != null && data.Length != 0)
             {
                 // Data was read - go ahead and deserialise.
-                using (MemoryStream stream = new MemoryStream(data))
-                {
-                    using (BinaryReader reader = new BinaryReader(stream))
-                    {
-                        // Read version.
-                        int version = reader.ReadInt32();
-                        LogHelper.Information("found data version ", version);
+                using MemoryStream stream = new(data);
+                using BinaryReader reader = new(stream);
 
-                        // Deserialise building settings.
-                        Utils.Util.Deserialize(version);
+                // Read version.
+                int version = reader.ReadInt32();
 
-                        LogHelper.Information("read ", stream.Length);
-                    }
-                }
+                LogHelper.Information("found data version ", version);
+
+                // Deserialise building settings.
+                Util.Deserialize(version);
+
+                LogHelper.Information("read ", stream.Length);
             }
             else
             {
                 // No data read.
                 LogHelper.Information("no data read");
-                Utils.Util.Deserialize(0);
+                Util.Deserialize(0);
             }
         }
-
     }
 }

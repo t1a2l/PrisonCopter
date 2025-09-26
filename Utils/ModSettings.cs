@@ -2,13 +2,14 @@ using System;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace PrisonHelicopter.Utils {
-
+namespace PrisonHelicopter.Utils
+{
     /// <summary>
     /// Global mod settings.
     /// </summary>
     [XmlRoot("PrisonHelicopter")]
-    public class ModSettings {
+    public class ModSettings
+    {
 
         // Settings file name.
         [XmlIgnore]
@@ -25,10 +26,10 @@ namespace PrisonHelicopter.Utils {
         [XmlElement("DropDown")]
         public int PriosnersPercentage
         {
-            get => PrisonHelicopterMod.PriosnersPercentage;
+            get => PrisonHelicopterMod.PrisonersPercentage;
 
-            set => PrisonHelicopterMod.PriosnersPercentage = value;
-        } 
+            set => PrisonHelicopterMod.PrisonersPercentage = value;
+        }
 
         /// <summary>
         /// Load settings from XML file.
@@ -52,15 +53,13 @@ namespace PrisonHelicopter.Utils {
                 }
 
                 // Read settings file.
-                using (StreamReader reader = new StreamReader(fileName))
+                using StreamReader reader = new(fileName);
+                XmlSerializer xmlSerializer = new(typeof(ModSettings));
+                if (xmlSerializer.Deserialize(reader) is not ModSettings settingsFile)
                 {
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
-                    if (xmlSerializer.Deserialize(reader) is not ModSettings settingsFile)
-                    {
-                        LogHelper.Error("couldn't deserialize settings file");
-                    }
+                    LogHelper.Error("couldn't deserialize settings file");
                 }
-  
+
             }
             catch (Exception e)
             {
@@ -77,9 +76,9 @@ namespace PrisonHelicopter.Utils {
             try
             {
                 // Pretty straightforward.
-                using (StreamWriter writer = new StreamWriter(SettingsFile))
+                using (StreamWriter writer = new(SettingsFile))
                 {
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
+                    XmlSerializer xmlSerializer = new(typeof(ModSettings));
                     xmlSerializer.Serialize(writer, new ModSettings());
                 }
 

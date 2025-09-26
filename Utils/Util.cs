@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using ColossalFramework.Plugins;
@@ -23,20 +22,20 @@ namespace PrisonHelicopter.Utils
             }
             return field.GetValue(instance);
         }
-        
+
         public static bool IsModActive(string modNamePart)
         {
             try
             {
                 var plugins = PluginManager.instance.GetPluginsInfo();
                 return (from plugin in plugins.Where(p => p.isEnabled)
-                    select plugin.GetInstances<IUserMod>()
+                        select plugin.GetInstances<IUserMod>()
                     into instances
-                    where instances.Any()
-                    select instances[0].Name
+                        where instances.Any()
+                        select instances[0].Name
                     into name
-                    where name != null && name.Contains(modNamePart)
-                    select name).Any();
+                        where name != null && name.Contains(modNamePart)
+                        select name).Any();
             }
             catch (Exception e)
             {
@@ -52,10 +51,10 @@ namespace PrisonHelicopter.Utils
             {
                 var plugins = PluginManager.instance.GetPluginsInfo();
                 return (from plugin in plugins.Where(p => p.isEnabled)
-                    select plugin.publishedFileID
+                        select plugin.publishedFileID
                     into workshopId
-                    where workshopId.AsUInt64 == modId
-                    select workshopId).Any();
+                        where workshopId.AsUInt64 == modId
+                        select workshopId).Any();
             }
             catch (Exception e)
             {
@@ -65,7 +64,7 @@ namespace PrisonHelicopter.Utils
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Deserializes savegame data.
         /// </summary>
         /// <param name="reader">Reader to deserialize from.</param>
@@ -78,9 +77,6 @@ namespace PrisonHelicopter.Utils
             {
                 oldDataVersion = true;
             }
-
-
-
         }
 
     }

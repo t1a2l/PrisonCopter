@@ -1,13 +1,11 @@
 using ColossalFramework;
 using System;
 using UnityEngine;
-using MoreTransferReasons;
-using PrisonHelicopter.Utils;
 using ColossalFramework.DataBinding;
 
 namespace PrisonHelicopter.AI
 {
-    public class PoliceHelicopterDepotAI : PlayerBuildingAI, IExtendedBuildingAI
+    public class PoliceHelicopterDepotAI : PlayerBuildingAI
     {
         [CustomizableProperty("Uneducated Workers", "Workers", 0)]
         public int m_workPlaceCount0 = 3;
@@ -124,47 +122,22 @@ namespace PrisonHelicopter.AI
             base.SimulationStep(buildingID, ref buildingData, ref frameData);
         }
 
-        void IExtendedBuildingAI.ExtendedStartTransfer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ExtendedTransferManager.Offer offer)
-        {
-            if (material == ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup)
-            {
-                BuildingManager instance = Singleton<BuildingManager>.instance;
-                ref Building target_building = ref instance.m_buildings.m_buffer[offer.Building];
-                // if no prison was found or helicopter depot has no prison helis enabled or offer building has already heli on the way, dont spawn prison helis
-                if(!FindPrison(data.m_position) || (data.m_flags & Building.Flags.Downgrading) == 0 || (target_building.m_flags & Building.Flags.Upgrading) != 0)
-                {
-                    return;
-                }
-                // spawn only level 4 helicopters (prison helicopters)
-                VehicleInfo randomVehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, ItemClass.Level.Level4, VehicleInfo.VehicleType.Helicopter);
-		if (randomVehicleInfo != null)
-		{
-		    Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
-		    if (ExtedndedVehicleManager.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, randomVehicleInfo, data.m_position, material, transferToSource: true, transferToTarget: false) && randomVehicleInfo.m_vehicleAI is PrisonCopterAI prisonCopterAI)
-		    {
-			randomVehicleInfo.m_vehicleAI.SetSource(vehicle, ref vehicles.m_buffer[vehicle], buildingID);
-			((IExtendedVehicleAI)prisonCopterAI).ExtendedStartTransfer(vehicle, ref vehicles.m_buffer[vehicle], material, offer);
-		    }
-		}
-            }
-        }
-
-        void IExtendedBuildingAI.ExtendedModifyMaterialBuffer(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, ref int amountDelta)
-        {
-
-        }
-
-        void IExtendedBuildingAI.ExtendedGetMaterialAmount(ushort buildingID, ref Building data, ExtendedTransferManager.TransferReason material, out int amount, out int max)
-        {
-            amount = 0;
-            max = 0;
-        }
-
         public override void StartTransfer(ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
         {
             TransferManager.TransferReason transferReason = TransferManager.TransferReason.Crime;
             if (material != TransferManager.TransferReason.None && (material == transferReason))
             {
+                if (material == PrisonHelicopterMod.PrisonHelicopterCriminalPickup)
+                {
+                    BuildingManager instance = Singleton<BuildingManager>.instance;
+                    ref Building target_building = ref instance.m_buildings.m_buffer[offer.Building];
+                    // if no prison was found or helicopter depot has no prison helis enabled or offer building has already heli on the way, dont spawn prison helis
+                    if (!FindPrison(data.m_position) || (data.m_flags & Building.Flags.Downgrading) == 0 || (target_building.m_flags & Building.Flags.Upgrading) != 0)
+                    {
+                        return;
+                    }
+                }
+
                 VehicleInfo vehicleInfo = GetSelectedVehicle(buildingID);
                 if (vehicleInfo == null)
                 {
@@ -189,10 +162,9 @@ namespace PrisonHelicopter.AI
         public override void BuildingDeactivated(ushort buildingID, ref Building data)
         {
             TransferManager.TransferOffer offer = default;
-            ExtendedTransferManager.Offer extended_offer = default;
             offer.Building = buildingID;
             Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer);
-            Singleton<ExtendedTransferManager>.instance.RemoveIncomingOffer(ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup, extended_offer);
+            Singleton<TransferManager>.instance.RemoveIncomingOffer(PrisonHelicopterMod.PrisonHelicopterCriminalPickup, offer);
             base.BuildingDeactivated(buildingID, ref data);
         }
 
@@ -246,13 +218,12 @@ namespace PrisonHelicopter.AI
                 }
             }
             TransferManager.TransferReason transferType = (TransferManager.TransferReason)instance.m_vehicles.m_buffer[num6].m_transferType;
-            ExtendedTransferManager.TransferReason extendedTransferType = (ExtendedTransferManager.TransferReason)instance.m_vehicles.m_buffer[num6].m_transferType;
             if (m_policeHelicopterCount < numVehicles && num3 - num4 > num2 && num5 != 0 && transferType == TransferManager.TransferReason.Crime)
             {
                 VehicleInfo info2 = instance.m_vehicles.m_buffer[num5].Info;
                 info2.m_vehicleAI.SetTarget(num5, ref instance.m_vehicles.m_buffer[num5], buildingID);
             }
-            if (m_prisonHelicopterCount < numVehicles && num3 - num4 > num2 && num5 != 0 && extendedTransferType == ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup)
+            if (m_prisonHelicopterCount < numVehicles && num3 - num4 > num2 && num5 != 0 && transferType == PrisonHelicopterMod.PrisonHelicopterCriminalPickup)
             {
                 VehicleInfo info3 = instance.m_vehicles.m_buffer[num5].Info;
                 info3.m_vehicleAI.SetTarget(num5, ref instance.m_vehicles.m_buffer[num5], buildingID);
@@ -275,15 +246,10 @@ namespace PrisonHelicopter.AI
                     offer.Amount = Mathf.Min(2, num8);
                     offer.Active = true;
                     Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.Crime, offer);
-                }
-                if (flag && (buildingData.m_flags & Building.Flags.Downgrading) != 0)
-                {
-                    ExtendedTransferManager.Offer offer2 = default;
-                    offer2.Building = buildingID;
-                    offer2.Position = buildingData.m_position;
-                    offer2.Amount = Mathf.Min(2, num8);
-                    offer2.Active = true;
-                    Singleton<ExtendedTransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup, offer2);
+                    if ((buildingData.m_flags & Building.Flags.Downgrading) != 0)
+                    {
+                        Singleton<TransferManager>.instance.AddIncomingOffer(PrisonHelicopterMod.PrisonHelicopterCriminalPickup, offer);
+                    }
                 }
             }
         }
@@ -330,7 +296,7 @@ namespace PrisonHelicopter.AI
             string text = "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
             if((data.m_flags & Building.Flags.Downgrading) != 0)
             {
-                ExtedndedVehicleManager.CalculateOwnVehicles(buildingID, ref data, ExtendedTransferManager.TransferReason.PrisonHelicopterCriminalPickup, ref count1, ref cargo1, ref capacity1, ref outside1);
+                CalculateOwnVehicles(buildingID, ref data, PrisonHelicopterMod.PrisonHelicopterCriminalPickup, ref count1, ref cargo1, ref capacity1, ref outside1);
                 text += Environment.NewLine;
                 text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
             }

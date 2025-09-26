@@ -7,14 +7,14 @@ using PrisonHelicopter.Utils;
 
 namespace PrisonHelicopter.HarmonyPatches
 {
-
-    [HarmonyPatch(typeof(CityServiceWorldInfoPanel))]
-    internal static class CityServiceWorldInfoPanelPatch
+    [HarmonyPatch]
+    public static class CityServiceWorldInfoPanelPatch
     {
         public static UICheckBox _checkBox;
         private static ushort _cachedBuilding;
 
-        public static void Reset() {
+        public static void Reset()
+        {
             _checkBox = null;
             _cachedBuilding = 0;
         }
@@ -43,7 +43,7 @@ namespace PrisonHelicopter.HarmonyPatches
             var policeHelicopterDepot = info.m_class.m_service == ItemClass.Service.PoliceDepartment && policeHelicopterDepotAI;
             var policeStation = info.m_class.m_service == ItemClass.Service.PoliceDepartment && info.m_class.m_level < ItemClass.Level.Level4 && prisonCopterPoliceStationAI;
 
-            if(policeHelicopterDepot)
+            if (policeHelicopterDepot)
             {
                 _checkBox.isVisible = true;
                 UpdateCheckedState(building_id);
@@ -52,9 +52,9 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
                 _checkBox.relativePosition = new Vector3(180, 275);
             }
-            else if(policeStation)
+            else if (policeStation)
             {
-                if(info.name.Contains("Headquarters"))
+                if (info.name.Contains("Headquarters"))
                 {
                     ___m_BuildingDesc.text = "The police headquarters can dispatch a large number of patrol cars to crime scenes around the city.";
                     _checkBox.relativePosition = new Vector3(180, 295);
@@ -69,7 +69,7 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.text = "Allow Prison Helicopters & Police Vans";
                 _checkBox.tooltip = "Enable this if you want prison helicopters to land and have a police vans fleet to pick up criminals from other stations";
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
-                
+
             }
             else
             {
@@ -89,10 +89,10 @@ namespace PrisonHelicopter.HarmonyPatches
 
         private static bool IsMovingPrisonersAllowed(ushort building)
         {
-            if(Singleton<BuildingManager>.exists && building != 0)
+            if (Singleton<BuildingManager>.exists && building != 0)
             {
                 Building building_to_check = Singleton<BuildingManager>.instance.m_buildings.m_buffer[building];
-                if((building_to_check.m_flags & Building.Flags.Downgrading) != 0) return true;
+                if ((building_to_check.m_flags & Building.Flags.Downgrading) != 0) return true;
             }
             return false;
         }
@@ -101,7 +101,7 @@ namespace PrisonHelicopter.HarmonyPatches
         {
             if (!Singleton<SimulationManager>.exists || _cachedBuilding == 0) return;
             Singleton<SimulationManager>.instance.AddAction(() => ToggleEmptying(_cachedBuilding, value));
-        }       
+        }
 
         private static void ToggleEmptying(ushort building, bool value)
         {

@@ -1,14 +1,18 @@
 using PrisonHelicopter.HarmonyPatches;
 
-namespace PrisonHelicopter.Utils {
-    public class GameConnectionManager {
+namespace PrisonHelicopter.Utils
+{
+    public class GameConnectionManager
+    {
 
         internal static GameConnectionManager Instance;
-        static GameConnectionManager() {
+        static GameConnectionManager()
+        {
             Instance = new GameConnectionManager();
         }
 
-        GameConnectionManager() {
+        GameConnectionManager()
+        {
             PoliceCopterAIConnection = PoliceCopterAIHook.GetConnection();
         }
 
