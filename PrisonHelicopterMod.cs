@@ -19,12 +19,6 @@ namespace PrisonHelicopter
 
         string IUserMod.Description => "Allow the police helicopter depot to spawn prison helicopters to transport prisoners to jail";
 
-        public const TransferManager.TransferReason PoliceVanCriminalMove = (TransferManager.TransferReason)203;
-
-        public const TransferManager.TransferReason PrisonHelicopterCriminalPickup = (TransferManager.TransferReason)204;
-
-        public const TransferManager.TransferReason PrisonHelicopterCriminalMove = (TransferManager.TransferReason)205;
-
         public void OnSettingsUI(UIHelperBase helper)
         {
             UIHelper uiHelper = helper.AddGroup("PrisonHelicopter-Options") as UIHelper;

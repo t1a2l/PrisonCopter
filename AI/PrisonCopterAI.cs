@@ -1,7 +1,8 @@
-using ColossalFramework;
-using UnityEngine;
-using ColossalFramework.Math;
 using System;
+using ColossalFramework;
+using ColossalFramework.Math;
+using MoreTransferReasons;
+using UnityEngine;
 
 namespace PrisonHelicopter.AI
 {
@@ -167,14 +168,14 @@ namespace PrisonHelicopter.AI
             }
             else if (GetArrestedCitizen(ref data) != 0) // prison helicopter with prisoners onboard find a prison
             {
-                data.m_transferType = (byte)PrisonHelicopterMod.PrisonHelicopterCriminalMove;
+                data.m_transferType = (byte)ExtendedTransferManager.PrisonHelicopterCriminalMove;
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
                 TransferManager.TransferOffer offer = default;
                 offer.Vehicle = vehicleID;
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
                 offer.Active = true;
-                Singleton<TransferManager>.instance.AddIncomingOffer(PrisonHelicopterMod.PrisonHelicopterCriminalMove, offer);
+                Singleton<TransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.PrisonHelicopterCriminalMove, offer);
                 data.m_flags |= Vehicle.Flags.WaitingTarget;
             }
             else if (ShouldReturnToSource(ref data)) // should go home
@@ -184,14 +185,14 @@ namespace PrisonHelicopter.AI
             }
             else // prison helicopter with no prisoners onboard find another big police station 
             {
-                data.m_transferType = (byte)PrisonHelicopterMod.PrisonHelicopterCriminalPickup;
+                data.m_transferType = (byte)ExtendedTransferManager.PrisonHelicopterCriminalPickup;
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
                 TransferManager.TransferOffer offer = default;
                 offer.Vehicle = vehicleID;
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
                 offer.Active = true;
-                Singleton<TransferManager>.instance.AddIncomingOffer(PrisonHelicopterMod.PrisonHelicopterCriminalPickup, offer);
+                Singleton<TransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.PrisonHelicopterCriminalPickup, offer);
                 data.m_flags |= Vehicle.Flags.WaitingTarget;
             }
             if (!StartPathFind(vehicleID, ref data))
