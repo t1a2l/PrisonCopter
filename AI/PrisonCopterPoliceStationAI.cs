@@ -484,7 +484,7 @@ namespace PrisonHelicopter.AI
                     if (num8 - capacity3 > 0)
                     {
                         TransferManager.TransferOffer offer3 = default; // ask for guest prison helicopters
-                        offer3.Priority = (num8 - capacity4) * 8 / Mathf.Max(1, JailCapacity);
+                        offer3.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, JailCapacity);
                         offer3.Building = buildingID;
                         offer3.Position = buildingData.m_position;
                         offer3.Amount = 1;

@@ -125,13 +125,14 @@ namespace PrisonHelicopter.AI
 
         public override void StartTransfer(ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
         {
-            TransferManager.TransferReason transferReason = TransferManager.TransferReason.Crime;
-            if (material != TransferManager.TransferReason.None && (material == transferReason))
+            if (material != TransferManager.TransferReason.None && (material == TransferManager.TransferReason.Crime || material == ExtendedTransferManager.PrisonHelicopterCriminalPickup))
             {
+                var level = m_info.m_class.m_level;
                 if (material == ExtendedTransferManager.PrisonHelicopterCriminalPickup)
                 {
                     BuildingManager instance = Singleton<BuildingManager>.instance;
                     ref Building target_building = ref instance.m_buildings.m_buffer[offer.Building];
+                    level = ItemClass.Level.Level4;
                     // if no prison was found or helicopter depot has no prison helis enabled or offer building has already heli on the way, dont spawn prison helis
                     if (!FindPrison(data.m_position) || (data.m_flags & Building.Flags.Downgrading) == 0 || (target_building.m_flags & Building.Flags.Upgrading) != 0)
                     {
@@ -142,7 +143,7 @@ namespace PrisonHelicopter.AI
                 VehicleInfo vehicleInfo = GetSelectedVehicle(buildingID);
                 if (vehicleInfo == null)
                 {
-                    vehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, m_info.m_class.m_level, VehicleInfo.VehicleType.Helicopter);
+                    vehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, level, VehicleInfo.VehicleType.Helicopter);
                 }
                 if (vehicleInfo != null)
                 {

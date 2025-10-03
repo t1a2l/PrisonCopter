@@ -123,7 +123,7 @@ namespace PrisonHelicopter.AI
                 BuildingManager instance = Singleton<BuildingManager>.instance;
                 BuildingInfo info = instance.m_buildings.m_buffer[sourceBuilding].Info;
                 data.Unspawn(vehicleID);
-                Randomizer randomizer = new Randomizer(vehicleID);
+                Randomizer randomizer = new(vehicleID);
                 info.m_buildingAI.CalculateSpawnPosition(sourceBuilding, ref instance.m_buildings.m_buffer[sourceBuilding], ref randomizer, m_info, out var position, out var target);
                 Quaternion rotation = Quaternion.identity;
                 Vector3 forward = target - position;
@@ -171,6 +171,7 @@ namespace PrisonHelicopter.AI
                 data.m_transferType = (byte)ExtendedTransferManager.PrisonHelicopterCriminalMove;
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
                 TransferManager.TransferOffer offer = default;
+                offer.Priority = 7;
                 offer.Vehicle = vehicleID;
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
@@ -188,6 +189,7 @@ namespace PrisonHelicopter.AI
                 data.m_transferType = (byte)ExtendedTransferManager.PrisonHelicopterCriminalPickup;
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
                 TransferManager.TransferOffer offer = default;
+                offer.Priority = 7;
                 offer.Vehicle = vehicleID;
                 offer.Position = data.GetLastFramePosition();
                 offer.Amount = 1;
