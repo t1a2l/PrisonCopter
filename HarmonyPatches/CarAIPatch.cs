@@ -1,6 +1,5 @@
 using ColossalFramework;
 using HarmonyLib;
-using System;
 using System.Reflection;
 
 namespace PrisonHelicopter.HarmonyPatches
@@ -9,11 +8,11 @@ namespace PrisonHelicopter.HarmonyPatches
     public static class CarAIPatch
     {
         private delegate bool StartPathFindPoliceCarAIDelegate(PoliceCarAI __instance, ushort vehicleID, ref Vehicle vehicleData);
-        private static readonly StartPathFindPoliceCarAIDelegate StartPathFindPoliceCarAI = AccessTools.MethodDelegate<StartPathFindPoliceCarAIDelegate>(typeof(PoliceCarAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(ushort), typeof(Vehicle).MakeByRefType() }, new ParameterModifier[] { }), null, false);
+        private static readonly StartPathFindPoliceCarAIDelegate StartPathFindPoliceCarAI = AccessTools.MethodDelegate<StartPathFindPoliceCarAIDelegate>(typeof(PoliceCarAI).GetMethod("StartPathFind", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(ushort), typeof(Vehicle).MakeByRefType()], []), null, false);
 
         [HarmonyPatch(typeof(CarAI), "PathfindFailure")]
         [HarmonyPrefix]
-        public static bool PathfindFailure(CarAI __instance, ushort vehicleID, ref Vehicle data)
+        public static bool PathfindFailure(ushort vehicleID, ref Vehicle data)
         {
             Building police_building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[data.m_sourceBuilding];
             if (data.Info.GetAI() is PoliceCarAI pcinstance)

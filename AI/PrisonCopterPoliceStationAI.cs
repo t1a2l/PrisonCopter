@@ -199,7 +199,6 @@ namespace PrisonHelicopter.AI
             if (material == TransferManager.TransferReason.Crime || material == TransferManager.TransferReason.CriminalMove || material == ExtendedTransferManager.PoliceVanCriminalMove)
             {
                 ushort bnum = buildingID;
-                VehicleInfo vehicleInfo = null;
                 BuildingManager instance = Singleton<BuildingManager>.instance;
                 BuildingInfo police_building_info = instance.m_buildings.m_buffer[bnum].Info;
                 var vehicle_level = m_info.m_class.m_level;
@@ -209,11 +208,7 @@ namespace PrisonHelicopter.AI
                 {
                     vehicle_level = ItemClass.Level.Level4;
                 }
-                vehicleInfo = GetSelectedVehicle(buildingID);
-                if (vehicleInfo == null)
-                {
-                    vehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, vehicle_level, VehicleInfo.VehicleType.Car);
-                }
+                VehicleInfo vehicleInfo = GetSelectedVehicle(buildingID) ?? Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, vehicle_level, VehicleInfo.VehicleType.Car);
                 if (vehicleInfo != null)
                 {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;

@@ -15,7 +15,7 @@ namespace PrisonHelicopter.Utils
             {
                 parameters = parameters.Skip(1);
             }
-            return parameters.Select(p => p.ParameterType).ToArray();
+            return [.. parameters.Select(p => p.ParameterType)];
         }
 
         internal static MethodInfo DeclaredMethod<TDelegate>(Type type, string name, bool instance = false) where TDelegate : Delegate

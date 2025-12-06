@@ -139,12 +139,7 @@ namespace PrisonHelicopter.AI
                         return;
                     }
                 }
-
-                VehicleInfo vehicleInfo = GetSelectedVehicle(buildingID);
-                if (vehicleInfo == null)
-                {
-                    vehicleInfo = Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, level, VehicleInfo.VehicleType.Helicopter);
-                }
+                VehicleInfo vehicleInfo = GetSelectedVehicle(buildingID) ?? Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, level, VehicleInfo.VehicleType.Helicopter);
                 if (vehicleInfo != null)
                 {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
