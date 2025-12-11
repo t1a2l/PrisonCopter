@@ -152,19 +152,22 @@ namespace PrisonHelicopter.AI
             data.m_flags &= ~Vehicle.Flags.WaitingTarget;
             data.m_waitCounter = 0;
             BuildingManager instance = Singleton<BuildingManager>.instance;
-            ref Building building = ref instance.m_buildings.m_buffer[targetBuilding];
-            BuildingInfo building_info = building.Info;
             // big police station or prison check the building is not already being picked up from
-            if (targetBuilding != 0 && building_info.GetAI() is PrisonCopterPoliceStationAI && (building.m_flags & Building.Flags.Upgrading) == 0)
+            if (targetBuilding != 0)
             {
-                if (building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) != 0 && data.m_transferSize == 0)
+                ref Building building = ref instance.m_buildings.m_buffer[targetBuilding];
+                BuildingInfo building_info = building.Info;
+                if (building_info.GetAI() is PrisonCopterPoliceStationAI && (building.m_flags & Building.Flags.Upgrading) == 0)
                 {
-                    building.m_flags |= Building.Flags.Upgrading; // set the big police station as being picked up from
+                    if (building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) != 0 && data.m_transferSize == 0)
+                    {
+                        building.m_flags |= Building.Flags.Upgrading; // set the big police station as being picked up from
+                    }
+                    data.m_flags &= ~Vehicle.Flags.Landing;
+                    data.m_flags |= Vehicle.Flags.Emergency2;
+                    data.m_targetBuilding = targetBuilding;
+                    building.AddGuestVehicle(vehicleID, ref data); // add guest vehicle to this big police station or to prison
                 }
-                data.m_flags &= ~Vehicle.Flags.Landing;
-                data.m_flags |= Vehicle.Flags.Emergency2;
-                data.m_targetBuilding = targetBuilding;
-                building.AddGuestVehicle(vehicleID, ref data); // add guest vehicle to this big police station or to prison
             }
             else if (GetArrestedCitizen(ref data) != 0) // prison helicopter with prisoners onboard find a prison
             {
