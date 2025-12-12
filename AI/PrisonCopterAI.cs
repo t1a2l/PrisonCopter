@@ -95,6 +95,7 @@ namespace PrisonHelicopter.AI
                 building.m_flags &= ~Building.Flags.Upgrading;  // set the big police station as being avalible to being picked up from again
             }
             UnloadCriminals(ref data);
+            data.m_custom = 0;
             RemoveOffers(vehicleID, ref data);
             RemoveSource(vehicleID, ref data);
             RemoveTarget(vehicleID, ref data);
@@ -159,6 +160,11 @@ namespace PrisonHelicopter.AI
                 BuildingInfo building_info = building.Info;
                 if (building_info.GetAI() is PrisonCopterPoliceStationAI && (building.m_flags & Building.Flags.Upgrading) == 0)
                 {
+                    if (data.m_transferType == (byte)ExtendedTransferManager.PrisonHelicopterCriminalMove && data.m_custom != 0)
+                    {
+                        ArrestCriminals(vehicleID, ref data, data.m_custom);
+                        data.m_custom = 0;
+                    }
                     if (building_info.m_class.m_level < ItemClass.Level.Level4 && (building.m_flags & Building.Flags.Downgrading) != 0 && data.m_transferSize == 0)
                     {
                         building.m_flags |= Building.Flags.Upgrading; // set the big police station as being picked up from
@@ -169,10 +175,11 @@ namespace PrisonHelicopter.AI
                     building.AddGuestVehicle(vehicleID, ref data); // add guest vehicle to this big police station or to prison
                 }
             }
-            else if (GetArrestedCitizen(ref data) != 0) // prison helicopter with prisoners onboard find a prison
+            else if ((data.m_flags & Vehicle.Flags.Parking) != 0) // prison helicopter with prisoners onboard find a prison
             {
                 data.m_transferType = (byte)ExtendedTransferManager.PrisonHelicopterCriminalMove;
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
+                data.m_flags &= ~Vehicle.Flags.Parking;
                 TransferManager.TransferOffer offer = default;
                 offer.Priority = 7;
                 offer.Vehicle = vehicleID;
@@ -291,8 +298,9 @@ namespace PrisonHelicopter.AI
             if (building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity && FindPrison(building.m_position)) // big police station 
             {
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
-                ArrestCriminals(vehicleID, ref data, data.m_targetBuilding);
                 building.m_flags &= ~Building.Flags.Upgrading;  // set the big police station as being avalible to being picked up from again
+                data.m_custom = data.m_targetBuilding; // save the big police station id
+                data.m_flags |= Vehicle.Flags.Parking; // set the vehicle as waiting for a prison to find
                 SetTarget(vehicleID, ref data, 0); // find a prison to transfer to
             }
             else if (building.Info.m_class.m_level >= ItemClass.Level.Level4) // prison
