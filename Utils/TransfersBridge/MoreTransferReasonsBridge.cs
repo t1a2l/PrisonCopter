@@ -44,20 +44,38 @@ namespace PrisonHelicopter.Utils.TransfersBridge
                     ?? Assembly.Load("MoreTransferReasons");
 
                 if (asm == null)
+                {
+                    LogHelper.Warning("MoreTransferReasons assembly not found. MoreTransferReasonsBridge will be unavailable.");
                     return false;
+                }
 
                 _managerType = asm.GetType("MoreTransferReasons.ExtendedTransferManager");
                 if (_managerType == null)
+                {
+                    LogHelper.Warning("ExtendedTransferManager not found. MoreTransferReasonsBridge will be unavailable.");
                     return false;
+                }
 
                 _managerVehicleType = asm.GetType("MoreTransferReasons.ExtendedVehicleManager");
                 if (_managerVehicleType == null)
+                {
+                    LogHelper.Warning("ExtendedVehicleManager not found. MoreTransferReasonsBridge will be unavailable.");
                     return false;
+                }
 
                 _offerType = _managerType.GetNestedType("Offer", BindingFlags.Public | BindingFlags.NonPublic);
-                _reasonType = _managerType.GetNestedType("TransferReason", BindingFlags.Public | BindingFlags.NonPublic);
-                if (_offerType == null || _reasonType == null)
+                if (_offerType == null)
+                {
+                    LogHelper.Warning("Offer type not found. MoreTransferReasonsBridge will be unavailable.");
                     return false;
+                }
+
+                _reasonType = _managerType.GetNestedType("TransferReason", BindingFlags.Public | BindingFlags.NonPublic);
+                if (_reasonType == null)
+                {
+                    LogHelper.Warning("TransferReason type not found. MoreTransferReasonsBridge will be unavailable.");
+                    return false;
+                }
 
                 var instanceProp =
                     _managerType.GetProperty("instance", BindingFlags.Public | BindingFlags.Static) ??
@@ -66,7 +84,10 @@ namespace PrisonHelicopter.Utils.TransfersBridge
                 _managerInstance = instanceProp?.GetValue(null, null) ?? GetSingletonInstanceFallback(_managerType);
 
                 if (_managerInstance == null)
+                {
+                    LogHelper.Warning("Could not get instance of ExtendedTransferManager. MoreTransferReasonsBridge will be unavailable.");
                     return false;
+                }
 
                 _addOutgoingOffer = _managerType.GetMethod("AddOutgoingOffer", BindingFlags.Public | BindingFlags.Instance);
                 _addIncomingOffer = _managerType.GetMethod("AddIncomingOffer", BindingFlags.Public | BindingFlags.Instance);
@@ -84,7 +105,6 @@ namespace PrisonHelicopter.Utils.TransfersBridge
                 _offerPosition = _offerType.GetField("Position");
                 _offerPriority = _offerType.GetField("Priority");
                 _offerVehicle = _offerType.GetField("Vehicle");
-
 
                 Available =
                     _addOutgoingOffer != null &&
