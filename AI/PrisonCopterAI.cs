@@ -1,7 +1,7 @@
 using System;
 using ColossalFramework;
 using ColossalFramework.Math;
-using MoreTransferReasons;
+using PrisonHelicopter.Utils.TransfersBridge;
 using UnityEngine;
 
 namespace PrisonHelicopter.AI
@@ -160,7 +160,7 @@ namespace PrisonHelicopter.AI
                 BuildingInfo building_info = building.Info;
                 if (building_info.GetAI() is PrisonCopterPoliceStationAI && (building.m_flags & Building.Flags.Upgrading) == 0)
                 {
-                    if (data.m_transferType == (byte)ExtendedTransferManager.PrisonHelicopterCriminalMove && data.m_custom != 0)
+                    if (data.m_transferType == TransfersAPI.Backend.GetTransferType(PrisonHelicopterTransferReason.CrimeMove2) && data.m_custom != 0)
                     {
                         ArrestCriminals(vehicleID, ref data, data.m_custom);
                         data.m_custom = 0;
@@ -177,16 +177,20 @@ namespace PrisonHelicopter.AI
             }
             else if ((data.m_flags & Vehicle.Flags.Parking) != 0) // prison helicopter with prisoners onboard find a prison
             {
-                data.m_transferType = (byte)ExtendedTransferManager.PrisonHelicopterCriminalMove;
+                data.m_transferType = TransfersAPI.Backend.GetTransferType(PrisonHelicopterTransferReason.CrimeMove2);
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
                 data.m_flags &= ~Vehicle.Flags.Parking;
-                TransferManager.TransferOffer offer = default;
-                offer.Priority = 7;
-                offer.Vehicle = vehicleID;
-                offer.Position = data.GetLastFramePosition();
-                offer.Amount = 1;
-                offer.Active = true;
-                Singleton<TransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.PrisonHelicopterCriminalMove, offer);
+
+                var offer = new TransferOfferData
+                {
+                    Priority = 7,
+                    Vehicle = vehicleID,
+                    Position = data.GetLastFramePosition(),
+                    Amount = 1,
+                    Active = true
+                };
+
+                TransfersAPI.Backend.AddIncomingOffer(PrisonHelicopterTransferReason.CrimeMove2, offer);
                 data.m_flags |= Vehicle.Flags.WaitingTarget;
             }
             else if (ShouldReturnToSource(ref data)) // should go home
@@ -196,15 +200,19 @@ namespace PrisonHelicopter.AI
             }
             else // prison helicopter with no prisoners onboard find another big police station 
             {
-                data.m_transferType = (byte)ExtendedTransferManager.PrisonHelicopterCriminalPickup;
+                data.m_transferType = TransfersAPI.Backend.GetTransferType(PrisonHelicopterTransferReason.CrimePickup2);
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
-                TransferManager.TransferOffer offer = default;
-                offer.Priority = 7;
-                offer.Vehicle = vehicleID;
-                offer.Position = data.GetLastFramePosition();
-                offer.Amount = 1;
-                offer.Active = true;
-                Singleton<TransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.PrisonHelicopterCriminalPickup, offer);
+
+                var offer = new TransferOfferData
+                {
+                    Priority = 7,
+                    Vehicle = vehicleID,
+                    Position = data.GetLastFramePosition(),
+                    Amount = 1,
+                    Active = true
+                };
+
+                TransfersAPI.Backend.AddIncomingOffer(PrisonHelicopterTransferReason.CrimeMove2, offer);
                 data.m_flags |= Vehicle.Flags.WaitingTarget;
             }
             if (!StartPathFind(vehicleID, ref data))

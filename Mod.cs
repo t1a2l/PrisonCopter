@@ -7,10 +7,11 @@ using ICities;
 using PrisonHelicopter.AI;
 using PrisonHelicopter.HarmonyPatches;
 using PrisonHelicopter.Utils;
+using PrisonHelicopter.Utils.TransfersBridge;
 
 namespace PrisonHelicopter
 {
-    public class PrisonHelicopterMod : LoadingExtensionBase, IUserMod
+    public class Mod : LoadingExtensionBase, IUserMod
     {
 
         public static int PrisonersPercentage = 90;
@@ -18,6 +19,8 @@ namespace PrisonHelicopter
         string IUserMod.Name => "Prison Helicopter Mod";
 
         string IUserMod.Description => "Allow the police helicopter depot to spawn prison helicopters to transport prisoners to jail";
+
+        private static bool _setupDone;
 
         public void OnSettingsUI(UIHelperBase helper)
         {
@@ -42,6 +45,7 @@ namespace PrisonHelicopter
         {
             ModSettings.Load();
             HarmonyHelper.DoOnHarmonyReady(() => PatchUtil.PatchAll());
+            TransfersAPI.Setup();
         }
 
         public void OnDisabled()
@@ -61,11 +65,16 @@ namespace PrisonHelicopter
             {
                 return;
             }
+            if (_setupDone)
+                return;
 
+            TransfersAPI.Setup();
+            _setupDone = true;
         }
 
         public override void OnReleased()
         {
+            _setupDone = false;
             base.OnReleased();
             ItemClasses.Unregister();
             CityServiceWorldInfoPanelPatch.Reset();

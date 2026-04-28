@@ -26,9 +26,9 @@ namespace PrisonHelicopter.Utils
         [XmlElement("DropDown")]
         public int PriosnersPercentage
         {
-            get => PrisonHelicopterMod.PrisonersPercentage;
+            get => Mod.PrisonersPercentage;
 
-            set => PrisonHelicopterMod.PrisonersPercentage = value;
+            set => Mod.PrisonersPercentage = value;
         }
 
         /// <summary>

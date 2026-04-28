@@ -2,7 +2,7 @@ using ColossalFramework;
 using System;
 using UnityEngine;
 using ColossalFramework.DataBinding;
-using MoreTransferReasons;
+using PrisonHelicopter.Utils.TransfersBridge;
 
 namespace PrisonHelicopter.AI
 {
@@ -125,10 +125,10 @@ namespace PrisonHelicopter.AI
 
         public override void StartTransfer(ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
         {
-            if (material != TransferManager.TransferReason.None && (material == TransferManager.TransferReason.Crime || material == ExtendedTransferManager.PrisonHelicopterCriminalPickup))
+            if (material != TransferManager.TransferReason.None && (material == TransferManager.TransferReason.Crime || material == (TransferManager.TransferReason)TransfersAPI.Backend.GetTransferType(PrisonHelicopterTransferReason.CrimePickup2)))
             {
                 var level = m_info.m_class.m_level;
-                if (material == ExtendedTransferManager.PrisonHelicopterCriminalPickup)
+                if (material == (TransferManager.TransferReason)TransfersAPI.Backend.GetTransferType(PrisonHelicopterTransferReason.CrimePickup2))
                 {
                     BuildingManager instance = Singleton<BuildingManager>.instance;
                     ref Building target_building = ref instance.m_buildings.m_buffer[offer.Building];
@@ -161,7 +161,9 @@ namespace PrisonHelicopter.AI
             TransferManager.TransferOffer offer = default;
             offer.Building = buildingID;
             Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer);
-            Singleton<TransferManager>.instance.RemoveIncomingOffer(ExtendedTransferManager.PrisonHelicopterCriminalPickup, offer);
+            TransferOfferData offer2 = default;
+            offer2.Building = buildingID;
+            TransfersAPI.Backend.RemoveIncomingOffer(PrisonHelicopterTransferReason.CrimePickup2, offer2);
             base.BuildingDeactivated(buildingID, ref data);
         }
 
@@ -220,7 +222,7 @@ namespace PrisonHelicopter.AI
                 VehicleInfo info2 = instance.m_vehicles.m_buffer[num5].Info;
                 info2.m_vehicleAI.SetTarget(num5, ref instance.m_vehicles.m_buffer[num5], buildingID);
             }
-            if (m_prisonHelicopterCount < numVehicles && num3 - num4 > num2 && num5 != 0 && transferType == ExtendedTransferManager.PrisonHelicopterCriminalPickup)
+            if (m_prisonHelicopterCount < numVehicles && num3 - num4 > num2 && num5 != 0 && transferType == (TransferManager.TransferReason)TransfersAPI.Backend.GetTransferType(PrisonHelicopterTransferReason.CrimePickup2))
             {
                 VehicleInfo info3 = instance.m_vehicles.m_buffer[num5].Info;
                 info3.m_vehicleAI.SetTarget(num5, ref instance.m_vehicles.m_buffer[num5], buildingID);
@@ -245,7 +247,13 @@ namespace PrisonHelicopter.AI
                     Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.Crime, offer);
                     if ((buildingData.m_flags & Building.Flags.Downgrading) != 0)
                     {
-                        Singleton<TransferManager>.instance.AddIncomingOffer(ExtendedTransferManager.PrisonHelicopterCriminalPickup, offer);
+                        TransferOfferData offer2 = default;
+                        offer2.Priority = 6;
+                        offer2.Building = buildingID;
+                        offer2.Position = buildingData.m_position;
+                        offer2.Amount = Mathf.Min(2, num8);
+                        offer2.Active = true;
+                        TransfersAPI.Backend.AddIncomingOffer(PrisonHelicopterTransferReason.CrimePickup2, offer2);
                     }
                 }
             }
@@ -293,7 +301,7 @@ namespace PrisonHelicopter.AI
             string text = "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
             if((data.m_flags & Building.Flags.Downgrading) != 0)
             {
-                CalculateOwnVehicles(buildingID, ref data, ExtendedTransferManager.PrisonHelicopterCriminalPickup, ref count1, ref cargo1, ref capacity1, ref outside1);
+                TransfersAPI.Backend.CalculateOwnVehicles(buildingID, ref data, PrisonHelicopterTransferReason.CrimePickup2, ref count1, ref cargo1, ref capacity1, ref outside1);
                 text += Environment.NewLine;
                 text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
             }
