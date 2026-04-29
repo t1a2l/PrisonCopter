@@ -8,6 +8,8 @@ namespace PrisonHelicopter.Utils.TransfersBridge
         public int Amount;
         public ushort Building;
         public uint Citizen;
+        public byte m_isLocalPark;
+        public InstanceID m_object;
         public Vector3 Position;
         public int Priority;
         public ushort Vehicle;

@@ -42,9 +42,9 @@ namespace PrisonHelicopter.Utils.TransfersBridge
         {
             return reason switch
             {
-                PrisonHelicopterTransferReason.PoliceVanCrimeMove => 15,
-                PrisonHelicopterTransferReason.CrimePickup2 => 17,
-                PrisonHelicopterTransferReason.CrimeMove2 => 19,
+                PrisonHelicopterTransferReason.PoliceVanCrimeMove => 7,
+                PrisonHelicopterTransferReason.CrimePickup2 => 8,
+                PrisonHelicopterTransferReason.CrimeMove2 => 9,
                 _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null),
             };
         }

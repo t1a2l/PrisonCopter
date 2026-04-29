@@ -82,6 +82,8 @@ namespace PrisonHelicopter.Utils.TransfersBridge
                 Amount = src.Amount,
                 Building = src.Building, 
                 Citizen = src.Citizen,
+                m_isLocalPark = src.m_isLocalPark,
+                m_object = src.m_object,
                 Position = src.Position,
                 Priority = src.Priority,
                 Vehicle = src.Vehicle
