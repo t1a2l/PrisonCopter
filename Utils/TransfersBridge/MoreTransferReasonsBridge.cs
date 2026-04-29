@@ -77,15 +77,11 @@ namespace PrisonHelicopter.Utils.TransfersBridge
                     return false;
                 }
 
-                var instanceProp =
-                    _managerType.GetProperty("instance", BindingFlags.Public | BindingFlags.Static) ??
-                    _managerType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
-
-                _managerInstance = instanceProp?.GetValue(null, null) ?? GetSingletonInstanceFallback(_managerType);
+                _managerInstance = GetManagerInstance(_managerType);
 
                 if (_managerInstance == null)
                 {
-                    LogHelper.Warning("Could not get instance of ExtendedTransferManager. MoreTransferReasonsBridge will be unavailable.");
+                    LogHelper.Warning("Could not get Singleton<ExtendedTransferManager>.instance. MoreTransferReasonsBridge will be unavailable.");
                     return false;
                 }
 
@@ -258,13 +254,22 @@ namespace PrisonHelicopter.Utils.TransfersBridge
             return boxed;
         }
 
-        private static object GetSingletonInstanceFallback(Type type)
+        private static object GetManagerInstance(Type managerType)
         {
-            var field =
-                type.GetField("instance", BindingFlags.Public | BindingFlags.Static) ??
-                type.GetField("Instance", BindingFlags.Public | BindingFlags.Static);
+            Type singletonType = typeof(Singleton<>).MakeGenericType(managerType);
 
-            return field?.GetValue(null);
+            PropertyInfo instanceProp =
+                singletonType.GetProperty("instance", BindingFlags.Public | BindingFlags.Static) ??
+                singletonType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
+
+            if (instanceProp != null)
+                return instanceProp.GetValue(null, null);
+
+            FieldInfo instanceField =
+                singletonType.GetField("instance", BindingFlags.Public | BindingFlags.Static) ??
+                singletonType.GetField("Instance", BindingFlags.Public | BindingFlags.Static);
+
+            return instanceField?.GetValue(null);
         }
 
         private static bool TryExtendedStartTransferVehicle(object reflectedReason, object reflectedOutgoingOffer, object reflectedIncomingOffer, TransferOfferData outgoingOffer, TransferOfferData incomingOffer, int delta)
