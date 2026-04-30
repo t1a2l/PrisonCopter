@@ -4,6 +4,7 @@ using System.Reflection;
 using ColossalFramework;
 using ColossalFramework.Math;
 using UnityEngine;
+using static TransferManager;
 
 namespace PrisonHelicopter.Utils.TransfersBridge
 {
@@ -22,6 +23,9 @@ namespace PrisonHelicopter.Utils.TransfersBridge
         private static MethodInfo _addIncomingOffer;
         private static MethodInfo _removeOutgoingOffer;
         private static MethodInfo _removeIncomingOffer;
+
+        public static MethodInfo _startTransfer;
+        public static MethodInfo _startDistrictTransfer;
 
         private static MethodInfo _calculateOwnVehicles;
         private static MethodInfo _calculateGuestVehicles;
@@ -89,6 +93,8 @@ namespace PrisonHelicopter.Utils.TransfersBridge
                 _addIncomingOffer = _managerType.GetMethod("AddIncomingOffer", BindingFlags.Public | BindingFlags.Instance);
                 _removeOutgoingOffer = _managerType.GetMethod("RemoveOutgoingOffer", BindingFlags.Public | BindingFlags.Instance);
                 _removeIncomingOffer = _managerType.GetMethod("RemoveIncomingOffer", BindingFlags.Public | BindingFlags.Instance);
+                _startTransfer = _managerType.GetMethod("StartTransfer", BindingFlags.NonPublic | BindingFlags.Instance);
+                _startDistrictTransfer = _managerType.GetMethod("StartDistrictTransfer", BindingFlags.NonPublic | BindingFlags.Instance);
 
                 _calculateOwnVehicles = _managerVehicleType.GetMethod("CalculateOwnVehicles", BindingFlags.Public | BindingFlags.Static);
                 _calculateGuestVehicles = _managerVehicleType.GetMethod("CalculateGuestVehicles", BindingFlags.Public | BindingFlags.Static);
@@ -107,6 +113,8 @@ namespace PrisonHelicopter.Utils.TransfersBridge
                     _addIncomingOffer != null &&
                     _removeOutgoingOffer != null &&
                     _removeIncomingOffer != null &&
+                    _startTransfer != null &&
+                    _startDistrictTransfer != null &&
                     _calculateOwnVehicles != null &&
                     _calculateGuestVehicles != null &&
                     _createVehicle != null &&
@@ -206,41 +214,6 @@ namespace PrisonHelicopter.Utils.TransfersBridge
             return result is bool b && b;
         }
 
-        public static bool TryExtendedStartTransfer(PrisonHelicopterTransferReason material, TransferOfferData outgoingOffer, TransferOfferData incomingOffer, int delta)
-        {
-            if (!Available)
-                return false;
-
-            try
-            {
-                byte mappedReason = material switch
-                {
-                    PrisonHelicopterTransferReason.PoliceVanCrimeMove => 58,
-                    PrisonHelicopterTransferReason.CrimePickup2 => 59,
-                    PrisonHelicopterTransferReason.CrimeMove2 => 60,
-                    _ => throw new ArgumentOutOfRangeException(nameof(material), material, null)
-                };
-
-                object reflectedReason = Enum.ToObject(_reasonType, mappedReason);
-                object reflectedOutgoingOffer = BuildOffer(outgoingOffer);
-                object reflectedIncomingOffer = BuildOffer(incomingOffer);
-
-                if (TryExtendedStartTransferVehicle(reflectedReason, reflectedOutgoingOffer, reflectedIncomingOffer, outgoingOffer, incomingOffer, delta))
-                    return true;
-
-                if (TryExtendedStartTransferBuilding(reflectedReason, reflectedOutgoingOffer, reflectedIncomingOffer, outgoingOffer, incomingOffer, delta))
-                    return true;
-
-                return false;
-            }
-            catch (Exception e)
-            {
-                LogHelper.Error($"TryExtendedStartTransfer failed: {e}");
-                return false;
-            }
-        }
-
-
         private static object BuildOffer(TransferOfferData src)
         {
             object boxed = Activator.CreateInstance(_offerType);
@@ -270,94 +243,6 @@ namespace PrisonHelicopter.Utils.TransfersBridge
                 singletonType.GetField("Instance", BindingFlags.Public | BindingFlags.Static);
 
             return instanceField?.GetValue(null);
-        }
-
-        private static bool TryExtendedStartTransferVehicle(object reflectedReason, object reflectedOutgoingOffer, object reflectedIncomingOffer, TransferOfferData outgoingOffer, TransferOfferData incomingOffer, int delta)
-        {
-            Type interfaceType = _managerType.Assembly.GetType("MoreTransferReasons.IExtendedVehicleAI");
-            if (interfaceType == null)
-                return false;
-
-            VehicleManager vehicleManager = Singleton<VehicleManager>.instance;
-            Array16<Vehicle> vehicles = vehicleManager.m_vehicles;
-
-            if (incomingOffer.Active && incomingOffer.Vehicle != 0)
-            {
-                ushort vehicle = incomingOffer.Vehicle;
-                VehicleInfo info = vehicles.m_buffer[vehicle].Info;
-                object ai = info?.m_vehicleAI;
-
-                if (ai != null && interfaceType.IsAssignableFrom(ai.GetType()))
-                {
-                    MethodInfo method = interfaceType.GetMethod("ExtendedStartTransfer");
-                    object[] args = [vehicle, vehicles.m_buffer[vehicle], reflectedReason, reflectedOutgoingOffer];
-                    method.Invoke(ai, args);
-                    vehicles.m_buffer[vehicle] = (Vehicle)args[1];
-                    return true;
-                }
-            }
-
-            if (outgoingOffer.Active && outgoingOffer.Vehicle != 0)
-            {
-                ushort vehicle = outgoingOffer.Vehicle;
-                VehicleInfo info = vehicles.m_buffer[vehicle].Info;
-                object ai = info?.m_vehicleAI;
-
-                if (ai != null && interfaceType.IsAssignableFrom(ai.GetType()))
-                {
-                    MethodInfo method = interfaceType.GetMethod("ExtendedStartTransfer");
-                    object[] args = [vehicle, vehicles.m_buffer[vehicle], reflectedReason, reflectedIncomingOffer];
-                    method.Invoke(ai, args);
-                    vehicles.m_buffer[vehicle] = (Vehicle)args[1];
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool TryExtendedStartTransferBuilding(object reflectedReason, object reflectedOutgoingOffer, object reflectedIncomingOffer, TransferOfferData outgoingOffer, TransferOfferData incomingOffer, int delta)
-        {
-            Type interfaceType = _managerType.Assembly.GetType("MoreTransferReasons.IExtendedBuildingAI");
-            if (interfaceType == null)
-                return false;
-
-            BuildingManager buildingManager = Singleton<BuildingManager>.instance;
-            Array16<Building> buildings = buildingManager.m_buildings;
-
-            if (outgoingOffer.Active && outgoingOffer.Building != 0)
-            {
-                ushort building = outgoingOffer.Building;
-                BuildingInfo info = buildings.m_buffer[building].Info;
-                object ai = info?.m_buildingAI;
-
-                if (ai != null && interfaceType.IsAssignableFrom(ai.GetType()))
-                {
-                    MethodInfo method = interfaceType.GetMethod("ExtendedStartTransfer");
-                    object[] args = [building, buildings.m_buffer[building], reflectedReason, reflectedIncomingOffer];
-                    method.Invoke(ai, args);
-                    buildings.m_buffer[building] = (Building)args[1];
-                    return true;
-                }
-            }
-
-            if (incomingOffer.Active && incomingOffer.Building != 0)
-            {
-                ushort building = incomingOffer.Building;
-                BuildingInfo info = buildings.m_buffer[building].Info;
-                object ai = info?.m_buildingAI;
-
-                if (ai != null && interfaceType.IsAssignableFrom(ai.GetType()))
-                {
-                    MethodInfo method = interfaceType.GetMethod("ExtendedStartTransfer");
-                    object[] args = [building, buildings.m_buffer[building], reflectedReason, reflectedOutgoingOffer];
-                    method.Invoke(ai, args);
-                    buildings.m_buffer[building] = (Building)args[1];
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }
