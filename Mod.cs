@@ -45,7 +45,6 @@ namespace PrisonHelicopter
         {
             ModSettings.Load();
             HarmonyHelper.DoOnHarmonyReady(() => PatchUtil.PatchAll());
-            TransfersAPI.Setup();
         }
 
         public void OnDisabled()
