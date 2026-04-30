@@ -1,5 +1,6 @@
 using System;
 using ColossalFramework.Math;
+using PrisonHelicopter.HarmonyPatches;
 using UnityEngine;
 
 namespace PrisonHelicopter.Utils.TransfersBridge
@@ -18,6 +19,7 @@ namespace PrisonHelicopter.Utils.TransfersBridge
             {
                 Backend = backend;
                 LogHelper.Information($"Transfers backend: {Backend.Name}");
+                ExtendedTransferManagerPatch.TryPatch();
                 return;
             }
 
