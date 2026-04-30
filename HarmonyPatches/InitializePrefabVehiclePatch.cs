@@ -2,8 +2,6 @@ using System;
 using HarmonyLib;
 using PrisonHelicopter.AI;
 using PrisonHelicopter.Utils;
-using UnityEngine;
-
 namespace PrisonHelicopter.HarmonyPatches
 {
     [HarmonyPatch]
@@ -25,7 +23,7 @@ namespace PrisonHelicopter.HarmonyPatches
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                LogHelper.Error("Error initializing prefab vehicle AI.", e);
             }
 
             return true;

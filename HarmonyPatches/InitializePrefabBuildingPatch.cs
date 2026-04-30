@@ -2,7 +2,6 @@ using System;
 using HarmonyLib;
 using PrisonHelicopter.AI;
 using PrisonHelicopter.Utils;
-using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace PrisonHelicopter.HarmonyPatches
@@ -54,7 +53,7 @@ namespace PrisonHelicopter.HarmonyPatches
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                LogHelper.Error("Error initializing prefab building AI.", e);
             }
         }
     }

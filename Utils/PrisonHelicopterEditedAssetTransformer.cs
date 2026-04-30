@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace PrisonHelicopter.Utils
 {
     public static class PrisonHelicopterEditedAssetTransformer
@@ -9,7 +7,7 @@ namespace PrisonHelicopter.Utils
             var vehicleInfo = ToolsModifierControl.toolController?.m_editPrefabInfo as VehicleInfo;
             if (vehicleInfo?.m_vehicleType != VehicleInfo.VehicleType.Helicopter)
             {
-                Debug.LogWarning("Current asset is not a vehicle or is not a Helicopter");
+                LogHelper.Warning("Current asset is not a vehicle or is not a Helicopter");
                 return;
             }
             vehicleInfo.m_requiredExpansion |= SteamHelper.ExpansionBitMask.AfterDark;

@@ -35,8 +35,7 @@ namespace PrisonHelicopter.Utils
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to detect if mod with name containing {modNamePart} is active");
-                Debug.LogException(e);
+                LogHelper.Error($"Failed to detect if mod with name containing {modNamePart} is active ", e);
                 return false;
             }
         }
@@ -54,8 +53,7 @@ namespace PrisonHelicopter.Utils
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to detect if mod {modId} is active");
-                Debug.LogException(e);
+                LogHelper.Error($"Failed to detect if mod {modId} is active ", e);
                 return false;
             }
         }
@@ -67,7 +65,7 @@ namespace PrisonHelicopter.Utils
         /// <param name="dataVersion">Data version.</param>
         internal static void Deserialize(int dataVersion)
         {
-            Debug.Log("deserializing save data");
+            LogHelper.Information("Deserializing save data");
 
             if (dataVersion <= 1)
             {

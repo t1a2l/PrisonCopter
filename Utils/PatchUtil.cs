@@ -5,7 +5,7 @@ namespace PrisonHelicopter.Utils
 {
     public static class PatchUtil
     {
-        private const string HarmonyId = "t1a2l.PrisonCopter";
+        public const string HarmonyId = "t1a2l.PrisonCopter";
 
         private static bool patched = false;
 
@@ -13,7 +13,7 @@ namespace PrisonHelicopter.Utils
         {
             if (patched) return;
 
-            UnityEngine.Debug.Log("Prison Helicopter: Patching...");
+            LogHelper.Information("Prison Helicopter: Patching...");
 
             patched = true;
 
@@ -32,7 +32,7 @@ namespace PrisonHelicopter.Utils
 
             patched = false;
 
-            UnityEngine.Debug.Log("Prison Helicopter: Reverted...");
+            LogHelper.Information("Prison Helicopter: Reverted...");
         }
     }
 
@@ -42,7 +42,7 @@ namespace PrisonHelicopter.Utils
     {
         public static void Prefix()
         {
-            UnityEngine.Debug.Log("CreateRelay Prefix");
+            LogHelper.Information("CreateRelay Prefix");
         }
     }
 
@@ -52,7 +52,7 @@ namespace PrisonHelicopter.Utils
     {
         public static void Prefix()
         {
-            UnityEngine.Debug.Log("MetaDataLoaded Prefix");
+            LogHelper.Information("MetaDataLoaded Prefix");
         }
     }
 }
