@@ -52,6 +52,8 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.tooltip = "Enable this to allow prison helicopters to also spawn";
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
                 _checkBox.relativePosition = new Vector3(160, 275);
+                _checkBox.label.width = 200;
+                _checkBox.width = 200;
             }
             else if (policeStation)
             {
@@ -69,6 +71,8 @@ namespace PrisonHelicopter.HarmonyPatches
                 UpdateCheckedState(building_id);
                 _checkBox.text = "Allow Prison Helicopters & Police Vans";
                 _checkBox.tooltip = "Enable this if you want prison helicopters to land and have a police vans fleet to pick up criminals from other stations";
+                _checkBox.label.width = 300;
+                _checkBox.width = 300;
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
 
             }
