@@ -214,10 +214,21 @@ namespace PrisonHelicopter.AI
                 if (vehicleInfo != null)
                 {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
-                    if (Singleton<VehicleManager>.instance.CreateVehicle(out ushort num, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, data.m_position, material, true, false))
+                    if (vehicle_level == ItemClass.Level.Level4)
                     {
-                        vehicleInfo.m_vehicleAI.SetSource(num, ref vehicles.m_buffer[num], bnum);
-                        vehicleInfo.m_vehicleAI.StartTransfer(num, ref vehicles.m_buffer[num], material, offer);
+                        if (TransfersAPI.Backend.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, data.m_position, PrisonHelicopterTransferReason.PoliceVanCrimeMove, transferToSource: true, transferToTarget: false))
+                        {
+                            vehicleInfo.m_vehicleAI.SetSource(vehicle, ref vehicles.m_buffer[vehicle], buildingID);
+                            vehicleInfo.m_vehicleAI.StartTransfer(vehicle, ref vehicles.m_buffer[vehicle], material, offer);
+                        }
+                    }
+                    else
+                    {
+                        if (Singleton<VehicleManager>.instance.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, data.m_position, material, transferToSource: true, transferToTarget: false))
+                        {
+                            vehicleInfo.m_vehicleAI.SetSource(vehicle, ref vehicles.m_buffer[vehicle], buildingID);
+                            vehicleInfo.m_vehicleAI.StartTransfer(vehicle, ref vehicles.m_buffer[vehicle], material, offer);
+                        }
                     }
                 }
             }
