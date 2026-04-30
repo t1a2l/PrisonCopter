@@ -4,7 +4,6 @@ using System.Reflection;
 using ColossalFramework;
 using ColossalFramework.Math;
 using UnityEngine;
-using static TransferManager;
 
 namespace PrisonHelicopter.Utils.TransfersBridge
 {
@@ -125,7 +124,7 @@ namespace PrisonHelicopter.Utils.TransfersBridge
             }
             catch (Exception e)
             {
-                LogHelper.Error($"Failed to setup MoreTransferReasons bridge: {e}");
+                LogHelper.Information($"Failed to setup MoreTransferReasons bridge: {e}");
                 Available = false;
                 return false;
             }
