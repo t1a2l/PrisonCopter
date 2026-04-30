@@ -303,7 +303,7 @@ namespace PrisonHelicopter.AI
             BuildingManager instance = Singleton<BuildingManager>.instance;
             ref Building building = ref instance.m_buildings.m_buffer[data.m_targetBuilding];
             data.m_flags |= Vehicle.Flags.Stopped;
-            if (building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity && FindPrison(building.m_position)) // big police station 
+            if (building.Info.m_class.m_level < ItemClass.Level.Level4 && data.m_transferSize < m_criminalCapacity && FindPrison(building.m_position) && building.Info.GetAI() is not PoliceHelicopterDepotAI) // big police station 
             {
                 data.m_flags &= ~Vehicle.Flags.Emergency2;
                 building.m_flags &= ~Building.Flags.Upgrading;  // set the big police station as being avalible to being picked up from again
