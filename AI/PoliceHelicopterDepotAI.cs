@@ -302,19 +302,24 @@ namespace PrisonHelicopter.AI
             int num1 = (productionRate * m_prisonHelicopterCount + 99) / 100;
             int count = 0;
             int count1 = 0;
+            int count2 = 0;
             int cargo = 0;
             int cargo1 = 0;
+            int cargo2 = 0;
             int capacity = 0;
             int capacity1 = 0;
+            int capacity2 = 0;
             int outside = 0;
             int outside1 = 0;
+            int outside2 = 0;
             CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
             string text = "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
             if((data.m_flags & Building.Flags.Downgrading) != 0)
             {
                 TransfersAPI.Backend.CalculateOwnVehicles(buildingID, ref data, PrisonHelicopterTransferReason.CrimePickup2, ref count1, ref cargo1, ref capacity1, ref outside1);
+                TransfersAPI.Backend.CalculateOwnVehicles(buildingID, ref data, PrisonHelicopterTransferReason.CrimeMove2, ref count2, ref cargo2, ref capacity2, ref outside2);
                 text += Environment.NewLine;
-                text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1, num1);
+                text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1 + count2, num1);
             }
             return text;
         }
