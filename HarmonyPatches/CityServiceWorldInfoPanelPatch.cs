@@ -52,11 +52,11 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.width = 200;
                 if (Mod.IsVehicleSelectorModEnabled)
                 {
-                    _checkBox.relativePosition = new Vector3(120, 275);
+                    _checkBox.relativePosition = new Vector3(160, 275);
                 }
                 else
                 {
-                    _checkBox.relativePosition = new Vector3(160, 275);
+                    _checkBox.relativePosition = new Vector3(120, 275);
                 }
             }
             else if (policeStation)
@@ -78,11 +78,11 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
                 if (Mod.IsVehicleSelectorModEnabled)
                 {
-                    _checkBox.relativePosition = new Vector3(120, 275);
+                    _checkBox.relativePosition = new Vector3(160, 275);
                 }
                 else
                 {
-                    _checkBox.relativePosition = new Vector3(160, 275);
+                    _checkBox.relativePosition = new Vector3(120, 275);
                 }
             }
             else
