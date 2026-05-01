@@ -3,34 +3,17 @@ using System;
 using UnityEngine;
 using ColossalFramework.DataBinding;
 using PrisonHelicopter.Utils.TransfersBridge;
+using System.Reflection;
 
 namespace PrisonHelicopter.AI
 {
-    public class PoliceHelicopterDepotAI : PlayerBuildingAI
+    public class PoliceHelicopterDepotAI : HelicopterDepotAI
     {
-        [CustomizableProperty("Uneducated Workers", "Workers", 0)]
-        public int m_workPlaceCount0 = 3;
-
-        [CustomizableProperty("Educated Workers", "Workers", 1)]
-        public int m_workPlaceCount1 = 18;
-
-        [CustomizableProperty("Well Educated Workers", "Workers", 2)]
-        public int m_workPlaceCount2 = 21;
-
-        [CustomizableProperty("Highly Educated Workers", "Workers", 3)]
-        public int m_workPlaceCount3 = 18;
-
         [CustomizableProperty("Police Helicopter Count")]
         public int m_policeHelicopterCount = 10;
 
         [CustomizableProperty("Prison Helicopter Count")]
         public int m_prisonHelicopterCount = 10;
-
-        [CustomizableProperty("Noise Accumulation")]
-        public int m_noiseAccumulation = 100;
-
-        [CustomizableProperty("Noise Radius")]
-        public float m_noiseRadius = 100f;
 
         public override ImmaterialResourceManager.ResourceData[] GetImmaterialResourceRadius(ushort buildingID, ref Building data)
         {
@@ -123,9 +106,21 @@ namespace PrisonHelicopter.AI
             base.SimulationStep(buildingID, ref buildingData, ref frameData);
         }
 
+        private TransferManager.TransferReason GetTransferReason1Impl()
+        {
+            // Invoke private (why would you make this private!) parent function 
+            MethodInfo infoGetTransferReason1 = typeof(HelicopterDepotAI).GetMethod("GetTransferReason1", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (infoGetTransferReason1 != null)
+            {
+                return (TransferManager.TransferReason)infoGetTransferReason1.Invoke(this, null);
+            }
+
+            return TransferManager.TransferReason.Crime;
+        }
+
         public override void StartTransfer(ushort buildingID, ref Building data, TransferManager.TransferReason material, TransferManager.TransferOffer offer)
         {
-            if (material != TransferManager.TransferReason.None && (material == TransferManager.TransferReason.Crime || material == (TransferManager.TransferReason)TransfersAPI.Backend.GetTransferType(PrisonHelicopterTransferReason.CrimePickup2)))
+            if (material != TransferManager.TransferReason.None && (material == GetTransferReason1Impl() || material == (TransferManager.TransferReason)TransfersAPI.Backend.GetTransferType(PrisonHelicopterTransferReason.CrimePickup2)))
             {
                 var level = m_info.m_class.m_level;
                 if (material == (TransferManager.TransferReason)TransfersAPI.Backend.GetTransferType(PrisonHelicopterTransferReason.CrimePickup2))
@@ -139,11 +134,12 @@ namespace PrisonHelicopter.AI
                         return;
                     }
                 }
+
                 VehicleInfo vehicleInfo = GetSelectedVehicle(buildingID) ?? Singleton<VehicleManager>.instance.GetRandomVehicleInfo(ref Singleton<SimulationManager>.instance.m_randomizer, m_info.m_class.m_service, m_info.m_class.m_subService, level, VehicleInfo.VehicleType.Helicopter);
                 if (vehicleInfo != null)
                 {
                     Array16<Vehicle> vehicles = Singleton<VehicleManager>.instance.m_vehicles;
-                    if(level == ItemClass.Level.Level4)
+                    if (level == ItemClass.Level.Level4)
                     {
                         if (TransfersAPI.Backend.CreateVehicle(out var vehicle, ref Singleton<SimulationManager>.instance.m_randomizer, vehicleInfo, data.m_position, PrisonHelicopterTransferReason.CrimePickup2, transferToSource: true, transferToTarget: false))
                         {
@@ -171,10 +167,12 @@ namespace PrisonHelicopter.AI
         {
             TransferManager.TransferOffer offer = default;
             offer.Building = buildingID;
-            Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer);
+            Singleton<TransferManager>.instance.RemoveIncomingOffer(GetTransferReason1Impl(), offer);
+
             TransferOfferData offer2 = default;
             offer2.Building = buildingID;
             TransfersAPI.Backend.RemoveIncomingOffer(PrisonHelicopterTransferReason.CrimePickup2, offer2);
+
             base.BuildingDeactivated(buildingID, ref data);
         }
 
@@ -228,7 +226,7 @@ namespace PrisonHelicopter.AI
                 }
             }
             TransferManager.TransferReason transferType = (TransferManager.TransferReason)instance.m_vehicles.m_buffer[num6].m_transferType;
-            if (m_policeHelicopterCount < numVehicles && num3 - num4 > num2 && num5 != 0 && transferType == TransferManager.TransferReason.Crime)
+            if (m_policeHelicopterCount < numVehicles && num3 - num4 > num2 && num5 != 0 && transferType == GetTransferReason1Impl())
             {
                 VehicleInfo info2 = instance.m_vehicles.m_buffer[num5].Info;
                 info2.m_vehicleAI.SetTarget(num5, ref instance.m_vehicles.m_buffer[num5], buildingID);
@@ -255,7 +253,8 @@ namespace PrisonHelicopter.AI
                     offer.Position = buildingData.m_position;
                     offer.Amount = Mathf.Min(2, num8);
                     offer.Active = true;
-                    Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.Crime, offer);
+                    Singleton<TransferManager>.instance.AddIncomingOffer(GetTransferReason1Impl(), offer);
+
                     if ((buildingData.m_flags & Building.Flags.Downgrading) != 0)
                     {
                         TransferOfferData offer2 = default;
@@ -288,9 +287,9 @@ namespace PrisonHelicopter.AI
         public override string GetLocalizedTooltip()
         {
             string text = LocaleFormatter.FormatGeneric("AIINFO_WATER_CONSUMPTION", GetWaterConsumption() * 16) + Environment.NewLine + LocaleFormatter.FormatGeneric("AIINFO_ELECTRICITY_CONSUMPTION", GetElectricityConsumption() * 16);
-            string text2 = "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTER_CAPACITY", m_policeHelicopterCount);
+            string text2 = "Police " + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTER_CAPACITY", m_policeHelicopterCount);
             text2 += Environment.NewLine;
-            text2 += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTER_CAPACITY", m_prisonHelicopterCount);
+            text2 += "Prison " + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTER_CAPACITY", m_prisonHelicopterCount);
             return TooltipHelper.Append(base.GetLocalizedTooltip(), TooltipHelper.Format(LocaleFormatter.Info1, text, LocaleFormatter.Info2, text2));
         }
 
@@ -312,34 +311,24 @@ namespace PrisonHelicopter.AI
             int outside = 0;
             int outside1 = 0;
             int outside2 = 0;
-            CalculateOwnVehicles(buildingID, ref data, TransferManager.TransferReason.Crime, ref count, ref cargo, ref capacity, ref outside);
-            string text = "Police "  + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
-            if((data.m_flags & Building.Flags.Downgrading) != 0)
+            CalculateOwnVehicles(buildingID, ref data, GetTransferReason1Impl(), ref count, ref cargo, ref capacity, ref outside);
+
+            string text = "Police " + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count, num);
+            if ((data.m_flags & Building.Flags.Downgrading) != 0)
             {
                 TransfersAPI.Backend.CalculateOwnVehicles(buildingID, ref data, PrisonHelicopterTransferReason.CrimePickup2, ref count1, ref cargo1, ref capacity1, ref outside1);
                 TransfersAPI.Backend.CalculateOwnVehicles(buildingID, ref data, PrisonHelicopterTransferReason.CrimeMove2, ref count2, ref cargo2, ref capacity2, ref outside2);
                 text += Environment.NewLine;
-                text += "Prison " +  LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1 + count2, num1);
+                text += "Prison " + LocaleFormatter.FormatGeneric("AIINFO_HELICOPTERS", count1 + count2, num1);
             }
             return text;
         }
 
-        public override void GetPollutionAccumulation(out int ground, out int noise)
-        {
-            ground = 0;
-            noise = m_noiseAccumulation;
-        }
-
-        public override bool RequireRoadAccess()
-        {
-            return true;
-        }
-
         public override void SetEmptying(ushort buildingID, ref Building data, bool emptying)
         {
-            if(data.Info.GetAI() is PoliceHelicopterDepotAI && data.Info.m_class.m_service == ItemClass.Service.PoliceDepartment)
+            if (data.Info.GetAI() is PoliceHelicopterDepotAI && data.Info.m_class.m_service == ItemClass.Service.PoliceDepartment)
             {
-               data.m_flags = data.m_flags.SetFlags(Building.Flags.Downgrading, emptying);
+                data.m_flags = data.m_flags.SetFlags(Building.Flags.Downgrading, emptying);
             }
         }
 
