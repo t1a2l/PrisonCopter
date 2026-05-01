@@ -16,11 +16,13 @@ namespace PrisonHelicopter.Utils.TransfersBridge
 
         public void AddOutgoingOffer(PrisonHelicopterTransferReason material, TransferOfferData offer)
         {
+            LogHelper.Information($"AddOutgoingOffer: {material}");
             Singleton<TransferManager>.instance.AddOutgoingOffer((TransferManager.TransferReason)MapReason(material), ToVanillaOffer(offer));
         }
 
         public void AddIncomingOffer(PrisonHelicopterTransferReason material, TransferOfferData offer)
         {
+            LogHelper.Information($"AddIncomingOffer: {material}");
             Singleton<TransferManager>.instance.AddIncomingOffer((TransferManager.TransferReason)MapReason(material), ToVanillaOffer(offer));
         }
 
@@ -36,7 +38,7 @@ namespace PrisonHelicopter.Utils.TransfersBridge
 
         public void CalculateOwnVehicles(ushort buildingID, ref Building data, PrisonHelicopterTransferReason material, ref int count, ref int cargo, ref int capacity, ref int outside)
         {
-            if(data.Info.GetAI() is PoliceHelicopterDepotAI policeHelicopterDepotAI)
+            if (data.Info.GetAI() is PoliceHelicopterDepotAI policeHelicopterDepotAI)
             {
                 policeHelicopterDepotAI.CalculateOwnVehicles(buildingID, ref data, (TransferManager.TransferReason)MapReason(material), ref count, ref cargo, ref capacity, ref outside);
             }
@@ -76,18 +78,28 @@ namespace PrisonHelicopter.Utils.TransfersBridge
 
         private static TransferManager.TransferOffer ToVanillaOffer(TransferOfferData src)
         {
-            return new TransferManager.TransferOffer
+            TransferManager.TransferOffer offer = default;
+
+            offer.Active = src.Active;
+            offer.Amount = src.Amount;
+            offer.m_isLocalPark = src.m_isLocalPark;
+            offer.Position = src.Position;
+            offer.Priority = src.Priority;
+
+            if (src.Building != 0)
             {
-                Active = src.Active,
-                Amount = src.Amount,
-                Building = src.Building, 
-                Citizen = src.Citizen,
-                m_isLocalPark = src.m_isLocalPark,
-                m_object = src.m_object,
-                Position = src.Position,
-                Priority = src.Priority,
-                Vehicle = src.Vehicle
-            };
+                offer.Building = src.Building;
+            }
+            else if (src.Vehicle != 0)
+            {
+                offer.Vehicle = src.Vehicle;
+            }
+            else if (src.Citizen != 0)
+            {
+                offer.Citizen = src.Citizen;
+            }
+
+            return offer;
         }
     }
 }
