@@ -79,7 +79,7 @@ namespace PrisonHelicopter.AI
                 case InfoManager.InfoMode.NoisePollution:
                     if (m_noiseAccumulation != 0)
                     {
-                        return CommonBuildingAI.GetNoisePollutionColor(m_noiseAccumulation);
+                        return GetNoisePollutionColor(m_noiseAccumulation);
                     }
                     break;
             }
@@ -191,7 +191,7 @@ namespace PrisonHelicopter.AI
             {
                 Singleton<TransferManager>.instance.RemoveIncomingOffer(TransferManager.TransferReason.Crime, offer); // send police cars from police station
                 TransfersAPI.Backend.RemoveOutgoingOffer(PrisonHelicopterTransferReason.PoliceVanCrimeMove, offer2); // ask for prison vans from police station
-                TransfersAPI.Backend.RemoveOutgoingOffer(PrisonHelicopterTransferReason.CrimePickup2, offer2); // ask for prison helicopters from police helicopter depot
+                Singleton<TransferManager>.instance.RemoveOutgoingOffer(TransferManager.TransferReason.CriminalMove, offer); // ask for prison vans from prison
             }
             base.BuildingDeactivated(buildingID, ref data);
         }
@@ -450,7 +450,10 @@ namespace PrisonHelicopter.AI
                     offer4.Active = true;
                     Singleton<TransferManager>.instance.AddIncomingOffer(TransferManager.TransferReason.CriminalMove, offer4);
                 }
-                if (capacity3 + num7 <= JailCapacity - 20)
+
+                bool extra_checks = (buildingData.m_flags & Building.Flags.RoadAccessFailed) != 0 || (servicePolicies & DistrictPolicies.Services.HelicopterPriority) != 0 || Singleton<SimulationManager>.instance.m_randomizer.Int32(15U) == 0;
+
+                if (capacity3 + num7 <= JailCapacity - 20 && extra_checks)
                 {
                     TransferOfferData offer3 = default; // ask for guest prison helicopter carrying prisoners
                     offer3.Priority = 2 - count3;
@@ -489,7 +492,9 @@ namespace PrisonHelicopter.AI
             {
                 if ((buildingData.m_flags & Building.Flags.Downgrading) != 0) // big police station
                 {
-                    if (num8 - capacity3 > 0)
+                    bool extra_checks = (buildingData.m_flags & Building.Flags.RoadAccessFailed) != 0 || (servicePolicies & DistrictPolicies.Services.HelicopterPriority) != 0 || Singleton<SimulationManager>.instance.m_randomizer.Int32(15U) == 0;
+
+                    if (num8 - capacity3 > 0 && extra_checks)
                     {
                         TransferOfferData offer3 = default; // ask for guest prison helicopters
                         offer3.Priority = (num8 - capacity3) * 8 / Mathf.Max(1, JailCapacity);
