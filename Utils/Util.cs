@@ -10,6 +10,9 @@ namespace PrisonHelicopter.Utils
     {
         public static bool oldDataVersion = false;
 
+        private static bool? s_bNaturalDisastersDlcOwned = null;
+        private static bool? s_bAfterDarkDlcOwned = null;
+
         public static object GetInstanceField(Type type, object instance, string fieldName)
         {
             const BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
@@ -70,6 +73,18 @@ namespace PrisonHelicopter.Utils
             {
                 oldDataVersion = true;
             }
+        }
+
+        public static bool IsNaturalDisastersDLC()
+        {
+            s_bNaturalDisastersDlcOwned ??= SteamHelper.IsDLCOwned(SteamHelper.DLC.NaturalDisastersDLC);
+            return s_bNaturalDisastersDlcOwned.Value;
+        }
+
+        public static bool IsAfterDarkDLC()
+        {
+            s_bAfterDarkDlcOwned ??= SteamHelper.IsDLCOwned(SteamHelper.DLC.AfterDarkDLC);
+            return s_bAfterDarkDlcOwned.Value;
         }
 
     }

@@ -66,7 +66,13 @@ namespace PrisonHelicopter
                 return;
             }
             if (_setupDone)
+            {
                 return;
+            }
+            if(!Util.IsNaturalDisastersDLC() || !Util.IsAfterDarkDLC())
+            {
+                return;
+            }
 
             TransfersAPI.Setup();
             _setupDone = true;
