@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using ColossalFramework.Plugins;
 using ICities;
-using UnityEngine;
 
 namespace PrisonHelicopter.Utils
 {

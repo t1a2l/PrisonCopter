@@ -28,10 +28,7 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox = UiUtil.CreateCheckBox(__instance.component.Find<UIPanel>("MainBottom"), "AllowMovingPrisonersCheckBox", "", false);
                 _checkBox.label.textColor = new Color32(185, 221, 254, 255);
                 _checkBox.label.textScale = 0.8125f;
-                _checkBox.AlignTo(__instance.component, UIAlignAnchor.BottomLeft);
-                _checkBox.relativePosition = new Vector3(160, 275);
-                _checkBox.label.width = 300;
-                _checkBox.width = 300;
+                _checkBox.AlignTo(__instance.component, UIAlignAnchor.BottomLeft);                
             }
 
             var building_id = ___m_InstanceID.Building;
@@ -51,21 +48,26 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.text = "Allow Prison Helicopters";
                 _checkBox.tooltip = "Enable this to allow prison helicopters to also spawn";
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
-                _checkBox.relativePosition = new Vector3(160, 275);
                 _checkBox.label.width = 200;
                 _checkBox.width = 200;
+                if (Mod.IsVehicleSelectorModEnabled)
+                {
+                    _checkBox.relativePosition = new Vector3(120, 275);
+                }
+                else
+                {
+                    _checkBox.relativePosition = new Vector3(160, 275);
+                }
             }
             else if (policeStation)
             {
                 if (info.name.Contains("Headquarters"))
                 {
                     ___m_BuildingDesc.text = "The police headquarters can dispatch a large number of patrol cars to crime scenes around the city.";
-                    _checkBox.relativePosition = new Vector3(160, 295);
                 }
                 else
                 {
                     ___m_BuildingDesc.text = "The police station can dispatch patrol cars to take care of criminal activity.";
-                    _checkBox.relativePosition = new Vector3(160, 275);
                 }
                 _checkBox.isVisible = true;
                 UpdateCheckedState(building_id);
@@ -74,7 +76,14 @@ namespace PrisonHelicopter.HarmonyPatches
                 _checkBox.label.width = 300;
                 _checkBox.width = 300;
                 _checkBox.eventCheckChanged += SetAllowMovingPrisoners;
-
+                if (Mod.IsVehicleSelectorModEnabled)
+                {
+                    _checkBox.relativePosition = new Vector3(120, 275);
+                }
+                else
+                {
+                    _checkBox.relativePosition = new Vector3(160, 275);
+                }
             }
             else
             {

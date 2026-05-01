@@ -13,8 +13,9 @@ namespace PrisonHelicopter
 {
     public class Mod : LoadingExtensionBase, IUserMod
     {
-
         public static int PrisonersPercentage = 90;
+
+        public static bool IsVehicleSelectorModEnabled = false;
 
         string IUserMod.Name => "Prison Helicopter Mod";
 
@@ -69,6 +70,11 @@ namespace PrisonHelicopter
 
             TransfersAPI.Setup();
             _setupDone = true;
+
+            if (Util.IsModActive("Vehicle Selector") || Util.IsModActive("2882769913"))
+            {
+                IsVehicleSelectorModEnabled = true;
+            }
         }
 
         public override void OnReleased()
